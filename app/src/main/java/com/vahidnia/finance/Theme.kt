@@ -54,32 +54,32 @@ class VC(
 fun makeVC(dark: Boolean, glass: Boolean): VC =
     if (dark) VC(
         dark = true, glass = glass,
-        bg = Color(0xFF10141C), card = Color(0xFF191F2B), surfaceVar = Color(0xFF252E3D),
-        dialog = Color(0xFF222A38), bar = Color(0xFF191F2B),
-        border = Color(0xFF30394A), divider = Color(0xFF2B3443),
-        text = Color(0xFFF2F4F8), sub = Color(0xFFA9B2C2),
-        primary = Color(0xFF8BAEF5), secondary = Color(0xFF8CA3C7), highlight = Color(0xFF6B8FD6),
-        accent = Color(0xFF8BAEF5), onAccent = Color(0xFF0F1B33), accentBg = Color(0xFF253A5D),
-        income = Color(0xFF55C995), incomeBg = Color(0xFF193C30),
-        expense = Color(0xFFFF7777), expenseBg = Color(0xFF48272B),
+        bg = Color(0xFF0C1316), card = Color(0xFF121C20), surfaceVar = Color(0xFF18252A),
+        dialog = Color(0xFF152127), bar = Color(0xFF101A1E),
+        border = Color(0xFF1F2F35), divider = Color(0xFF1A282D),
+        text = Color(0xFFF2F7F6), sub = Color(0xFF8FA3A8),
+        primary = Color(0xFF34D3A0), secondary = Color(0xFF7FA7A0), highlight = Color(0xFF3FD5B0),
+        accent = Color(0xFF2FCB99), onAccent = Color(0xFF04231A), accentBg = Color(0xFF123A31),
+        income = Color(0xFF34D399), incomeBg = Color(0xFF12372D),
+        expense = Color(0xFFFF6470), expenseBg = Color(0xFF3A1D22),
         warning = Color(0xFFF0C36D), warningBg = Color(0xFF3A3020),
         error = Color(0xFFFF8585), errorBg = Color(0xFF45262A),
-        info = Color(0xFF8CB5FF), infoBg = Color(0xFF1F2F4D),
-        hero1 = Color(0xFF253A5D), hero2 = Color(0xFF1D2E4A), onHero = Color(0xFFF2F4F8)
+        info = Color(0xFF7DB2FF), infoBg = Color(0xFF1B2B48),
+        hero1 = Color(0xFF138F6A), hero2 = Color(0xFF0D6B52), onHero = Color(0xFFFFFFFF)
     ) else VC(
         dark = false, glass = glass,
-        bg = Color(0xFFF6F7FB), card = Color(0xFFFFFFFF), surfaceVar = Color(0xFFEDF0F6),
+        bg = Color(0xFFF3F7F6), card = Color(0xFFFFFFFF), surfaceVar = Color(0xFFE9F0EE),
         dialog = Color(0xFFFFFFFF), bar = Color(0xFFFFFFFF),
-        border = Color(0xFFE1E6EF), divider = Color(0xFFE8ECF2),
-        text = Color(0xFF202938), sub = Color(0xFF667085),
-        primary = Color(0xFF233B67), secondary = Color(0xFF536B91), highlight = Color(0xFF6B8FD6),
-        accent = Color(0xFF233B67), onAccent = Color(0xFFFFFFFF), accentBg = Color(0xFFE8F0FC),
-        income = Color(0xFF21865A), incomeBg = Color(0xFFE5F5EC),
-        expense = Color(0xFFD94A4A), expenseBg = Color(0xFFFCEAEA),
+        border = Color(0xFFDCE6E3), divider = Color(0xFFE5EDEA),
+        text = Color(0xFF14201F), sub = Color(0xFF5E7370),
+        primary = Color(0xFF0F8A67), secondary = Color(0xFF4F7A72), highlight = Color(0xFF1FB486),
+        accent = Color(0xFF0F8A67), onAccent = Color(0xFFFFFFFF), accentBg = Color(0xFFDDF3EA),
+        income = Color(0xFF14805A), incomeBg = Color(0xFFDDF3EA),
+        expense = Color(0xFFD6455A), expenseBg = Color(0xFFFBE7EA),
         warning = Color(0xFFB7791F), warningBg = Color(0xFFFFF4D6),
         error = Color(0xFFC62828), errorBg = Color(0xFFFDECEC),
         info = Color(0xFF356AC3), infoBg = Color(0xFFEAF1FF),
-        hero1 = Color(0xFF233B67), hero2 = Color(0xFF192B4D), onHero = Color(0xFFFFFFFF)
+        hero1 = Color(0xFF138F6A), hero2 = Color(0xFF0D6B52), onHero = Color(0xFFFFFFFF)
     )
 
 val LocalVC = staticCompositionLocalOf { makeVC(true, true) }
@@ -126,6 +126,6 @@ fun bankColors(bank: String, dark: Boolean = false): List<Color> = when {
 
 /** مجموعه محدود رنگ برای نمودار دسته‌بندی‌ها */
 val chartPalette = listOf(
-    Color(0xFF233B67), Color(0xFF6B8FD6), Color(0xFF536B91),
-    Color(0xFF21865A), Color(0xFFB7791F), Color(0xFF8A94A6)
+    Color(0xFF138F6A), Color(0xFF34D3A0), Color(0xFF3D75BA),
+    Color(0xFF43B5BE), Color(0xFFB7791F), Color(0xFF8A94A6)
 )

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Receipt
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -107,14 +108,8 @@ fun FinanceScreen(vm: AppVm, onAddTx: (Boolean) -> Unit, onAddCard: () -> Unit, 
                 }
             }
         }
-        item { Field(query, { query = it }, "جستجو در تراکنش‌ها...") }
-        item {
-            ChipRow {
-                Chip("همه", type == 0) { type = 0 }
-                Chip("درآمد", type == 1) { type = 1 }
-                Chip("هزینه", type == 2) { type = 2 }
-            }
-        }
+        item { Field(query, { query = it }, "جستجو در تراکنش‌ها...", trailing = Icons.Rounded.Search) }
+        item { Segmented(listOf("همه", "درآمد", "هزینه"), type) { type = it } }
         if (filtered.isEmpty()) {
             item {
                 EmptyBox(

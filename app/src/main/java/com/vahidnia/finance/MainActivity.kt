@@ -7,6 +7,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -119,16 +126,40 @@ fun VsoftApp() {
 @Composable
 fun Splash() {
     val c = LocalVC.current
-    Box(
-        Modifier.fillMaxSize().background(c.bg),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            VText("V", size = 72, weight = FontWeight.Black, color = c.primary)
+    val p = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { p.animateTo(1f, tween(1150)) }
+    val m1 = c.accent.copy(alpha = 0.10f)
+    val m2 = c.accent.copy(alpha = 0.18f)
+    Box(Modifier.fillMaxSize().background(c.bg), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            val a = Path().apply {
+                moveTo(0f, h * 0.78f); lineTo(w * 0.22f, h * 0.60f); lineTo(w * 0.42f, h * 0.74f)
+                lineTo(w * 0.66f, h * 0.55f); lineTo(w, h * 0.72f); lineTo(w, h); lineTo(0f, h); close()
+            }
+            val b = Path().apply {
+                moveTo(0f, h * 0.88f); lineTo(w * 0.30f, h * 0.72f); lineTo(w * 0.55f, h * 0.86f)
+                lineTo(w * 0.80f, h * 0.70f); lineTo(w, h * 0.84f); lineTo(w, h); lineTo(0f, h); close()
+            }
+            drawPath(a, m1)
+            drawPath(b, m2)
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            VLogo(96.dp)
+            Spacer(Modifier.height(6.dp))
             VText("VSOFT", size = 30, weight = FontWeight.ExtraBold)
             VText("مدیریت مالی وحیدینیا", size = 14, color = c.sub, align = TextAlign.Center)
-            Spacer(Modifier.height(16.dp))
-            VText("مدیریت مالی، ساده از همیشه", size = 12, color = c.sub)
+        }
+        Column(
+            Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp, start = 64.dp, end = 64.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            VText("مدیریت مالی، ساده‌تر از همیشه", size = 13, color = c.sub, align = TextAlign.Center)
+            Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(50)).background(c.border)) {
+                Box(Modifier.fillMaxHeight().fillMaxWidth(p.value).clip(RoundedCornerShape(50)).background(c.accent))
+            }
         }
     }
 }

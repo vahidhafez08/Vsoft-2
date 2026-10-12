@@ -1,6 +1,12 @@
 package com.vahidnia.finance
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,9 +55,11 @@ fun AddTxDialog(vm: AppVm, onDismiss: () -> Unit, onNeedCard: () -> Unit, startI
             }
         }
     ) {
-        ChipRow {
-            Chip("هزینه", !income) { income = false; category = expenseCats[0] }
-            Chip("درآمد", income) { income = true; category = incomeCats[0] }
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(c.surfaceVar).padding(4.dp)
+        ) {
+            TypeSeg("هزینه", !income, c.expense, Color.White, Modifier.weight(1f)) { income = false; category = expenseCats[0] }
+            TypeSeg("درآمد", income, c.income, c.onAccent, Modifier.weight(1f)) { income = true; category = incomeCats[0] }
         }
         Field(amount, { amount = it }, "مبلغ (تومان)", number = true)
         if (parseAmount(amount) > 0L) VText(parseAmount(amount).money() + " تومان", size = 12, color = c.accent)
@@ -143,5 +151,20 @@ private fun ReceiptRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         VText(label, size = 13, color = c.sub)
         VText(value, size = 13, weight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun TypeSeg(text: String, selected: Boolean, fill: Color, onFill: Color, modifier: Modifier, onClick: () -> Unit) {
+    val c = LocalVC.current
+    Box(
+        modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (selected) fill else Color.Transparent)
+            .clickable { onClick() }
+            .padding(vertical = 9.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        VText(text, size = 14, weight = FontWeight.Bold, color = if (selected) onFill else c.sub)
     }
 }

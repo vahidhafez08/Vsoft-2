@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.Construction
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material.icons.rounded.Wifi
@@ -164,6 +165,56 @@ fun catIcon(cat: String): ImageVector = when (cat) {
 }
 
 @Composable
+fun IconSquare(icon: ImageVector, tint: Color, bg: Color, size: Dp = 44.dp, onClick: (() -> Unit)? = null) {
+    var m = Modifier.size(size).clip(RoundedCornerShape(size * 0.3f)).background(bg)
+    if (onClick != null) m = m.clickable { onClick() }
+    Box(m, contentAlignment = Alignment.Center) {
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(size * 0.5f))
+    }
+}
+
+@Composable
+fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    val c = LocalVC.current
+    val shape = RoundedCornerShape(50)
+    Row(
+        Modifier.fillMaxWidth().clip(shape).background(c.card).border(1.dp, c.border, shape).padding(4.dp)
+    ) {
+        options.forEachIndexed { i, label ->
+            val sel = i == selected
+            var m = Modifier.weight(1f).clip(shape).background(if (sel) c.accentBg else Color.Transparent)
+            if (sel) m = m.border(1.dp, c.accent, shape)
+            Box(m.clickable { onSelect(i) }.padding(vertical = 9.dp), contentAlignment = Alignment.Center) {
+                VText(
+                    label, size = 13, weight = if (sel) FontWeight.Bold else FontWeight.Medium,
+                    color = if (sel) c.accent else c.sub, maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun VLogo(size: Dp, modifier: Modifier = Modifier) {
+    val light = Color(0xFF5CE0B8)
+    val deep = Color(0xFF1FB486)
+    Canvas(modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val left = androidx.compose.ui.graphics.Path().apply {
+            moveTo(w * 0.06f, h * 0.18f); lineTo(w * 0.30f, h * 0.18f)
+            lineTo(w * 0.50f, h * 0.66f); lineTo(w * 0.50f, h * 0.94f); close()
+        }
+        val right = androidx.compose.ui.graphics.Path().apply {
+            moveTo(w * 0.94f, h * 0.18f); lineTo(w * 0.70f, h * 0.18f)
+            lineTo(w * 0.50f, h * 0.66f); lineTo(w * 0.50f, h * 0.94f); close()
+        }
+        drawPath(left, Brush.linearGradient(listOf(light, deep)))
+        drawPath(right, deep)
+    }
+}
+
+@Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     VText(text, modifier = modifier, size = 16, weight = FontWeight.Bold)
 }
@@ -188,7 +239,7 @@ fun TxRow(tx: Tx, cardName: String, onClick: () -> Unit) {
         Modifier.fillMaxWidth().vcard(16.dp).clickable { onClick() }.padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconBadge(catIcon(tx.category), tint, bg = if (tx.income) c.incomeBg else c.expenseBg)
+        IconSquare(catIcon(tx.category), tint, if (tx.income) c.incomeBg else c.expenseBg)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             VText(if (tx.note.isBlank()) tx.category else tx.note, size = 14, weight = FontWeight.Bold, maxLines = 1)
@@ -229,7 +280,7 @@ fun BankCardView(card: BankCard, balance: Long, selected: Boolean, width: Dp = 2
             if (selected) Icon(Icons.Rounded.CheckCircle, null, tint = Color.White, modifier = Modifier.size(22.dp))
             else Icon(Icons.Rounded.AccountBalanceWallet, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(22.dp))
         }
-        VText("کارت ${card.last4.fa()}", size = 13, color = Color.White.copy(alpha = 0.8f))
+        VText("\u202A•••• •••• ${card.last4.fa()}\u202C", size = 13, color = Color.White.copy(alpha = 0.85f))
         Row(verticalAlignment = Alignment.Bottom) {
             VText(balance.money(), size = 22, weight = FontWeight.ExtraBold, color = Color.White)
             Spacer(Modifier.width(6.dp))
@@ -287,7 +338,8 @@ fun Field(
     label: String,
     number: Boolean = false,
     singleLine: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    trailing: ImageVector? = null
 ) {
     val c = LocalVC.current
     OutlinedTextField(
@@ -296,6 +348,7 @@ fun Field(
         modifier = modifier.fillMaxWidth(),
         label = { VText(label, size = 12, color = c.sub) },
         singleLine = singleLine,
+        trailingIcon = if (trailing != null) { { Icon(trailing, null, tint = c.sub, modifier = Modifier.size(20.dp)) } } else null,
         keyboardOptions = if (number) KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number) else KeyboardOptions.Default,
         textStyle = TextStyle(color = c.text, fontSize = 15.sp, fontFamily = LocalFont.current),
         shape = RoundedCornerShape(14.dp),
@@ -332,8 +385,15 @@ fun AppDialog(
         },
         confirmButton = {
             if (confirmText != null) {
-                TextButton(onClick = onConfirm) {
-                    VText(confirmText, size = 14, weight = FontWeight.Bold, color = if (danger) c.expense else c.accent)
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (danger) c.expense else c.accent)
+                        .clickable { onConfirm() }
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    VText(confirmText, size = 14, weight = FontWeight.Bold, color = if (danger) Color.White else c.onAccent)
                 }
             }
         },
@@ -435,7 +495,9 @@ fun BottomBar(current: Int, onSelect: (Int) -> Unit) {
         for (i in titles.indices) {
             val sel = i == current
             Column(
-                Modifier.weight(1f).clickable { onSelect(i) }.padding(vertical = 4.dp),
+                Modifier.weight(1f).padding(horizontal = 3.dp).clip(RoundedCornerShape(14.dp))
+                    .background(if (sel) c.accentBg else Color.Transparent)
+                    .clickable { onSelect(i) }.padding(vertical = 6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(NavIcon(i, sel), null, tint = if (sel) c.accent else c.sub, modifier = Modifier.size(24.dp))

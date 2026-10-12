@@ -101,13 +101,7 @@ fun ReportsScreen(vm: AppVm) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item { ScreenTitle("گزارش‌ها") }
-        item {
-            ChipRow {
-                Chip("ماهانه", period == 0) { period = 0 }
-                Chip("سه‌ماهه", period == 1) { period = 1 }
-                Chip("سالانه", period == 2) { period = 2 }
-            }
-        }
+        item { Segmented(listOf("ماهانه", "سه‌ماهه", "سالانه"), period) { period = it } }
         item {
             ChipRow {
                 Chip("همه کارت‌ها", selected == null) { cardId = null }
