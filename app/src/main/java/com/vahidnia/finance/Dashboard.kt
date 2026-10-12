@@ -1,6 +1,7 @@
 package com.vahidnia.finance
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,12 +52,20 @@ fun Dashboard(
 ) {
     val c = LocalVC.current
     var hide by rememberSaveable { mutableStateOf(false) }
-    val total = vm.cards.sumOf { cardBalance(it, vm.txs) }
-    val now = jalali(System.currentTimeMillis())
-    val monthTx = vm.txs.filter { val j = jalali(it.time); j.y == now.y && j.m == now.m }
-    val inc = monthTx.filter { it.income }.sumOf { it.amount }
-    val exp = monthTx.filter { !it.income }.sumOf { it.amount }
-    val recent = vm.txs.sortedByDescending { it.time }.take(5)
+    val now = remember { jalali(System.currentTimeMillis()) }
+    val total = remember(vm.cards, vm.txs) { allBalances(vm.cards, vm.txs).values.sum() }
+    val month = remember(vm.txs) {
+        var i = 0L
+        var e = 0L
+        for (t in vm.txs) {
+            val j = jalali(t.time)
+            if (j.y == now.y && j.m == now.m) { if (t.income) i += t.amount else e += t.amount }
+        }
+        i to e
+    }
+    val inc = month.first
+    val exp = month.second
+    val recent = remember(vm.txs) { vm.txs.sortedByDescending { it.time }.take(5) }
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -63,7 +73,7 @@ fun Dashboard(
     ) {
         item {
             Column {
-                VText("VSOFT", size = 12, weight = FontWeight.Bold, color = c.accent)
+                VText("VSOFT", size = 12, weight = FontWeight.Bold, color = c.primary)
                 VText("سلام، خوش آمدی", size = 24, weight = FontWeight.ExtraBold)
                 VText(jalali(System.currentTimeMillis()).text(), size = 12, color = c.sub)
             }
@@ -74,24 +84,25 @@ fun Dashboard(
                 Modifier
                     .fillMaxWidth()
                     .clip(shape)
-                    .background(Brush.linearGradient(listOf(Color(0xFF0E8D69), Color(0xFF1FCB93))), shape)
+                    .background(Brush.linearGradient(listOf(c.hero1, c.hero2)), shape)
+                    .border(1.dp, Color.White.copy(alpha = 0.10f), shape)
                     .padding(20.dp)
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    VText("موجودی کل", size = 14, color = Color.White.copy(alpha = 0.9f))
+                    VText("موجودی کل", size = 14, color = c.onHero.copy(alpha = 0.8f))
                     Icon(
                         if (hide) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, null,
-                        tint = Color.White, modifier = Modifier.size(22.dp).clickable { hide = !hide }
+                        tint = c.onHero, modifier = Modifier.size(22.dp).clickable { hide = !hide }
                     )
                 }
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
-                    VText(if (hide) "••••••" else total.money(), size = 30, weight = FontWeight.ExtraBold, color = Color.White)
+                    VText(if (hide) "••••••" else total.money(), size = 30, weight = FontWeight.ExtraBold, color = c.onHero)
                     Spacer(Modifier.width(6.dp))
-                    VText("تومان", size = 13, color = Color.White.copy(alpha = 0.9f))
+                    VText("تومان", size = 13, color = c.onHero.copy(alpha = 0.8f))
                 }
                 Spacer(Modifier.height(6.dp))
-                VText("${vm.cards.size.fa()} کارت بانکی", size = 12, color = Color.White.copy(alpha = 0.85f))
+                VText("${vm.cards.size.fa()} کارت بانکی", size = 12, color = c.onHero.copy(alpha = 0.75f))
             }
         }
         item {
@@ -146,7 +157,7 @@ private fun QuickTile(title: String, icon: ImageVector, modifier: Modifier, onCl
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        IconBadge(icon, c.accent, 40.dp)
+        IconBadge(icon, c.accent, 40.dp, bg = c.accentBg)
         VText(title, size = 11, weight = FontWeight.Medium, maxLines = 1)
     }
 }
@@ -156,7 +167,7 @@ private fun SummaryTile(title: String, amount: Long, tint: Color, icon: ImageVec
     val c = LocalVC.current
     Column(modifier.vcard().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconBadge(icon, tint, 30.dp)
+            IconBadge(icon, tint, 30.dp, bg = if (tint == c.income) c.incomeBg else c.expenseBg)
             Spacer(Modifier.width(8.dp))
             VText(title, size = 13, color = c.sub)
         }

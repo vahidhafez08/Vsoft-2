@@ -3,6 +3,16 @@ package com.vahidnia.finance
 import java.util.Calendar
 import java.util.Locale
 
+private val calTl = object : ThreadLocal<Calendar>() {
+    override fun initialValue(): Calendar = Calendar.getInstance()
+}
+
+private fun calAt(t: Long): Calendar {
+    val c = calTl.get()!!
+    c.timeInMillis = t
+    return c
+}
+
 private val faDigits = charArrayOf('۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹')
 
 fun String.fa(): String {
@@ -69,20 +79,17 @@ fun g2j(gy: Int, gm: Int, gd: Int): JDate {
 }
 
 fun jalali(time: Long): JDate {
-    val c = Calendar.getInstance()
-    c.timeInMillis = time
+    val c = calAt(time)
     return g2j(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
 }
 
 fun timeText(time: Long): String {
-    val c = Calendar.getInstance()
-    c.timeInMillis = time
+    val c = calAt(time)
     return String.format(Locale.US, "%02d:%02d", c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE)).fa()
 }
 
 private fun startOfDay(t: Long): Long {
-    val c = Calendar.getInstance()
-    c.timeInMillis = t
+    val c = calAt(t)
     c.set(Calendar.HOUR_OF_DAY, 0)
     c.set(Calendar.MINUTE, 0)
     c.set(Calendar.SECOND, 0)

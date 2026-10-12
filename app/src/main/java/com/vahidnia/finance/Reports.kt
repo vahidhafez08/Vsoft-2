@@ -53,36 +53,48 @@ fun ReportsScreen(vm: AppVm) {
         else -> "سال ${sy.fa()}"
     }
 
-    val list = vm.txs.filter {
-        val i = jalali(it.time).idx
-        i in start..end && (selected == null || it.cardId == selected.id)
-    }
-    val inc = list.filter { it.income }.sumOf { it.amount }
-    val exp = list.filter { !it.income }.sumOf { it.amount }
-
-    val groups: List<Pair<Long, Long>>
-    val labels: List<String>
-    if (period == 0) {
-        val n = if (sm <= 6) 31 else 30
-        val ai = LongArray(n)
-        val ae = LongArray(n)
-        for (t in list) {
-            val d = jalali(t.time).d.coerceIn(1, n) - 1
-            if (t.income) ai[d] += t.amount else ae[d] += t.amount
+    val selId = selected?.id
+    val rep = remember(vm.txs, period, idx, selId) {
+        val list = ArrayList<Tx>()
+        var inc = 0L
+        var exp = 0L
+        for (t in vm.txs) {
+            val i = jalali(t.time).idx
+            if (i in start..end && (selId == null || t.cardId == selId)) {
+                list.add(t)
+                if (t.income) inc += t.amount else exp += t.amount
+            }
         }
-        groups = List(n) { ai[it] to ae[it] }
-        labels = List(n) { (it + 1).fa() }
-    } else {
-        val n = end - start + 1
-        val ai = LongArray(n)
-        val ae = LongArray(n)
-        for (t in list) {
-            val k = jalali(t.time).idx - start
-            if (k in 0 until n) { if (t.income) ai[k] += t.amount else ae[k] += t.amount }
+        val groups: List<Pair<Long, Long>>
+        val labels: List<String>
+        if (period == 0) {
+            val n = if (sm <= 6) 31 else 30
+            val ai = LongArray(n)
+            val ae = LongArray(n)
+            for (t in list) {
+                val d = jalali(t.time).d.coerceIn(1, n) - 1
+                if (t.income) ai[d] += t.amount else ae[d] += t.amount
+            }
+            groups = List(n) { ai[it] to ae[it] }
+            labels = List(n) { (it + 1).fa() }
+        } else {
+            val n = end - start + 1
+            val ai = LongArray(n)
+            val ae = LongArray(n)
+            for (t in list) {
+                val k = jalali(t.time).idx - start
+                if (k in 0 until n) { if (t.income) ai[k] += t.amount else ae[k] += t.amount }
+            }
+            groups = List(n) { ai[it] to ae[it] }
+            labels = List(n) { jMonths[((start + it) % 12 + 12) % 12].take(3) }
         }
-        groups = List(n) { ai[it] to ae[it] }
-        labels = List(n) { jMonths[((start + it) % 12 + 12) % 12].take(3) }
+        ReportData(list.size, inc, exp, groups, labels)
     }
+    val inc = rep.inc
+    val exp = rep.exp
+    val groups = rep.groups
+    val labels = rep.labels
+    val balances = remember(vm.cards, vm.txs) { allBalances(vm.cards, vm.txs) }
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -126,27 +138,27 @@ fun ReportsScreen(vm: AppVm) {
                     Legend("هزینه", c.expense)
                 }
                 Spacer(Modifier.size(10.dp))
-                if (list.isEmpty()) VText("در این بازه تراکنشی وجود ندارد.", size = 13, color = c.sub)
+                if (rep.count == 0) VText("در این بازه تراکنشی وجود ندارد.", size = 13, color = c.sub)
                 else BarChart(groups, labels)
             }
         }
         if (selected == null && vm.cards.isNotEmpty()) {
             item {
-                val total = vm.cards.sumOf { cardBalance(it, vm.txs) }
+                val total = balances.values.sum()
                 Column(Modifier.fillMaxWidth().vcard().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     SectionTitle("بررسی کارت‌ها")
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Donut(
-                            vm.cards.map { (cardBalance(it, vm.txs).coerceAtLeast(0L)).toFloat() to bankColors(it.bank)[0] }
+                            vm.cards.map { ((balances[it.id] ?: 0L).coerceAtLeast(0L)).toFloat() to bankColors(it.bank, c.dark)[0] }
                         ) { VText("همه", size = 12, color = c.sub) }
                         Spacer(Modifier.width(16.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             for (card in vm.cards) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(Modifier.size(10.dp).clip(CircleShape).background(bankColors(card.bank)[0]))
+                                    Box(Modifier.size(10.dp).clip(CircleShape).background(bankColors(card.bank, c.dark)[0]))
                                     Spacer(Modifier.width(8.dp))
                                     VText(card.bank, size = 12, modifier = Modifier.weight(1f), maxLines = 1)
-                                    VText(cardBalance(card, vm.txs).money(), size = 12, color = c.sub)
+                                    VText((balances[card.id] ?: card.initial).money(), size = 12, color = c.sub)
                                 }
                             }
                         }
@@ -180,3 +192,11 @@ private fun Legend(text: String, color: androidx.compose.ui.graphics.Color) {
         VText(text, size = 12, color = c.sub)
     }
 }
+
+private class ReportData(
+    val count: Int,
+    val inc: Long,
+    val exp: Long,
+    val groups: List<Pair<Long, Long>>,
+    val labels: List<String>
+)

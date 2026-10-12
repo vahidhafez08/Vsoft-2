@@ -46,12 +46,17 @@ fun FinanceScreen(vm: AppVm, onAddTx: () -> Unit, onAddCard: () -> Unit, onOpenT
     val selected = vm.cards.firstOrNull { it.id == cardId }
     val q = norm(query.trim())
 
-    val filtered = vm.txs
-        .filter { selected == null || it.cardId == selected.id }
-        .filter { type == 0 || (type == 1 && it.income) || (type == 2 && !it.income) }
-        .filter { q.isEmpty() || norm(it.note).contains(q) || norm(it.category).contains(q) || it.amount.toString().contains(q) }
-        .sortedByDescending { it.time }
-    val grouped = filtered.groupBy { dayLabel(it.time) }
+    val selId = selected?.id
+    val filtered = remember(vm.txs, selId, type, q) {
+        vm.txs
+            .filter { selId == null || it.cardId == selId }
+            .filter { type == 0 || (type == 1 && it.income) || (type == 2 && !it.income) }
+            .filter { q.isEmpty() || norm(it.note).contains(q) || norm(it.category).contains(q) || it.amount.toString().contains(q) }
+            .sortedByDescending { it.time }
+    }
+    val grouped = remember(filtered) { filtered.groupBy { dayLabel(it.time) } }
+    val balances = remember(vm.cards, vm.txs) { allBalances(vm.cards, vm.txs) }
+    val cardNames = remember(vm.cards) { vm.cards.associate { it.id to it.bank } }
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -68,7 +73,7 @@ fun FinanceScreen(vm: AppVm, onAddTx: () -> Unit, onAddCard: () -> Unit, onOpenT
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(vm.cards, key = { it.id }) { card ->
-                    BankCardView(card, cardBalance(card, vm.txs), selected?.id == card.id) {
+                    BankCardView(card, balances[card.id] ?: card.initial, selected?.id == card.id) {
                         cardId = if (selected?.id == card.id) null else card.id
                     }
                 }
@@ -78,7 +83,7 @@ fun FinanceScreen(vm: AppVm, onAddTx: () -> Unit, onAddCard: () -> Unit, onOpenT
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            IconBadge(Icons.Rounded.Add, c.accent, 40.dp)
+                            IconBadge(Icons.Rounded.Add, c.accent, 40.dp, bg = c.accentBg)
                             VText("کارت جدید", size = 12, color = c.sub)
                         }
                     }
@@ -118,9 +123,7 @@ fun FinanceScreen(vm: AppVm, onAddTx: () -> Unit, onAddCard: () -> Unit, onOpenT
         grouped.forEach { (label, list) ->
             item(key = "h_$label") { VText(label, size = 13, weight = FontWeight.Bold, color = c.sub) }
             items(list, key = { it.id }) { t ->
-                Column {
-                    TxRow(t, vm.cards.firstOrNull { it.id == t.cardId }?.bank ?: "—") { onOpenTx(t) }
-                }
+                TxRow(t, cardNames[t.cardId] ?: "—") { onOpenTx(t) }
             }
         }
         if (filtered.isNotEmpty()) {

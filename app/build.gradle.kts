@@ -26,6 +26,12 @@ android {
     }
 
     buildTypes {
+        // نسخه debug قابل‌دیباگ، Compose را چند برابر کند می‌کند؛ پس غیرقابل‌دیباگ + R8 (کلید و شناسه همان قبلی)
+        getByName("debug") {
+            isDebuggable = false
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
         release { isMinifyEnabled = false }
     }
     compileOptions {
@@ -46,5 +52,6 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
     testImplementation("junit:junit:4.13.2")
 }

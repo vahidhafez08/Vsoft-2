@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Category
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Construction
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Home
@@ -90,8 +91,7 @@ fun VText(
 fun Modifier.vcard(radius: Dp = 20.dp): Modifier {
     val c = LocalVC.current
     val shape = RoundedCornerShape(radius)
-    val fill = if (c.glass) c.card.copy(alpha = 0.72f) else c.card
-    return this.background(fill, shape).border(1.dp, c.border, shape).clip(shape)
+    return this.background(c.card, shape).border(1.dp, c.border, shape).clip(shape)
 }
 
 @Composable
@@ -101,7 +101,7 @@ fun Chip(text: String, selected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(shape)
-            .background(if (selected) c.accent else c.card.copy(alpha = 0.8f), shape)
+            .background(if (selected) c.accent else c.surfaceVar, shape)
             .border(1.dp, if (selected) c.accent else c.border, shape)
             .clickable { onClick() }
             .padding(horizontal = 14.dp, vertical = 8.dp),
@@ -138,8 +138,14 @@ fun ProgressBar(progress: Int, color: Color = LocalVC.current.accent) {
 }
 
 @Composable
-fun IconBadge(icon: ImageVector, tint: Color, size: Dp = 44.dp, onClick: (() -> Unit)? = null) {
-    var m = Modifier.size(size).clip(CircleShape).background(tint.copy(alpha = 0.16f))
+fun IconBadge(
+    icon: ImageVector,
+    tint: Color,
+    size: Dp = 44.dp,
+    onClick: (() -> Unit)? = null,
+    bg: Color = tint.copy(alpha = 0.16f)
+) {
+    var m = Modifier.size(size).clip(CircleShape).background(bg)
     if (onClick != null) m = m.clickable { onClick() }
     Box(m, contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(size * 0.5f))
@@ -182,7 +188,7 @@ fun TxRow(tx: Tx, cardName: String, onClick: () -> Unit) {
         Modifier.fillMaxWidth().vcard(16.dp).clickable { onClick() }.padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconBadge(catIcon(tx.category), tint)
+        IconBadge(catIcon(tx.category), tint, bg = if (tx.income) c.incomeBg else c.expenseBg)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             VText(if (tx.note.isBlank()) tx.category else tx.note, size = 14, weight = FontWeight.Bold, maxLines = 1)
@@ -205,7 +211,7 @@ fun TxRow(tx: Tx, cardName: String, onClick: () -> Unit) {
 
 @Composable
 fun BankCardView(card: BankCard, balance: Long, selected: Boolean, width: Dp = 250.dp, onClick: () -> Unit) {
-    val colors = bankColors(card.bank)
+    val colors = bankColors(card.bank, LocalVC.current.dark)
     val shape = RoundedCornerShape(22.dp)
     Column(
         Modifier
@@ -220,7 +226,8 @@ fun BankCardView(card: BankCard, balance: Long, selected: Boolean, width: Dp = 2
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             VText(card.bank, size = 15, weight = FontWeight.Bold, color = Color.White)
-            Icon(Icons.Rounded.AccountBalanceWallet, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(22.dp))
+            if (selected) Icon(Icons.Rounded.CheckCircle, null, tint = Color.White, modifier = Modifier.size(22.dp))
+            else Icon(Icons.Rounded.AccountBalanceWallet, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(22.dp))
         }
         VText("کارت ${card.last4.fa()}", size = 13, color = Color.White.copy(alpha = 0.8f))
         Row(verticalAlignment = Alignment.Bottom) {
@@ -300,7 +307,7 @@ fun AppDialog(
     val c = LocalVC.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = if (c.dark) Color(0xFF122326) else Color.White,
+        containerColor = c.dialog,
         shape = RoundedCornerShape(24.dp),
         title = { VText(title, size = 18, weight = FontWeight.Bold) },
         text = {
@@ -327,7 +334,7 @@ fun BarChart(groups: List<Pair<Long, Long>>, labels: List<String>) {
     val maxV = (groups.maxOfOrNull { maxOf(it.first, it.second) } ?: 0L).coerceAtLeast(1L)
     val inc = c.income
     val exp = c.expense
-    val grid = c.border
+    val grid = c.divider
     Canvas(Modifier.fillMaxWidth().height(160.dp)) {
         val w = size.width
         val h = size.height
@@ -405,8 +412,8 @@ fun BottomBar(current: Int, onSelect: (Int) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .background(if (c.dark) Color(0xFF0C1B1D) else Color.White)
-            .border(BorderStroke(1.dp, c.border))
+            .background(if (c.glass) c.bar.copy(alpha = 0.94f) else c.bar)
+            .border(BorderStroke(1.dp, c.divider))
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
@@ -422,4 +429,13 @@ fun BottomBar(current: Int, onSelect: (Int) -> Unit) {
             }
         }
     }
+}
+
+@Composable
+fun StatusPill(status: Status) {
+    val sc = LocalVC.current.statusColors(status)
+    Box(
+        Modifier.clip(RoundedCornerShape(50)).background(sc.bg).padding(horizontal = 10.dp, vertical = 3.dp),
+        contentAlignment = Alignment.Center
+    ) { VText(sc.label, size = 11, weight = FontWeight.Bold, color = sc.fg) }
 }

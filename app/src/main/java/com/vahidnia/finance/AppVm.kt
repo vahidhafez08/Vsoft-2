@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.Executors
 
 class AppVm(app: Application) : AndroidViewModel(app) {
     private val ctx: Context = app
@@ -204,16 +205,22 @@ class AppVm(app: Application) : AndroidViewModel(app) {
         places = p
     }
 
+    private val io = Executors.newSingleThreadExecutor()
+
     private fun save() {
-        try {
-            val tmp = File(file.parentFile, "vsoft_data.tmp")
-            tmp.writeText(toJson().toString())
-            if (!tmp.renameTo(file)) {
-                file.writeText(tmp.readText())
-                tmp.delete()
+        // عکس لحظه‌ای از داده روی نخ اصلی؛ نوشتن فایل در پس‌زمینه و به ترتیب
+        val json = try { toJson().toString() } catch (e: Exception) { return }
+        io.execute {
+            try {
+                val tmp = File(file.parentFile, "vsoft_data.tmp")
+                tmp.writeText(json)
+                if (!tmp.renameTo(file)) {
+                    file.writeText(json)
+                    tmp.delete()
+                }
+            } catch (e: Exception) {
+                // ذخیره ناموفق؛ داده در حافظه می‌ماند
             }
-        } catch (e: Exception) {
-            // ذخیره ناموفق؛ داده در حافظه می‌ماند
         }
     }
 

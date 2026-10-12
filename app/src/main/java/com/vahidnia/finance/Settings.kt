@@ -38,10 +38,11 @@ fun SettingsScreen(vm: AppVm) {
             Group("ظاهر برنامه") {
                 VText("تم", size = 13, color = c.sub)
                 ChipRow {
-                    Chip("سیستم", vm.theme == 0) { vm.updateTheme(0) }
-                    Chip("روشن", vm.theme == 1) { vm.updateTheme(1) }
-                    Chip("تیره", vm.theme == 2) { vm.updateTheme(2) }
+                    Chip("خودکار (دستگاه)", vm.theme == 0) { vm.updateTheme(0) }
+                    Chip("روز", vm.theme == 1) { vm.updateTheme(1) }
+                    Chip("شب", vm.theme == 2) { vm.updateTheme(2) }
                 }
+                VText("حالت «خودکار» از تنظیم شب/روز دستگاه پیروی می‌کند.", size = 11, color = c.sub)
                 VText("فونت", size = 13, color = c.sub)
                 ChipRow {
                     Chip("پیش‌فرض", vm.font == 0) { vm.updateFont(0) }
@@ -49,7 +50,7 @@ fun SettingsScreen(vm: AppVm) {
                     Chip("Serif", vm.font == 2) { vm.updateFont(2) }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    VText("حالت شیشه‌ای", size = 14, weight = FontWeight.Medium)
+                    VText("حالت شیشه‌ای (نوار پایین)", size = 14, weight = FontWeight.Medium)
                     Switch(
                         checked = vm.glass, onCheckedChange = { vm.updateGlass(it) },
                         colors = SwitchDefaults.colors(checkedTrackColor = c.accent, checkedThumbColor = c.onAccent)
@@ -96,7 +97,7 @@ fun SettingsScreen(vm: AppVm) {
         }
         item {
             Group("درباره برنامه") {
-                VText("VSOFT · مدیریت مالی وحیدینیا", size = 14, weight = FontWeight.Bold)
+                VText("Vsoft · مدیریت مالی وحیدینیا", size = 14, weight = FontWeight.Bold)
                 VText("نسخه ${"1.0".fa()}", size = 12, color = c.sub)
             }
         }

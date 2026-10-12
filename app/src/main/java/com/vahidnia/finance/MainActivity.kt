@@ -35,7 +35,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -73,8 +72,21 @@ fun VsoftApp() {
         2 -> FontFamily.Serif
         else -> FontFamily.Default
     }
-    val scheme = if (dark) darkColorScheme(primary = colors.accent, background = colors.bg, surface = colors.card)
-    else lightColorScheme(primary = colors.accent, background = colors.bg, surface = colors.card)
+    val scheme = if (dark) darkColorScheme(
+        primary = colors.accent, onPrimary = colors.onAccent, primaryContainer = colors.accentBg,
+        background = colors.bg, onBackground = colors.text,
+        surface = colors.card, onSurface = colors.text,
+        surfaceVariant = colors.surfaceVar, onSurfaceVariant = colors.sub,
+        outline = colors.border, outlineVariant = colors.divider,
+        error = colors.error, errorContainer = colors.errorBg
+    ) else lightColorScheme(
+        primary = colors.accent, onPrimary = colors.onAccent, primaryContainer = colors.accentBg,
+        background = colors.bg, onBackground = colors.text,
+        surface = colors.card, onSurface = colors.text,
+        surfaceVariant = colors.surfaceVar, onSurfaceVariant = colors.sub,
+        outline = colors.border, outlineVariant = colors.divider,
+        error = colors.error, errorContainer = colors.errorBg
+    )
 
     val view = LocalView.current
     SideEffect {
@@ -108,11 +120,11 @@ fun VsoftApp() {
 fun Splash() {
     val c = LocalVC.current
     Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(c.bg2, c.bg))),
+        Modifier.fillMaxSize().background(c.bg),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            VText("V", size = 72, weight = FontWeight.Black, color = c.accent)
+            VText("V", size = 72, weight = FontWeight.Black, color = c.primary)
             VText("VSOFT", size = 30, weight = FontWeight.ExtraBold)
             VText("مدیریت مالی وحیدینیا", size = 14, color = c.sub, align = TextAlign.Center)
             Spacer(Modifier.height(16.dp))
@@ -131,10 +143,14 @@ fun MainShell(vm: AppVm) {
     var openTx by remember { mutableStateOf<Tx?>(null) }
     var openPlace by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val go: (Int) -> Unit = { p -> scope.launch { pager.animateScrollToPage(p) } }
+    val go: (Int) -> Unit = { p ->
+        scope.launch {
+            if (kotlin.math.abs(p - pager.currentPage) > 1) pager.scrollToPage(p) else pager.animateScrollToPage(p)
+        }
+    }
 
-    Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(c.bg2, c.bg)))) {
-        HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
+    Column(Modifier.fillMaxSize().background(c.bg)) {
+        HorizontalPager(state = pager, beyondViewportPageCount = 1, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
             when (page) {
                 0 -> Dashboard(vm, go, { showTx = true }, { showCard = true }, { openTx = it })
                 1 -> FinanceScreen(vm, { showTx = true }, { showCard = true }, { openTx = it })

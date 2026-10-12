@@ -63,15 +63,15 @@ private fun WorkList(vm: AppVm, setOpen: (String?) -> Unit) {
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconBadge(Icons.Rounded.Construction, c.accent)
+                            IconBadge(Icons.Rounded.Construction, c.accent, bg = c.accentBg)
                             Spacer(Modifier.width(10.dp))
                             VText(p.name, size = 15, weight = FontWeight.Bold, maxLines = 2)
                         }
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             VText("پیشرفت پروژه", size = 12, color = c.sub)
-                            VText("${p.progress().fa()}٪", size = 13, weight = FontWeight.Bold, color = c.accent)
+                            VText("${p.progress().fa()}٪", size = 13, weight = FontWeight.Bold, color = c.statusColors(progressStatus(p.progress())).fg)
                         }
-                        ProgressBar(p.progress())
+                        ProgressBar(p.progress(), c.statusColors(progressStatus(p.progress())).fg)
                         VText("${p.totalHours().fa()} ساعت کاری · ${p.items.size.fa()} فعالیت", size = 11, color = c.sub)
                     }
                 }
@@ -81,7 +81,7 @@ private fun WorkList(vm: AppVm, setOpen: (String?) -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            IconBadge(Icons.Rounded.Add, c.accent, 40.dp)
+                            IconBadge(Icons.Rounded.Add, c.accent, 40.dp, bg = c.accentBg)
                             VText("مکان جدید", size = 12, color = c.sub)
                         }
                     }
@@ -149,9 +149,9 @@ private fun WorkDetail(vm: AppVm, place: Place, onBack: () -> Unit) {
             Column(Modifier.fillMaxWidth().vcard().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     VText("پیشرفت پروژه", size = 14, color = c.sub)
-                    VText("${place.progress().fa()}٪", size = 22, weight = FontWeight.ExtraBold, color = c.accent)
+                    VText("${place.progress().fa()}٪", size = 22, weight = FontWeight.ExtraBold, color = c.statusColors(progressStatus(place.progress())).fg)
                 }
-                ProgressBar(place.progress())
+                ProgressBar(place.progress(), c.statusColors(progressStatus(place.progress())).fg)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Stat("ساعت کاری", place.totalHours().fa(), Modifier.weight(1f))
                     Stat("روز کاری", place.totalDays().fa(), Modifier.weight(1f))
@@ -175,11 +175,13 @@ private fun WorkDetail(vm: AppVm, place: Place, onBack: () -> Unit) {
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     VText(w.title, size = 15, weight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 2)
-                    VText("${w.progress.fa()}٪", size = 14, weight = FontWeight.Bold, color = c.accent)
+                    StatusPill(progressStatus(w.progress))
+                    Spacer(Modifier.width(8.dp))
+                    VText("${w.progress.fa()}٪", size = 14, weight = FontWeight.Bold, color = c.statusColors(progressStatus(w.progress)).fg)
                     Spacer(Modifier.width(10.dp))
                     Icon(Icons.Rounded.Delete, null, tint = c.sub, modifier = Modifier.size(20.dp).clickable { deleteItem = w })
                 }
-                ProgressBar(w.progress)
+                ProgressBar(w.progress, c.statusColors(progressStatus(w.progress)).fg)
                 val floor = if (w.floor == 0) "همکف" else "طبقه ${w.floor.fa()}"
                 VText("$floor · ${w.days.fa()} روز کاری · ${w.hours.fa()} ساعت", size = 12, color = c.sub)
                 VText(workerText(w), size = 12, color = c.sub)

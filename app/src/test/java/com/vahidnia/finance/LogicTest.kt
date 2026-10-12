@@ -33,4 +33,17 @@ class LogicTest {
         assertEquals("۲۵,۸۷۰,۰۰۰", 25_870_000L.money())
         assertEquals(1_500_000L, parseAmount("۱,۵۰۰,۰۰۰"))
     }
+
+    @Test
+    fun allBalancesMatchesCardBalance() {
+        val c2 = BankCard("c2", "بلو بانک", "5678", 100_000L)
+        val txs = listOf(
+            Tx("t1", "c1", true, 2_000_000L, "حقوق", "", 0L),
+            Tx("t2", "c2", true, 500_000L, "حقوق", "", 0L),
+            Tx("t3", "c1", false, 300_000L, "خرید", "", 0L)
+        )
+        val m = allBalances(listOf(card, c2), txs)
+        assertEquals(cardBalance(card, txs), m["c1"])
+        assertEquals(600_000L, m["c2"])
+    }
 }
