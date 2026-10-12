@@ -128,7 +128,7 @@ fun Dashboard(
                 EmptyBox("هنوز کارتی ثبت نشده", "برای شروع یک کارت بانکی اضافه کن یا داده نمونه را ببین.") {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         PrimaryButton("افزودن کارت") { onAddCard() }
-                        Chip("داده نمونه", false) { vm.loadSample() }
+                        SecondaryButton("داده نمونه") { vm.loadSample() }
                     }
                 }
             }

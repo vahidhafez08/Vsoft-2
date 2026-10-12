@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AddTxDialog(vm: AppVm, onDismiss: () -> Unit, onNeedCard: () -> Unit) {
+fun AddTxDialog(vm: AppVm, onDismiss: () -> Unit, onNeedCard: () -> Unit, startIncome: Boolean = false) {
     val c = LocalVC.current
     if (vm.cards.isEmpty()) {
         AppDialog(
@@ -29,9 +29,9 @@ fun AddTxDialog(vm: AppVm, onDismiss: () -> Unit, onNeedCard: () -> Unit) {
         ) { VText("برای ثبت تراکنش باید حداقل یک کارت بانکی داشته باشی.", size = 14, color = c.sub) }
         return
     }
-    var income by remember { mutableStateOf(false) }
+    var income by remember { mutableStateOf(startIncome) }
     var amount by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf(expenseCats[0]) }
+    var category by remember { mutableStateOf(if (startIncome) incomeCats[0] else expenseCats[0]) }
     var cardId by remember { mutableStateOf(vm.cards[0].id) }
     var note by remember { mutableStateOf("") }
     val cats = if (income) incomeCats else expenseCats

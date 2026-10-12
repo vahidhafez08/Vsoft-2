@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontFamily
 
 /**
@@ -28,6 +29,7 @@ class VC(
     // رنگ اصلی
     val primary: Color,
     val secondary: Color,
+    val highlight: Color,
     val accent: Color,
     val onAccent: Color,
     val accentBg: Color,
@@ -56,7 +58,7 @@ fun makeVC(dark: Boolean, glass: Boolean): VC =
         dialog = Color(0xFF222A38), bar = Color(0xFF191F2B),
         border = Color(0xFF30394A), divider = Color(0xFF2B3443),
         text = Color(0xFFF2F4F8), sub = Color(0xFFA9B2C2),
-        primary = Color(0xFF8BAEF5), secondary = Color(0xFF8CA3C7),
+        primary = Color(0xFF8BAEF5), secondary = Color(0xFF8CA3C7), highlight = Color(0xFF6B8FD6),
         accent = Color(0xFF8BAEF5), onAccent = Color(0xFF0F1B33), accentBg = Color(0xFF253A5D),
         income = Color(0xFF55C995), incomeBg = Color(0xFF193C30),
         expense = Color(0xFFFF7777), expenseBg = Color(0xFF48272B),
@@ -70,7 +72,7 @@ fun makeVC(dark: Boolean, glass: Boolean): VC =
         dialog = Color(0xFFFFFFFF), bar = Color(0xFFFFFFFF),
         border = Color(0xFFE1E6EF), divider = Color(0xFFE8ECF2),
         text = Color(0xFF202938), sub = Color(0xFF667085),
-        primary = Color(0xFF233B67), secondary = Color(0xFF536B91),
+        primary = Color(0xFF233B67), secondary = Color(0xFF536B91), highlight = Color(0xFF6B8FD6),
         accent = Color(0xFF233B67), onAccent = Color(0xFFFFFFFF), accentBg = Color(0xFFE8F0FC),
         income = Color(0xFF21865A), incomeBg = Color(0xFFE5F5EC),
         expense = Color(0xFFD94A4A), expenseBg = Color(0xFFFCEAEA),
@@ -103,20 +105,23 @@ fun progressStatus(p: Int): Status = when {
     else -> Status.Pending
 }
 
-// ---------- رنگ بانک‌ها (دو تُن نزدیک، کم‌اشباع؛ متن سفید با کنتراست کافی) ----------
+// ---------- رنگ بانک‌ها: [0] = رنگ اصلی، [1] = رنگ مکمل ----------
+private val bankDarkBase = Color(0xFF10141C)
+
+private fun bankPair(main: Long, comp: Long, dark: Boolean): List<Color> {
+    val a = Color(main)
+    val b = Color(comp)
+    // در حالت تاریک هر دو رنگ کمی تیره‌تر می‌شوند تا متن سفید خوانا بماند
+    return if (dark) listOf(lerp(a, bankDarkBase, 0.25f), lerp(b, bankDarkBase, 0.35f)) else listOf(a, b)
+}
+
 fun bankColors(bank: String, dark: Boolean = false): List<Color> = when {
-    bank.contains("ملی") ->
-        if (dark) listOf(Color(0xFF1D5F6E), Color(0xFF164552)) else listOf(Color(0xFF0E6B7E), Color(0xFF0B4F61))
-    bank.contains("بلو") ->
-        if (dark) listOf(Color(0xFF34559F), Color(0xFF29427F)) else listOf(Color(0xFF3B63C9), Color(0xFF2D4DA3))
-    bank.contains("مسکن") ->
-        if (dark) listOf(Color(0xFF9A5A1F), Color(0xFF7F4A19)) else listOf(Color(0xFFB8651F), Color(0xFF9A5218))
-    bank.contains("رد بانک") ->
-        if (dark) listOf(Color(0xFF9A3440), Color(0xFF7D2A34)) else listOf(Color(0xFFB23A48), Color(0xFF92303B))
-    bank.contains("مهر") ->
-        if (dark) listOf(Color(0xFF2A6B4E), Color(0xFF215740)) else listOf(Color(0xFF2F7D5B), Color(0xFF256449))
-    else ->
-        if (dark) listOf(Color(0xFF3F495C), Color(0xFF343D4E)) else listOf(Color(0xFF5B667A), Color(0xFF465065))
+    bank.contains("ملی") -> bankPair(0xFF164B8C, 0xFF3D75BA, dark)
+    bank.contains("مسکن") -> bankPair(0xFF087E8B, 0xFF43B5BE, dark)
+    bank.contains("بلو") -> bankPair(0xFF3C83F6, 0xFF76A9FA, dark)
+    bank.contains("رد بانک") -> bankPair(0xFFB52B35, 0xFFE45B62, dark)
+    bank.contains("مهر") -> bankPair(0xFF23865B, 0xFF56B987, dark)
+    else -> bankPair(0xFF5B667A, 0xFF8A94A6, dark) // خنثی
 }
 
 /** مجموعه محدود رنگ برای نمودار دسته‌بندی‌ها */

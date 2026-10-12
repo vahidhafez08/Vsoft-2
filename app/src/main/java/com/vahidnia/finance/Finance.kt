@@ -21,6 +21,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Receipt
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -31,11 +33,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun FinanceScreen(vm: AppVm, onAddTx: () -> Unit, onAddCard: () -> Unit, onOpenTx: (Tx) -> Unit) {
+fun FinanceScreen(vm: AppVm, onAddTx: (Boolean) -> Unit, onAddCard: () -> Unit, onOpenTx: (Tx) -> Unit) {
     val c = LocalVC.current
     var query by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(0) } // 0 همه، 1 درآمد، 2 هزینه
@@ -64,10 +67,10 @@ fun FinanceScreen(vm: AppVm, onAddTx: () -> Unit, onAddCard: () -> Unit, onOpenT
     ) {
         item {
             ScreenTitle("امور مالی") {
-                Box(
-                    Modifier.size(42.dp).clip(CircleShape).background(c.accent).clickable { onAddTx() },
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Rounded.Add, null, tint = c.onAccent) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TxTypeButton("درآمد", true, c.income, c.incomeBg) { onAddTx(true) }
+                    TxTypeButton("هزینه", false, c.expense, c.expenseBg) { onAddTx(false) }
+                }
             }
         }
         item {
@@ -148,5 +151,20 @@ fun FinanceScreen(vm: AppVm, onAddTx: () -> Unit, onAddCard: () -> Unit, onOpenT
         ) {
             VText("کارت «${selected.bank}» و همه تراکنش‌های آن حذف می‌شود.", size = 14, color = c.sub)
         }
+    }
+}
+
+@Composable
+private fun TxTypeButton(text: String, income: Boolean, fg: Color, bg: Color, onClick: () -> Unit) {
+    Row(
+        Modifier.clip(RoundedCornerShape(50)).background(bg).clickable { onClick() }.padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            if (income) Icons.Rounded.ArrowDownward else Icons.Rounded.ArrowUpward,
+            contentDescription = null, tint = fg, modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        VText(text, size = 13, weight = FontWeight.Bold, color = fg)
     }
 }

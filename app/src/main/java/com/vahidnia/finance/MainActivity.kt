@@ -139,6 +139,7 @@ fun MainShell(vm: AppVm) {
     val pager = rememberPagerState(pageCount = { 5 })
     val scope = rememberCoroutineScope()
     var showTx by remember { mutableStateOf(false) }
+    var txIncome by remember { mutableStateOf(false) }
     var showCard by remember { mutableStateOf(false) }
     var openTx by remember { mutableStateOf<Tx?>(null) }
     var openPlace by rememberSaveable { mutableStateOf<String?>(null) }
@@ -152,8 +153,8 @@ fun MainShell(vm: AppVm) {
     Column(Modifier.fillMaxSize().background(c.bg)) {
         HorizontalPager(state = pager, beyondBoundsPageCount = 1, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
             when (page) {
-                0 -> Dashboard(vm, go, { showTx = true }, { showCard = true }, { openTx = it })
-                1 -> FinanceScreen(vm, { showTx = true }, { showCard = true }, { openTx = it })
+                0 -> Dashboard(vm, go, { txIncome = false; showTx = true }, { showCard = true }, { openTx = it })
+                1 -> FinanceScreen(vm, { inc -> txIncome = inc; showTx = true }, { showCard = true }, { openTx = it })
                 2 -> WorkScreen(vm, openPlace) { openPlace = it }
                 3 -> ReportsScreen(vm)
                 else -> SettingsScreen(vm)
@@ -162,7 +163,7 @@ fun MainShell(vm: AppVm) {
         BottomBar(pager.currentPage) { go(it) }
     }
 
-    if (showTx) AddTxDialog(vm, { showTx = false }, { showCard = true })
+    if (showTx) AddTxDialog(vm, { showTx = false }, { showCard = true }, txIncome)
     if (showCard) AddCardDialog(vm) { showCard = false }
     val liveTx = openTx?.let { t -> vm.txs.firstOrNull { it.id == t.id } }
     if (liveTx != null) TxDetailDialog(vm, liveTx) { openTx = null }

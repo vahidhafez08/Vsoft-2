@@ -125,7 +125,7 @@ fun ChipRow(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun ProgressBar(progress: Int, color: Color = LocalVC.current.accent) {
+fun ProgressBar(progress: Int, color: Color = LocalVC.current.highlight) {
     val c = LocalVC.current
     val p = progress.coerceIn(0, 100) / 100f
     Box(
@@ -218,7 +218,7 @@ fun BankCardView(card: BankCard, balance: Long, selected: Boolean, width: Dp = 2
             .width(width)
             .height(140.dp)
             .clip(shape)
-            .background(Brush.linearGradient(colors), shape)
+            .background(Brush.linearGradient(listOf(colors[1], colors[0])), shape)
             .border(if (selected) 2.dp else 1.dp, if (selected) Color.White else Color.White.copy(alpha = 0.18f), shape)
             .clickable { onClick() }
             .padding(16.dp),
@@ -263,6 +263,21 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier, onClick: () -> Un
             .padding(horizontal = 18.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) { VText(text, size = 14, weight = FontWeight.Bold, color = c.onAccent) }
+}
+
+@Composable
+fun SecondaryButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val c = LocalVC.current
+    val shape = RoundedCornerShape(14.dp)
+    Box(
+        modifier
+            .clip(shape)
+            .background(c.surfaceVar)
+            .border(1.dp, c.border, shape)
+            .clickable { onClick() }
+            .padding(horizontal = 18.dp, vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) { VText(text, size = 14, weight = FontWeight.Bold, color = c.text) }
 }
 
 @Composable
