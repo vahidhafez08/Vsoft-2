@@ -16,10 +16,14 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Verify JDK
+        run: java -version
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+      - name: Stop old Gradle daemons
+        run: ./gradlew --stop
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+        run: ./gradlew clean assembleDebug --stacktrace
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v4

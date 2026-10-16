@@ -29,6 +29,11 @@ android {
     composeOptions { kotlinCompilerExtensionVersion = "1.5.10" }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
+
+hilt {
+    enableAggregatingTask = false
+}
+
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
     implementation(composeBom)
