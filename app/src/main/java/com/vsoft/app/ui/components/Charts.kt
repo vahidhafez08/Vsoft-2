@@ -151,7 +151,7 @@ fun LineChart(
 
 // Index 0 (oldest) is drawn on the RIGHT side so the chart reads right-to-left (Persian).
 private fun DrawScope.drawSeries(values: List<Float>, color: Color, maxV: Float) {
-    if (values.size < 2) return
+    if (values.size < 2 || values.all { it == 0f }) return
     val w = size.width
     val h = size.height
     val pad = h * 0.08f

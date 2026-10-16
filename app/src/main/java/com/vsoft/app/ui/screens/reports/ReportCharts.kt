@@ -78,7 +78,7 @@ fun ReportLines(labels: List<String>, income: List<Long>, expense: List<Long>, m
 }
 
 private fun DrawScope.drawSeries(values: List<Long>, maxV: Long, slots: Int, color: Color, padV: Float, chartH: Float) {
-    if (values.isEmpty()) return
+    if (values.isEmpty() || values.all { it == 0L }) return
     fun x(i: Int): Float = size.width * (1f - (i + 0.5f) / slots)
     fun y(v: Long): Float = padV + chartH * (1f - v.toFloat() / maxV)
     val path = Path()
