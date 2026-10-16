@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.data.repository.FinanceRepository
+import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,15 +30,15 @@ class AccountsViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AccountsUiState())
 
     fun save(account: AccountEntity) {
-        viewModelScope.launch { repository.saveAccount(account) }
+        safeLaunch { repository.saveAccount(account) }
     }
 
     fun delete(account: AccountEntity) {
-        viewModelScope.launch { repository.deleteAccount(account) }
+        safeLaunch { repository.deleteAccount(account) }
     }
 
     fun transfer(fromId: Long, toId: Long, amount: Long) {
-        viewModelScope.launch {
+        safeLaunch {
             val list = state.value.accounts
             val from = list.firstOrNull { it.id == fromId }
             val to = list.firstOrNull { it.id == toId }

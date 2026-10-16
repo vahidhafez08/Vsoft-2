@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.*
 import com.vsoft.app.data.repository.TaskRepository
 import com.vsoft.app.util.taskFraction
+import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -39,20 +40,20 @@ class TasksViewModel @Inject constructor(private val repository: TaskRepository)
         }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TasksUiState())
 
     fun setFilters(f: TaskFilters) { filters.value = f }
-    fun toggle(task: TaskEntity) { viewModelScope.launch { repository.toggleTask(task) } }
-    fun saveTask(task: TaskEntity) { viewModelScope.launch { repository.saveTask(task) } }
-    fun saveProject(project: ProjectEntity) { viewModelScope.launch { repository.saveProject(project) } }
-    fun deleteProject(project: ProjectEntity) { viewModelScope.launch { repository.deleteProject(project) } }
+    fun toggle(task: TaskEntity) { safeLaunch { repository.toggleTask(task) } }
+    fun saveTask(task: TaskEntity) { safeLaunch { repository.saveTask(task) } }
+    fun saveProject(project: ProjectEntity) { safeLaunch { repository.saveProject(project) } }
+    fun deleteProject(project: ProjectEntity) { safeLaunch { repository.deleteProject(project) } }
 
     fun deleteTask(task: TaskEntity) {
-        viewModelScope.launch {
+        safeLaunch {
             lastDeleted = task to repository.getSubtasks(task.id)
             repository.deleteTask(task)
         }
     }
 
     fun restoreLastDeleted() {
-        viewModelScope.launch {
+        safeLaunch {
             lastDeleted?.let { (task, subs) ->
                 repository.restoreTask(task, subs)
                 lastDeleted = null

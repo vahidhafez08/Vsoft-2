@@ -6,6 +6,7 @@ import com.vsoft.app.data.model.TaskEntity
 import com.vsoft.app.data.repository.JobRepository
 import com.vsoft.app.data.repository.TaskRepository
 import com.vsoft.app.util.startOfDay
+import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,12 +43,12 @@ class CalendarViewModel @Inject constructor(
         }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CalendarData())
 
     fun toggle(task: TaskEntity) {
-        viewModelScope.launch { taskRepo.toggleTask(task) }
+        safeLaunch { taskRepo.toggleTask(task) }
     }
 
     fun addTask(title: String, dayMillis: Long) {
         if (title.isBlank()) return
-        viewModelScope.launch {
+        safeLaunch {
             taskRepo.saveTask(TaskEntity(title = title.trim(), dueDateMillis = dayMillis))
         }
     }

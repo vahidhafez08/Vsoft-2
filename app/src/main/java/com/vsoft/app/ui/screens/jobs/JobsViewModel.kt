@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.SiteEntity
 import com.vsoft.app.data.repository.JobRepository
 import com.vsoft.app.util.jobProgress
+import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,6 +44,6 @@ class JobsViewModel @Inject constructor(private val repo: JobRepository) : ViewM
         }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), JobsUiState())
 
     fun saveSite(site: SiteEntity) {
-        viewModelScope.launch { repo.saveSite(site) }
+        safeLaunch { repo.saveSite(site) }
     }
 }

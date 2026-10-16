@@ -7,6 +7,7 @@ import com.vsoft.app.data.repository.FinanceRepository
 import com.vsoft.app.util.dayLabel
 import com.vsoft.app.util.startOfDay
 import com.vsoft.app.util.toLatinDigits
+import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,15 +58,15 @@ class TransactionsViewModel @Inject constructor(
     }
 
     fun save(tx: TransactionEntity) {
-        viewModelScope.launch { repository.saveTransaction(tx) }
+        safeLaunch { repository.saveTransaction(tx) }
     }
 
     fun delete(tx: TransactionEntity) {
-        viewModelScope.launch { repository.deleteTransaction(tx) }
+        safeLaunch { repository.deleteTransaction(tx) }
     }
 
     fun restore(tx: TransactionEntity) {
-        viewModelScope.launch { repository.saveTransaction(tx) }
+        safeLaunch { repository.saveTransaction(tx) }
     }
 
     private fun build(all: List<TransactionEntity>, f: TxFilters): TransactionsUiState {

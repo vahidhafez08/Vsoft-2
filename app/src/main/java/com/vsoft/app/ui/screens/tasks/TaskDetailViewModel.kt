@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.*
 import com.vsoft.app.data.repository.TaskRepository
+import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,14 +41,14 @@ class TaskDetailViewModel @Inject constructor(
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TaskDetailUiState())
 
-    fun toggleTask(task: TaskEntity) { viewModelScope.launch { repository.toggleTask(task) } }
-    fun saveTask(task: TaskEntity) { viewModelScope.launch { repository.saveTask(task) } }
-    fun deleteTask(task: TaskEntity) { viewModelScope.launch { repository.deleteTask(task) } }
-    fun toggleSubtask(sub: SubtaskEntity) { viewModelScope.launch { repository.toggleSubtask(sub) } }
-    fun deleteSubtask(sub: SubtaskEntity) { viewModelScope.launch { repository.deleteSubtask(sub) } }
+    fun toggleTask(task: TaskEntity) { safeLaunch { repository.toggleTask(task) } }
+    fun saveTask(task: TaskEntity) { safeLaunch { repository.saveTask(task) } }
+    fun deleteTask(task: TaskEntity) { safeLaunch { repository.deleteTask(task) } }
+    fun toggleSubtask(sub: SubtaskEntity) { safeLaunch { repository.toggleSubtask(sub) } }
+    fun deleteSubtask(sub: SubtaskEntity) { safeLaunch { repository.deleteSubtask(sub) } }
 
     fun addSubtask(title: String) {
         if (title.isBlank()) return
-        viewModelScope.launch { repository.addSubtask(taskId, title.trim()) }
+        safeLaunch { repository.addSubtask(taskId, title.trim()) }
     }
 }

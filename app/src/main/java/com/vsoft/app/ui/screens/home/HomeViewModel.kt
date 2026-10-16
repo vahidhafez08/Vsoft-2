@@ -10,6 +10,7 @@ import com.vsoft.app.util.JCal
 import com.vsoft.app.util.percentChange
 import com.vsoft.app.util.startOfDay
 import com.vsoft.app.util.weekdayShort
+import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -45,7 +46,7 @@ class HomeViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     fun addTransaction(title: String, amount: Long, isIncome: Boolean, category: String) {
-        viewModelScope.launch {
+        safeLaunch {
             repository.addTransaction(title, amount, isIncome, category)
         }
     }

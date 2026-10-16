@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.*
 import com.vsoft.app.data.repository.JobRepository
 import com.vsoft.app.util.jobProgress
+import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -72,19 +73,19 @@ class SiteDetailViewModel @Inject constructor(
             )
         }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SiteDetailUiState())
 
-    fun saveSite(site: SiteEntity) { viewModelScope.launch { repo.saveSite(site) } }
-    fun deleteSite() { viewModelScope.launch { repo.deleteSite(siteId) } }
+    fun saveSite(site: SiteEntity) { safeLaunch { repo.saveSite(site) } }
+    fun deleteSite() { safeLaunch { repo.deleteSite(siteId) } }
 
     fun saveFloor(existing: FloorEntity?, name: String) {
-        viewModelScope.launch {
+        safeLaunch {
             repo.saveFloor(existing?.copy(name = name) ?: FloorEntity(siteId = siteId, name = name))
         }
     }
 
-    fun deleteFloor(id: Long) { viewModelScope.launch { repo.deleteFloor(id) } }
+    fun deleteFloor(id: Long) { safeLaunch { repo.deleteFloor(id) } }
 
     fun saveItem(existing: WorkItemEntity?, floorId: Long, title: String, unit: String, target: Int) {
-        viewModelScope.launch {
+        safeLaunch {
             repo.saveItem(
                 existing?.copy(title = title, unit = unit, targetQty = target)
                     ?: WorkItemEntity(siteId = siteId, floorId = floorId, title = title, unit = unit, targetQty = target)
@@ -92,23 +93,23 @@ class SiteDetailViewModel @Inject constructor(
         }
     }
 
-    fun deleteItem(id: Long) { viewModelScope.launch { repo.deleteItem(id) } }
+    fun deleteItem(id: Long) { safeLaunch { repo.deleteItem(id) } }
 
     fun addLog(item: WorkItemEntity, qty: Int, note: String, dateMillis: Long) {
-        viewModelScope.launch {
+        safeLaunch {
             repo.addLog(
                 WorkLogEntity(siteId = siteId, floorId = item.floorId, itemId = item.id, qty = qty, note = note, dateMillis = dateMillis)
             )
         }
     }
 
-    fun deleteLog(id: Long) { viewModelScope.launch { repo.deleteLog(id) } }
+    fun deleteLog(id: Long) { safeLaunch { repo.deleteLog(id) } }
 
     fun savePayment(amount: Long, note: String, dateMillis: Long) {
-        viewModelScope.launch {
+        safeLaunch {
             repo.savePayment(SitePaymentEntity(siteId = siteId, amount = amount, dateMillis = dateMillis, note = note))
         }
     }
 
-    fun deletePayment(id: Long) { viewModelScope.launch { repo.deletePayment(id) } }
+    fun deletePayment(id: Long) { safeLaunch { repo.deletePayment(id) } }
 }

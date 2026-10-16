@@ -59,10 +59,10 @@ fun DonutChart(
             val inset = strokeWidth / 2f
             val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
             val topLeft = Offset(inset, inset)
-            val visible = slices.filter { it.value > 0f }
-            val total = visible.sumOf { it.value.toDouble() }.toFloat()
+            val visible = slices.filter { it.value.isFinite() && it.value > 0f }
+            val total = visible.sumOf { it.value.toDouble() }
 
-            if (total <= 0f) {
+            if (total <= 0.0 || !total.isFinite()) {
                 drawArc(
                     color = trackColor,
                     startAngle = 0f,
@@ -76,7 +76,7 @@ fun DonutChart(
                 val gap = if (visible.size > 1) 3f else 0f
                 var start = -90f
                 visible.forEach { slice ->
-                    val fullSweep = slice.value / total * 360f
+                    val fullSweep = (slice.value.toDouble() / total * 360.0).toFloat()
                     val sweep = fullSweep * progress.value
                     val drawSweep = if (sweep > gap + 0.5f) sweep - gap else sweep
                     drawArc(
@@ -127,7 +127,10 @@ fun LineChart(
             val h = size.height
             val maxV = max(
                 1f,
-                max(incomeValues.maxOrNull() ?: 0f, expenseValues.maxOrNull() ?: 0f)
+                max(
+                    incomeValues.filter { it.isFinite() }.maxOrNull() ?: 0f,
+                    expenseValues.filter { it.isFinite() }.maxOrNull() ?: 0f
+                )
             )
             for (i in 0..3) {
                 val y = h * i / 3f
@@ -135,8 +138,8 @@ fun LineChart(
             }
             // Reveal from the right side (Persian reading direction)
             clipRect(left = w * (1f - reveal.value)) {
-                drawSeries(incomeValues, IncomeGreen, maxV)
-                drawSeries(expenseValues, ExpenseRed, maxV)
+                drawSeries(incomeValues.map { if (it.isFinite()) it else 0f }, IncomeGreen, maxV)
+                drawSeries(expenseValues.map { if (it.isFinite()) it else 0f }, ExpenseRed, maxV)
             }
         }
         Spacer(Modifier.height(8.dp))
