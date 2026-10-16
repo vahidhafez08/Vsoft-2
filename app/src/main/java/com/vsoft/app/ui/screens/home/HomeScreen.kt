@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.ui.components.AddTransactionSheet
+import com.vsoft.app.ui.screens.more.SettingsViewModel
 import com.vsoft.app.ui.components.AnimatedMoney
 import com.vsoft.app.ui.components.bounceClick
 import com.vsoft.app.ui.components.LineChart
@@ -62,9 +63,11 @@ import kotlin.math.abs
 fun HomeScreen(
     onOpenTransactions: () -> Unit = {},
     onOpenAccounts: () -> Unit = {},
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val userName by settingsViewModel.userName.collectAsStateWithLifecycle()
     // 0 = hidden, 1 = add income, 2 = add expense
     var sheetMode by rememberSaveable { mutableIntStateOf(0) }
     val context = LocalContext.current
@@ -100,11 +103,11 @@ fun HomeScreen(
                     .background(Brush.linearGradient(listOf(BrandBlue, BrandPurple))),
                 contentAlignment = Alignment.Center
             ) {
-                Text("و", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(userName.trim().firstOrNull()?.toString() ?: "؟", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("سلام وحید", color = Vsoft.colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text("سلام $userName", color = Vsoft.colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                 Text("امروز یک قدم به اهداف نزدیک‌تر هستی", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
             }
             Icon(Icons.Filled.Notifications, contentDescription = "اعلان‌ها", tint = Vsoft.colors.textSecondary)
@@ -113,7 +116,7 @@ fun HomeScreen(
         // Balance + income
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatCard("موجودی کل", state.totalBalance, null, balanceBrush, balanceContent, Modifier.weight(1f))
-            StatCard("درآمد (۳۰ روز اخیر)", state.income, state.incomeChange, incomeBrush, incomeContent, Modifier.weight(1f))
+            StatCard("درآمد (این ماه)", state.income, state.incomeChange, incomeBrush, incomeContent, Modifier.weight(1f))
         }
 
         // Today's expense
