@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun TasksScreen(onOpenTask: (Long) -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
+fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -77,6 +77,23 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, viewModel: TasksViewModel = hiltView
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text("کارها و پروژه‌ها", color = Vsoft.colors.textPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     Text(state.open.toPersianText() + " کار در حال انجام", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                }
+            }
+
+            item(key = "jobsEntry") {
+                VCard {
+                    Row(
+                        Modifier.fillMaxWidth().bounceClick(onOpenJobs),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.Construction, contentDescription = null, tint = BrandPurple, modifier = Modifier.size(28.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("شغل و کارگاه‌ها", color = Vsoft.colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Text("گزارش روزانه، طبقه‌ها و پیشرفت کارگاه", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                        }
+                        Icon(Icons.Filled.ChevronLeft, contentDescription = null, tint = Vsoft.colors.textSecondary)
+                    }
                 }
             }
 
