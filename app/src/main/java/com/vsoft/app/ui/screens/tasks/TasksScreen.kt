@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
+fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalendar: () -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -91,6 +91,23 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, viewModel: T
                         Column(Modifier.weight(1f)) {
                             Text("شغل و کارگاه‌ها", color = Vsoft.colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                             Text("گزارش روزانه، طبقه‌ها و پیشرفت کارگاه", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                        }
+                        Icon(Icons.Filled.ChevronLeft, contentDescription = null, tint = Vsoft.colors.textSecondary)
+                    }
+                }
+            }
+
+            item(key = "calendarEntry") {
+                VCard {
+                    Row(
+                        Modifier.fillMaxWidth().bounceClick(onOpenCalendar),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = BrandBlue, modifier = Modifier.size(28.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("تقویم", color = Vsoft.colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Text("کارها و گزارش‌های هر روز", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                         }
                         Icon(Icons.Filled.ChevronLeft, contentDescription = null, tint = Vsoft.colors.textSecondary)
                     }
