@@ -19,7 +19,9 @@ object JCal {
     }
 
     fun fromJalali(jy: Int, jm: Int, jd: Int): Long {
-        val g = j2g(jy, jm.coerceIn(1, 12), jd.coerceAtLeast(1))
+        val month = jm.coerceIn(1, 12)
+        val day = jd.coerceIn(1, monthLength(jy, month))
+        val g = j2g(jy, month, day)
         val c = Calendar.getInstance()
         c.clear()
         c.set(g[0], g[1] - 1, g[2], 0, 0, 0)
@@ -27,14 +29,25 @@ object JCal {
         return c.timeInMillis
     }
 
-    fun monthLength(jy: Int, jm: Int): Int = when {
-        jm <= 6 -> 31
-        jm <= 11 -> 30
-        else -> {
-            val a = fromJalali(jy, 12, 1)
-            val b = fromJalali(jy + 1, 1, 1)
-            Math.round((b - a) / DAY_MS.toDouble()).toInt().coerceIn(29, 30)
+    fun monthLength(jy: Int, jm: Int): Int {
+        val month = jm.coerceIn(1, 12)
+        return when {
+            month <= 6 -> 31
+            month <= 11 -> 30
+            else -> {
+                val a = toGregorianMillis(j2g(jy, 12, 1))
+                val b = toGregorianMillis(j2g(jy + 1, 1, 1))
+                Math.round((b - a) / DAY_MS.toDouble()).toInt().coerceIn(29, 30)
+            }
         }
+    }
+
+    private fun toGregorianMillis(g: IntArray): Long {
+        val c = Calendar.getInstance()
+        c.clear()
+        c.set(g[0], g[1] - 1, g[2], 0, 0, 0)
+        c.set(Calendar.MILLISECOND, 0)
+        return c.timeInMillis
     }
 
     fun weekdayIndex(millis: Long): Int {

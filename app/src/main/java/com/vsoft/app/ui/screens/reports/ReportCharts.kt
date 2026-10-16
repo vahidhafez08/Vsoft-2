@@ -104,17 +104,18 @@ fun ReportDonut(slices: List<Pair<Long, Color>>, modifier: Modifier = Modifier) 
         progress.animateTo(1f, tween(800, easing = FastOutSlowInEasing))
     }
     val track = Vsoft.colors.outline
+    val visible = slices.filter { it.first > 0L }
+    val total = visible.sumOf { it.first.toDouble() }
     Canvas(modifier) {
         val stroke = 22.dp.toPx()
         val arcSize = Size(size.width - stroke, size.height - stroke)
         val topLeft = Offset(stroke / 2, stroke / 2)
-        val total = slices.sumOf { it.first }.toFloat()
-        if (total <= 0f) {
+        if (total <= 0.0 || !total.isFinite()) {
             drawArc(track, 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
         } else {
             var start = -90f
-            slices.forEach { (v, c) ->
-                val full = v / total * 360f
+            visible.forEach { (v, c) ->
+                val full = (v.toDouble() / total * 360.0).toFloat()
                 drawArc(c, start, full * progress.value, false, topLeft, arcSize, style = Stroke(stroke))
                 start += full
             }
