@@ -19,6 +19,7 @@ import com.vsoft.app.ui.navigation.Routes
 import com.vsoft.app.ui.screens.PlaceholderScreen
 import com.vsoft.app.ui.screens.accounts.AccountsScreen
 import com.vsoft.app.ui.screens.calendar.CalendarScreen
+import com.vsoft.app.ui.screens.reports.ReportsScreen
 import com.vsoft.app.ui.screens.finance.FinanceScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
 import com.vsoft.app.ui.screens.jobs.JobsScreen
@@ -134,7 +135,7 @@ fun MainScaffold() {
                     onOpenTask = { id -> openRoute(Routes.taskDetail(id)) }
                 )
             }
-            composable(Destination.Reports.route) { PlaceholderScreen(title = Destination.Reports.label) }
+            composable(Destination.Reports.route) { ReportsScreen() }
             composable(Destination.More.route) { PlaceholderScreen(title = Destination.More.label) }
         }
     }
