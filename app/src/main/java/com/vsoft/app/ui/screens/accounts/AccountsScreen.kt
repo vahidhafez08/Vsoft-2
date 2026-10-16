@@ -1,0 +1,271 @@
+package com.vsoft.app.ui.screens.accounts
+
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vsoft.app.data.model.AccountEntity
+import com.vsoft.app.ui.components.AccountCardView
+import com.vsoft.app.ui.components.AccountEditorSheet
+import com.vsoft.app.ui.components.AnimatedMoney
+import com.vsoft.app.ui.components.Appear
+import com.vsoft.app.ui.components.ScreenHeader
+import com.vsoft.app.ui.components.TransferSheet
+import com.vsoft.app.ui.components.bounceClick
+import com.vsoft.app.ui.theme.BrandBlue
+import com.vsoft.app.ui.theme.BrandPurple
+import com.vsoft.app.ui.theme.IncomeGreen
+import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.util.toPersianText
+
+@Composable
+fun AccountsScreen(
+    onBack: () -> Unit,
+    viewModel: AccountsViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var adding by rememberSaveable { mutableStateOf(false) }
+    var transferring by rememberSaveable { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<AccountEntity?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Vsoft.colors.bg)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        ScreenHeader(
+            title = "کارت‌ها و حساب‌ها",
+            subtitle = state.accounts.size.toPersianText() + " حساب فعال",
+            onBack = onBack
+        ) {
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .bounceClick { adding = true }
+                    .clip(CircleShape)
+                    .background(BrandBlue),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "حساب جدید", tint = Color.White)
+            }
+        }
+
+        Appear(0) { TotalCard(state.total, state.accounts.size) }
+
+        Appear(1) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ActionPill("انتقال وجه", Icons.Filled.SwapHoriz, BrandBlue, Modifier.weight(1f)) {
+                    if (state.accounts.size >= 2) {
+                        transferring = true
+                    } else {
+                        Toast.makeText(context, "برای انتقال، حداقل دو حساب لازم است", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                ActionPill("حساب جدید", Icons.Filled.Add, IncomeGreen, Modifier.weight(1f)) {
+                    adding = true
+                }
+            }
+        }
+
+        state.accounts.forEachIndexed { index, acc ->
+            key(acc.id) {
+                Appear(index + 2) {
+                    AccountCardView(
+                        name = acc.name,
+                        last4 = acc.last4,
+                        balance = acc.balance,
+                        colorKey = acc.colorKey,
+                        modifier = Modifier.bounceClick { editing = acc }
+                    )
+                }
+            }
+        }
+
+        Appear(state.accounts.size + 2) {
+            AddDashedCard { adding = true }
+        }
+    }
+
+    if (adding) {
+        AccountEditorSheet(
+            initial = null,
+            onDismiss = { adding = false },
+            onSave = {
+                viewModel.save(it)
+                adding = false
+            }
+        )
+    }
+
+    editing?.let { acc ->
+        AccountEditorSheet(
+            initial = acc,
+            onDismiss = { editing = null },
+            onSave = {
+                viewModel.save(it)
+                editing = null
+            },
+            onDelete = {
+                viewModel.delete(acc)
+                editing = null
+            }
+        )
+    }
+
+    if (transferring && state.accounts.size >= 2) {
+        TransferSheet(
+            accounts = state.accounts,
+            onDismiss = { transferring = false },
+            onTransfer = { fromId, toId, amount ->
+                viewModel.transfer(fromId, toId, amount)
+                transferring = false
+                Toast.makeText(context, "انتقال انجام شد", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+}
+
+@Composable
+private fun TotalCard(total: Long, count: Int) {
+    val shape = RoundedCornerShape(24.dp)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(Brush.linearGradient(listOf(BrandBlue, BrandPurple)))
+            .drawBehind {
+                drawCircle(
+                    Color.White.copy(alpha = 0.08f),
+                    radius = size.height * 0.9f,
+                    center = Offset(size.width * 0.1f, -size.height * 0.1f)
+                )
+                drawCircle(
+                    Color.White.copy(alpha = 0.06f),
+                    radius = size.height * 0.55f,
+                    center = Offset(size.width * 0.95f, size.height)
+                )
+            }
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text("مجموع موجودی", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
+        Row(verticalAlignment = Alignment.Bottom) {
+            AnimatedMoney(total, color = Color.White, fontSize = 30.sp)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                "تومان",
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 13.sp,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+        Text(
+            count.toPersianText() + " کارت و حساب فعال",
+            color = Color.White.copy(alpha = 0.8f),
+            fontSize = 12.sp
+        )
+    }
+}
+
+@Composable
+private fun ActionPill(
+    label: String,
+    icon: ImageVector,
+    tint: Color,
+    modifier: Modifier,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        modifier
+            .bounceClick(onClick)
+            .clip(shape)
+            .background(tint.copy(alpha = 0.12f))
+            .border(1.dp, tint.copy(alpha = 0.3f), shape)
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(label, color = tint, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun AddDashedCard(onClick: () -> Unit) {
+    val dashColor = Vsoft.colors.textSecondary.copy(alpha = 0.5f)
+    val shape = RoundedCornerShape(20.dp)
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .bounceClick(onClick)
+            .clip(shape)
+            .drawBehind {
+                val sw = 2.dp.toPx()
+                drawRoundRect(
+                    color = dashColor,
+                    topLeft = Offset(sw / 2f, sw / 2f),
+                    size = Size(size.width - sw, size.height - sw),
+                    cornerRadius = CornerRadius(20.dp.toPx(), 20.dp.toPx()),
+                    style = Stroke(width = sw, pathEffect = PathEffect.dashPathEffect(floatArrayOf(18f, 12f), 0f))
+                )
+            }
+            .padding(vertical = 22.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Add, contentDescription = null, tint = Vsoft.colors.textSecondary)
+            Spacer(Modifier.width(8.dp))
+            Text("افزودن کارت یا حساب جدید", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
+        }
+    }
+}

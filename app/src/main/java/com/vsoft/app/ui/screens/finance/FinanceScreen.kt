@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.ui.components.CategoryStyles
+import com.vsoft.app.ui.components.FinanceShortcuts
 import com.vsoft.app.ui.components.ChartSlice
 import com.vsoft.app.ui.components.DonutChart
 import com.vsoft.app.ui.components.SegmentedTabs
@@ -108,7 +109,11 @@ private fun buildContent(tab: Int, s: FinanceUiState): TabContent = when (tab) {
 }
 
 @Composable
-fun FinanceScreen(viewModel: FinanceViewModel = hiltViewModel()) {
+fun FinanceScreen(
+    onOpenTransactions: () -> Unit = {},
+    onOpenAccounts: () -> Unit = {},
+    viewModel: FinanceViewModel = hiltViewModel()
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
 
@@ -130,6 +135,8 @@ fun FinanceScreen(viewModel: FinanceViewModel = hiltViewModel()) {
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold
         )
+
+        FinanceShortcuts(onOpenTransactions = onOpenTransactions, onOpenAccounts = onOpenAccounts)
 
         SegmentedTabs(
             items = listOf("کلیات", "درآمد", "هزینه", "حساب‌ها"),

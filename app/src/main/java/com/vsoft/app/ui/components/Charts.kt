@@ -1,5 +1,8 @@
 package com.vsoft.app.ui.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -23,6 +28,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,6 +47,12 @@ fun DonutChart(
     modifier: Modifier = Modifier
 ) {
     val trackColor = Vsoft.colors.outline
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(slices) {
+        progress.snapTo(0f)
+        progress.animateTo(1f, tween(900, easing = FastOutSlowInEasing))
+    }
+
     Box(modifier.size(210.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize().padding(8.dp)) {
             val strokeWidth = 26.dp.toPx()
@@ -64,7 +76,8 @@ fun DonutChart(
                 val gap = if (visible.size > 1) 3f else 0f
                 var start = -90f
                 visible.forEach { slice ->
-                    val sweep = slice.value / total * 360f
+                    val fullSweep = slice.value / total * 360f
+                    val sweep = fullSweep * progress.value
                     val drawSweep = if (sweep > gap + 0.5f) sweep - gap else sweep
                     drawArc(
                         color = slice.color,
@@ -75,7 +88,7 @@ fun DonutChart(
                         size = arcSize,
                         style = Stroke(width = strokeWidth)
                     )
-                    start += sweep
+                    start += fullSweep
                 }
             }
         }
@@ -102,6 +115,12 @@ fun LineChart(
 ) {
     val gridColor = Vsoft.colors.outline
     val labelColor = Vsoft.colors.textSecondary
+    val reveal = remember { Animatable(0f) }
+    LaunchedEffect(incomeValues, expenseValues) {
+        reveal.snapTo(0f)
+        reveal.animateTo(1f, tween(1000, easing = FastOutSlowInEasing))
+    }
+
     Column(modifier) {
         Canvas(Modifier.fillMaxWidth().height(140.dp)) {
             val w = size.width
@@ -114,8 +133,11 @@ fun LineChart(
                 val y = h * i / 3f
                 drawLine(gridColor, Offset(0f, y), Offset(w, y), strokeWidth = 1f)
             }
-            drawSeries(incomeValues, IncomeGreen, maxV)
-            drawSeries(expenseValues, ExpenseRed, maxV)
+            // Reveal from the right side (Persian reading direction)
+            clipRect(left = w * (1f - reveal.value)) {
+                drawSeries(incomeValues, IncomeGreen, maxV)
+                drawSeries(expenseValues, ExpenseRed, maxV)
+            }
         }
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

@@ -1,0 +1,164 @@
+package com.vsoft.app.ui.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.vsoft.app.data.model.ExpenseCategories
+import com.vsoft.app.data.model.IncomeCategories
+import com.vsoft.app.data.model.TransactionEntity
+import com.vsoft.app.ui.theme.ExpenseRed
+import com.vsoft.app.ui.theme.IncomeGreen
+import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.util.DAY_MS
+import com.vsoft.app.util.formatJalali
+import com.vsoft.app.util.toLatinDigits
+import com.vsoft.app.util.toMoney
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun TransactionEditorSheet(
+    initial: TransactionEntity?,
+    defaultIncome: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (TransactionEntity) -> Unit,
+    onDelete: (() -> Unit)? = null
+) {
+    var isIncome by remember { mutableStateOf(initial?.isIncome ?: defaultIncome) }
+    val categories = if (isIncome) IncomeCategories else ExpenseCategories
+    var title by remember { mutableStateOf(initial?.title ?: "") }
+    var amountText by remember { mutableStateOf(initial?.amount?.toString() ?: "") }
+    var category by remember { mutableStateOf(initial?.category ?: categories.first()) }
+    var dayOffset by remember { mutableStateOf<Int?>(if (initial == null) 0 else null) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val amount = amountText.toLongOrNull() ?: 0L
+    val accent = if (isIncome) IncomeGreen else ExpenseRed
+    val dayLabels = listOf("امروز", "دیروز", "۲ روز پیش", "۳ روز پیش")
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Vsoft.colors.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = if (initial == null) "تراکنش جدید" else "ویرایش تراکنش",
+                color = Vsoft.colors.textPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            SegmentedTabs(
+                items = listOf("هزینه", "درآمد"),
+                selected = if (isIncome) 1 else 0,
+                onSelect = { index ->
+                    isIncome = index == 1
+                    category = (if (isIncome) IncomeCategories else ExpenseCategories).first()
+                }
+            )
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it.take(40) },
+                label = { Text("عنوان (اختیاری)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = amountText,
+                onValueChange = { v -> amountText = v.toLatinDigits().filter { it.isDigit() }.take(12) },
+                label = { Text("مبلغ (تومان)") },
+                supportingText = { if (amount > 0) Text(amount.toMoney()) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text("دسته‌بندی", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                categories.forEach { c ->
+                    FilterChip(selected = c == category, onClick = { category = c }, label = { Text(c) })
+                }
+            }
+            Text(
+                text = if (initial == null) "تاریخ" else "تاریخ فعلی: " + formatJalali(initial.dateMillis),
+                color = Vsoft.colors.textSecondary,
+                fontSize = 13.sp
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                dayLabels.forEachIndexed { index, label ->
+                    FilterChip(
+                        selected = dayOffset == index,
+                        onClick = { dayOffset = index },
+                        label = { Text(label) }
+                    )
+                }
+            }
+            Button(
+                onClick = {
+                    val off = dayOffset
+                    val now = System.currentTimeMillis()
+                    val date = if (off != null) now - off * DAY_MS else (initial?.dateMillis ?: now)
+                    onSave(
+                        TransactionEntity(
+                            id = initial?.id ?: 0L,
+                            title = title.trim().ifBlank { category },
+                            amount = amount,
+                            isIncome = isIncome,
+                            category = category,
+                            dateMillis = date
+                        )
+                    )
+                },
+                enabled = amount > 0L,
+                colors = ButtonDefaults.buttonColors(containerColor = accent),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (initial == null) "ذخیره" else "ذخیره تغییرات")
+            }
+            if (onDelete != null) {
+                TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
+                    Text("حذف تراکنش", color = ExpenseRed)
+                }
+            }
+        }
+    }
+}

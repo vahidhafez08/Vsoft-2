@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.ui.components.AddTransactionSheet
+import com.vsoft.app.ui.components.AnimatedMoney
+import com.vsoft.app.ui.components.bounceClick
 import com.vsoft.app.ui.components.LineChart
 import com.vsoft.app.ui.components.VCard
 import com.vsoft.app.ui.theme.BrandBlue
@@ -57,7 +59,11 @@ import com.vsoft.app.util.toPersianDigits
 import kotlin.math.abs
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    onOpenTransactions: () -> Unit = {},
+    onOpenAccounts: () -> Unit = {},
+    viewModel: HomeViewModel = hiltViewModel()
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     // 0 = hidden, 1 = add income, 2 = add expense
     var sheetMode by rememberSaveable { mutableIntStateOf(0) }
@@ -111,7 +117,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         }
 
         // Today's expense
-        VCard {
+        VCard(Modifier.bounceClick(onOpenTransactions)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(ExpenseRed.copy(alpha = 0.15f)),
@@ -162,7 +168,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             QuickAction("ثبت هزینه", Icons.Filled.Remove, ExpenseRed, Modifier.weight(1f)) { sheetMode = 2 }
             QuickAction("ثبت درآمد", Icons.Filled.Add, IncomeGreen, Modifier.weight(1f)) { sheetMode = 1 }
             QuickAction("انتقال وجه", Icons.Filled.SwapHoriz, BrandBlue, Modifier.weight(1f)) {
-                Toast.makeText(context, "به‌زودی", Toast.LENGTH_SHORT).show()
+                onOpenAccounts()
             }
             QuickAction("اسناد", Icons.Filled.Description, BrandPurple, Modifier.weight(1f)) {
                 Toast.makeText(context, "به‌زودی", Toast.LENGTH_SHORT).show()
@@ -200,7 +206,7 @@ private fun StatCard(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(title, color = contentColor.copy(alpha = 0.85f), fontSize = 11.sp, maxLines = 1)
-        Text(amount.toMoney(), color = contentColor, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        AnimatedMoney(amount, color = contentColor, fontSize = 18.sp)
         Text("تومان", color = contentColor.copy(alpha = 0.7f), fontSize = 11.sp)
         if (change != null) {
             Text(

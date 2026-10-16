@@ -30,6 +30,28 @@ class FinanceRepository @Inject constructor(
         )
     }
 
+    /** Insert or update (also used to restore a deleted item with its old id). */
+    suspend fun saveTransaction(tx: TransactionEntity) {
+        transactionDao.upsert(tx)
+    }
+
+    suspend fun deleteTransaction(tx: TransactionEntity) {
+        transactionDao.delete(tx)
+    }
+
+    suspend fun saveAccount(account: AccountEntity) {
+        accountDao.upsert(account)
+    }
+
+    suspend fun deleteAccount(account: AccountEntity) {
+        accountDao.delete(account)
+    }
+
+    suspend fun transfer(from: AccountEntity, to: AccountEntity, amount: Long) {
+        accountDao.upsert(from.copy(balance = from.balance - amount))
+        accountDao.upsert(to.copy(balance = to.balance + amount))
+    }
+
     /** Inserts demo data once (first launch only). */
     suspend fun seedDemoDataIfNeeded(prefs: SharedPreferences) {
         if (prefs.getBoolean(KEY_SEEDED, false)) return
