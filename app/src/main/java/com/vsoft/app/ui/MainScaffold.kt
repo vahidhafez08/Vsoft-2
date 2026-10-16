@@ -8,8 +8,13 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LocalLayoutDirection
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -30,14 +35,23 @@ import com.vsoft.app.ui.screens.tasks.TasksScreen
 import com.vsoft.app.ui.screens.transactions.TransactionsScreen
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.util.UiEvents
 
 @Composable
 fun MainScaffold() {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
+    val snackbarHostState = remember { SnackbarHostState() }
     val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS)
     val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.JOBS, Routes.SITE_DETAIL, Routes.CALENDAR)
+
+    LaunchedEffect(Unit) {
+        UiEvents.messages.collect { msg ->
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(msg, duration = SnackbarDuration.Short)
+        }
+    }
 
     fun openRoute(route: String) {
         navController.navigate(route) { launchSingleTop = true }
@@ -45,6 +59,11 @@ fun MainScaffold() {
 
     Scaffold(
         containerColor = Vsoft.colors.bg,
+        snackbarHost = {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                SnackbarHost(snackbarHostState)
+            }
+        },
         bottomBar = {
             NavigationBar(containerColor = Vsoft.colors.surface) {
                 Destination.values().forEach { dest ->
