@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 jobs:
-  assembleDebug:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,11 +22,17 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
       - name: Stop old Gradle daemons
         run: ./gradlew --stop
+      - name: Build release APK (R8)
+        run: ./gradlew assembleRelease --stacktrace
       - name: Build debug APK
-        run: ./gradlew clean assembleDebug --stacktrace
-      - name: Upload debug APK
-        if: success()
+        if: always()
+        run: ./gradlew assembleDebug --stacktrace
+      - name: Upload APKs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vsoft-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: vsoft-apks
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn

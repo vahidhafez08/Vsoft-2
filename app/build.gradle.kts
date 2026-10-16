@@ -16,8 +16,11 @@ android {
     }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Debug signing is for installing on personal devices only, not for Play Store distribution.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

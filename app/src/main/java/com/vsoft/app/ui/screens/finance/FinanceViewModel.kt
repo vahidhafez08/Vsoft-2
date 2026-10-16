@@ -5,7 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.data.repository.FinanceRepository
-import com.vsoft.app.util.DAY_MS
+import com.vsoft.app.util.JCal
+import com.vsoft.app.util.startOfDay
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -36,8 +37,10 @@ class FinanceViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FinanceUiState())
 
     private fun build(tx: List<TransactionEntity>, acc: List<AccountEntity>): FinanceUiState {
-        val from = System.currentTimeMillis() - 30 * DAY_MS
-        val recent = tx.filter { it.dateMillis >= from }
+        val now = System.currentTimeMillis()
+        val j = JCal.toJalali(startOfDay(now))
+        val curFrom = JCal.fromJalali(j[0], j[1], 1)
+        val recent = tx.filter { it.dateMillis >= curFrom }
         val incomes = recent.filter { it.isIncome }
         val expenses = recent.filter { !it.isIncome }
 

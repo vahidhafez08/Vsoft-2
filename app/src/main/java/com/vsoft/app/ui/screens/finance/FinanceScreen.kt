@@ -71,8 +71,8 @@ private val accountPalette = listOf(BrandBlue, Color(0xFF14B8A6), IncomeGreen, B
 private fun buildContent(tab: Int, s: FinanceUiState): TabContent = when (tab) {
     0 -> TabContent(
         items = listOf(
-            RowItem("درآمد", "۳۰ روز اخیر", s.income, IncomeGreen, Icons.Filled.ArrowDownward),
-            RowItem("هزینه", "۳۰ روز اخیر", s.expense, ExpenseRed, Icons.Filled.ArrowUpward)
+            RowItem("درآمد", "این ماه", s.income, IncomeGreen, Icons.Filled.ArrowDownward),
+            RowItem("هزینه", "این ماه", s.expense, ExpenseRed, Icons.Filled.ArrowUpward)
         ),
         centerTitle = "تراز",
         centerValue = s.income - s.expense
