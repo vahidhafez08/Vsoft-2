@@ -43,6 +43,7 @@ private fun signedMoney(v: Long): String = (if (v < 0L) "−" else "") + abs(v).
 @Composable
 fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
     val s by viewModel.state.collectAsStateWithLifecycle()
+    val includeJobIncome by viewModel.includeJobIncome.collectAsStateWithLifecycle()
     var period by rememberSaveable { mutableIntStateOf(1) }
     var catTab by rememberSaveable { mutableIntStateOf(0) }
 
@@ -73,7 +74,7 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
                     modifier = Modifier.weight(1f)
                 )
                 Switch(
-                    checked = viewModel.includeJobIncome.collectAsStateWithLifecycle().value,
+                    checked = includeJobIncome,
                     onCheckedChange = { viewModel.setIncludeJobs(it) }
                 )
             }
