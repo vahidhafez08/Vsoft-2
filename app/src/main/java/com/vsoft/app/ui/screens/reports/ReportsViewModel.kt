@@ -6,6 +6,7 @@ import com.vsoft.app.data.db.TransactionDao
 import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.util.DAY_MS
 import com.vsoft.app.util.JCal
+import com.vsoft.app.util.JRange
 import com.vsoft.app.util.startOfDay
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -41,11 +42,13 @@ private val seasonNames = listOf("بهار", "تابستان", "پاییز", "ز
 
 private fun monthStart(idx: Int): Long = JCal.fromJalali(idx / 12, idx % 12 + 1, 1)
 
-/** period: 0 week (last 7 days), 1 Jalali month, 2 Jalali season, 3 Jalali year. offset 0 = current, -1 = previous. */
+/** period: 0 Jalali week (Saturday-Friday), 1 Jalali month, 2 Jalali season, 3 Jalali year. offset 0 = current, -1 = previous. */
 private fun rangeFor(period: Int, offset: Int, todayStart: Long, today: IntArray): Range = when (period) {
     0 -> {
-        val end = todayStart + DAY_MS + offset * 7 * DAY_MS
-        Range(end - 7 * DAY_MS, end)
+        val start = JRange.weekStart(todayStart)
+        val previousStart = JRange.prevWeekStart(todayStart)
+        val end = if (offset == 0) todayStart + DAY_MS else minOf(start, previousStart + (todayStart - start))
+        Range(if (offset == 0) start else previousStart, end)
     }
     1 -> {
         val idx = today[0] * 12 + (today[1] - 1) + offset
@@ -87,10 +90,22 @@ class ReportsViewModel @Inject constructor(dao: TransactionDao) : ViewModel() {
     }
 
     private fun build(all: List<TransactionEntity>, p: Int): ReportsUi {
-        val todayStart = startOfDay(System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        val todayStart = startOfDay(now)
         val today = JCal.toJalali(todayStart)
-        val cur = rangeFor(p, 0, todayStart, today)
-        val prev = rangeFor(p, -1, todayStart, today)
+        val cur = if (p == 0) {
+            val start = JRange.weekStart(now)
+            Range(start, now + 1L)
+        } else {
+            rangeFor(p, 0, todayStart, today)
+        }
+        val prev = if (p == 0) {
+            val start = JRange.weekStart(now)
+            val previousStart = JRange.prevWeekStart(now)
+            Range(previousStart, minOf(start, previousStart + (now - start)))
+        } else {
+            rangeFor(p, -1, todayStart, today)
+        }
         val txs = all.filter { it.dateMillis >= cur.start && it.dateMillis < cur.end }
         val prevTxs = all.filter { it.dateMillis >= prev.start && it.dateMillis < prev.end }
         val j = JCal.toJalali(cur.start)
@@ -101,8 +116,8 @@ class ReportsViewModel @Inject constructor(dao: TransactionDao) : ViewModel() {
         when (p) {
             0 -> {
                 starts = List(7) { cur.start + it * DAY_MS }
-                labels = starts.map { JCal.dayHeaders[JCal.weekdayIndex(it).coerceIn(0, 6)] }
-                rangeLabel = "۷ روز گذشته"
+                labels = JCal.dayHeaders
+                rangeLabel = "هفته جاری"
             }
             1 -> {
                 val n = JCal.monthLength(j[0], j[1])
@@ -131,7 +146,7 @@ class ReportsViewModel @Inject constructor(dao: TransactionDao) : ViewModel() {
                 if (t.isIncome) inc[i] += t.amount else exp[i] += t.amount
             }
         }
-        val visible = starts.count { it <= todayStart }.coerceAtLeast(1)
+        val visible = if (p == 0) 7 else starts.count { it <= todayStart }.coerceAtLeast(1)
 
         val income = txs.filter { it.isIncome }.sumOf { it.amount }
         val expense = txs.filter { !it.isIncome }.sumOf { it.amount }
