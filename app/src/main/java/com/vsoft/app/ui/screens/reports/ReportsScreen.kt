@@ -65,6 +65,21 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
         SegmentedTabs(items = listOf("هفته", "ماه", "سه‌ماهه", "سال"), selected = period, onSelect = { period = it })
 
         VCard {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "شامل درآمد کارگاه‌ها",
+                    color = Vsoft.colors.textPrimary,
+                    fontSize = 13.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = viewModel.includeJobIncome.collectAsStateWithLifecycle().value,
+                    onCheckedChange = { viewModel.setIncludeJobs(it) }
+                )
+            }
+        }
+
+        VCard {
             SummaryRow("درآمد", s.income, IncomeGreen, s.prevIncome, goodWhenUp = true)
             Spacer(Modifier.height(10.dp))
             SummaryRow("هزینه", s.expense, ExpenseRed, s.prevExpense, goodWhenUp = false)
@@ -79,6 +94,15 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
                 color = Vsoft.colors.textSecondary,
                 fontSize = 12.sp
             )
+            if (s.includeJobIncome && s.jobIncome > 0L) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "درآمد کارگاه: " + s.jobIncome.toMoney() + " تومان",
+                    color = IncomeGreen,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
 
         VCard {
@@ -93,7 +117,7 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
                 Legend(ExpenseRed, "هزینه")
             }
             Spacer(Modifier.height(12.dp))
-            if (s.loaded && s.count == 0) {
+            if (s.loaded && s.count == 0 && s.jobIncome <= 0L) {
                 EmptyState(
                     icon = Icons.Filled.BarChart,
                     title = "تراکنشی در این بازه نیست",
@@ -165,7 +189,8 @@ private fun SummaryRow(label: String, value: Long, color: Color, prev: Long?, go
             Text(signedMoney(value), color = color, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         }
         if (prev != null && prev > 0L) {
-            val pct = ((value - prev) * 100.0 / prev).roundToInt()
+            val rawPct = (value.toDouble() - prev.toDouble()) * 100.0 / prev.toDouble()
+            val pct = if (rawPct.isFinite()) rawPct.coerceIn(-9999.0, 9999.0).roundToInt() else 0
             if (pct == 0) {
                 MiniChip("بدون تغییر", Vsoft.colors.textSecondary)
             } else {
