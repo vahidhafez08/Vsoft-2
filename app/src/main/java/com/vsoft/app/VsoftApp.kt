@@ -2,8 +2,7 @@ package com.vsoft.app
 
 import android.app.Application
 import android.util.Log
-import com.vsoft.app.data.repository.FinanceRepository
-import com.vsoft.app.data.repository.TaskRepository
+import com.vsoft.app.data.db.AppDatabase
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,19 +13,20 @@ import javax.inject.Inject
 @HiltAndroidApp
 class VsoftApp : Application() {
 
-    @Inject lateinit var financeRepository: FinanceRepository
-    @Inject lateinit var taskRepository: TaskRepository
+    @Inject lateinit var database: AppDatabase
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
+        // The app no longer seeds demo data. Wipe the old demo data exactly once.
         appScope.launch {
             val prefs = getSharedPreferences("vsoft_prefs", MODE_PRIVATE)
-            runCatching { financeRepository.seedDemoDataIfNeeded(prefs) }
-                .onFailure { Log.e("VsoftApp", "Finance seeding failed", it) }
-            runCatching { taskRepository.seedDemoDataIfNeeded(prefs) }
-                .onFailure { Log.e("VsoftApp", "Task seeding failed", it) }
+            if (!prefs.getBoolean("demo_cleared", false)) {
+                runCatching { database.clearAllTables() }
+                    .onSuccess { prefs.edit().putBoolean("demo_cleared", true).apply() }
+                    .onFailure { Log.e("VsoftApp", "Clearing demo data failed", it) }
+            }
         }
     }
 }
