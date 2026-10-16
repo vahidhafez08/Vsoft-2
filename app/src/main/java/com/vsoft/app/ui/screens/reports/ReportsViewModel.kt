@@ -1,18 +1,24 @@
 package com.vsoft.app.ui.screens.reports
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.db.TransactionDao
+import com.vsoft.app.data.model.SitePaymentEntity
 import com.vsoft.app.data.model.TransactionEntity
+import com.vsoft.app.data.repository.JobRepository
 import com.vsoft.app.util.DAY_MS
 import com.vsoft.app.util.JCal
 import com.vsoft.app.util.JRange
 import com.vsoft.app.util.startOfDay
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
@@ -33,16 +39,15 @@ data class ReportsUi(
     val expenseSeries: List<Long> = emptyList(),
     val expenseCats: List<CatSlice> = emptyList(),
     val incomeCats: List<CatSlice> = emptyList(),
+    val jobIncome: Long = 0L,
+    val includeJobIncome: Boolean = true,
     val loaded: Boolean = false
 )
 
-private class Range(val start: Long, val end: Long)
-
+private data class Range(val start: Long, val end: Long)
 private val seasonNames = listOf("بهار", "تابستان", "پاییز", "زمستان")
-
 private fun monthStart(idx: Int): Long = JCal.fromJalali(idx / 12, idx % 12 + 1, 1)
 
-/** period: 0 Jalali week (Saturday-Friday), 1 Jalali month, 2 Jalali season, 3 Jalali year. offset 0 = current, -1 = previous. */
 private fun rangeFor(period: Int, offset: Int, todayStart: Long, today: IntArray): Range = when (period) {
     0 -> {
         val start = JRange.weekStart(todayStart)
@@ -65,49 +70,74 @@ private fun rangeFor(period: Int, offset: Int, todayStart: Long, today: IntArray
 }
 
 private fun slices(txs: List<TransactionEntity>, income: Boolean): List<CatSlice> {
-    val sorted = txs
-        .filter { it.isIncome == income }
+    val sorted = txs.filter { it.isIncome == income }
         .groupBy { it.category.ifBlank { "سایر" } }
         .map { e -> CatSlice(e.key, e.value.sumOf { t -> t.amount }) }
         .sortedByDescending { it.amount }
     if (sorted.size <= 6) return sorted
-    val rest = sorted.drop(5).sumOf { it.amount }
-    return sorted.take(5) + CatSlice("سایر", rest)
+    return sorted.take(5) + CatSlice("سایر", sorted.drop(5).sumOf { it.amount })
 }
 
 @HiltViewModel
-class ReportsViewModel @Inject constructor(dao: TransactionDao) : ViewModel() {
-
+class ReportsViewModel @Inject constructor(
+    dao: TransactionDao,
+    jobRepository: JobRepository,
+    @ApplicationContext context: Context
+) : ViewModel() {
     private val period = MutableStateFlow(1)
+    private val prefs = context.getSharedPreferences("vsoft_prefs", Context.MODE_PRIVATE)
+    private val _includeJobIncome = MutableStateFlow(prefs.getBoolean("reports_include_jobs", true))
+    val includeJobIncome: StateFlow<Boolean> = _includeJobIncome
+
+    private val safeLogs = jobRepository.allLogs().catch { error ->
+        Log.e("VSOFT-Reports", "Unable to read job logs; using zero job income", error)
+        emit(emptyList())
+    }
+    private val safePayments = jobRepository.allPayments().catch { error ->
+        Log.e("VSOFT-Reports", "Unable to read workshop payments; using zero job income", error)
+        emit(emptyList())
+    }
 
     val state: StateFlow<ReportsUi> =
-        combine(dao.observeAll(), period) { all, p -> build(all, p) }
-            .flowOn(Dispatchers.Default)
+        combine(dao.observeAll(), safeLogs, safePayments, period, includeJobIncome) { all, logs, payments, p, include ->
+            try {
+                build(all, payments, p, include)
+            } catch (error: Exception) {
+                Log.e("VSOFT-Reports", "Failed to calculate workshop income; using zero", error)
+                build(all, emptyList(), p, include)
+            }
+        }.flowOn(Dispatchers.Default)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReportsUi())
 
     fun setPeriod(p: Int) {
         period.value = p.coerceIn(0, 3)
     }
 
-    private fun build(all: List<TransactionEntity>, p: Int): ReportsUi {
+    fun setIncludeJobs(v: Boolean) {
+        _includeJobIncome.value = v
+        prefs.edit().putBoolean("reports_include_jobs", v).apply()
+    }
+
+    private fun build(
+        all: List<TransactionEntity>,
+        payments: List<SitePaymentEntity>,
+        p: Int,
+        includeJobs: Boolean
+    ): ReportsUi {
         val now = System.currentTimeMillis()
         val todayStart = startOfDay(now)
         val today = JCal.toJalali(todayStart)
-        val cur = if (p == 0) {
-            val start = JRange.weekStart(now)
-            Range(start, now + 1L)
-        } else {
-            rangeFor(p, 0, todayStart, today)
-        }
+        val cur = if (p == 0) Range(JRange.weekStart(now), now + 1L) else rangeFor(p, 0, todayStart, today)
         val prev = if (p == 0) {
             val start = JRange.weekStart(now)
             val previousStart = JRange.prevWeekStart(now)
             Range(previousStart, minOf(start, previousStart + (now - start)))
-        } else {
-            rangeFor(p, -1, todayStart, today)
-        }
+        } else rangeFor(p, -1, todayStart, today)
+
         val txs = all.filter { it.dateMillis >= cur.start && it.dateMillis < cur.end }
         val prevTxs = all.filter { it.dateMillis >= prev.start && it.dateMillis < prev.end }
+        val currentPayments = if (includeJobs) payments.filter { it.dateMillis >= cur.start && it.dateMillis < cur.end } else emptyList()
+        val previousPayments = if (includeJobs) payments.filter { it.dateMillis >= prev.start && it.dateMillis < prev.end } else emptyList()
         val j = JCal.toJalali(cur.start)
 
         val starts: List<Long>
@@ -130,11 +160,8 @@ class ReportsViewModel @Inject constructor(dao: TransactionDao) : ViewModel() {
                 val base = j[0] * 12 + (j[1] - 1)
                 starts = List(count) { monthStart(base + it) }
                 labels = List(count) { JCal.monthNames[(base + it) % 12] }
-                rangeLabel = if (p == 2) {
-                    seasonNames[((j[1] - 1) / 3).coerceIn(0, 3)] + " " + JCal.fa(j[0])
-                } else {
-                    "سال " + JCal.fa(j[0])
-                }
+                rangeLabel = if (p == 2) seasonNames[((j[1] - 1) / 3).coerceIn(0, 3)] + " " + JCal.fa(j[0])
+                else "سال " + JCal.fa(j[0])
             }
         }
 
@@ -146,9 +173,16 @@ class ReportsViewModel @Inject constructor(dao: TransactionDao) : ViewModel() {
                 if (t.isIncome) inc[i] += t.amount else exp[i] += t.amount
             }
         }
+        for (payment in currentPayments) {
+            val i = starts.indexOfLast { start -> start <= payment.dateMillis }
+            if (i >= 0) inc[i] += payment.amount
+        }
         val visible = if (p == 0) 7 else starts.count { it <= todayStart }.coerceAtLeast(1)
-
-        val income = txs.filter { it.isIncome }.sumOf { it.amount }
+        val jobIncome = currentPayments.sumOf { it.amount }
+        val transactionIncome = txs.filter { it.isIncome }.sumOf { it.amount }
+        val prevTransactionIncome = prevTxs.filter { it.isIncome }.sumOf { it.amount }
+        val income = transactionIncome + jobIncome
+        val previousIncome = prevTransactionIncome + previousPayments.sumOf { it.amount }
         val expense = txs.filter { !it.isIncome }.sumOf { it.amount }
         val days = ((minOf(cur.end, todayStart + DAY_MS) - cur.start) / DAY_MS).toInt().coerceAtLeast(1)
 
@@ -156,7 +190,7 @@ class ReportsViewModel @Inject constructor(dao: TransactionDao) : ViewModel() {
             rangeLabel = rangeLabel,
             income = income,
             expense = expense,
-            prevIncome = prevTxs.filter { it.isIncome }.sumOf { it.amount },
+            prevIncome = previousIncome,
             prevExpense = prevTxs.filter { !it.isIncome }.sumOf { it.amount },
             avgDailyExpense = expense / days,
             count = txs.size,
@@ -165,6 +199,8 @@ class ReportsViewModel @Inject constructor(dao: TransactionDao) : ViewModel() {
             expenseSeries = exp.take(visible),
             expenseCats = slices(txs, false),
             incomeCats = slices(txs, true),
+            jobIncome = jobIncome,
+            includeJobIncome = includeJobs,
             loaded = true
         )
     }
