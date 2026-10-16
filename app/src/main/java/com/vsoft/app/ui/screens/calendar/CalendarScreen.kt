@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Construction
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,6 +39,7 @@ import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.JCal
+import com.vsoft.app.util.JHolidays
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.startOfDay
 
@@ -49,11 +51,12 @@ fun CalendarScreen(
 ) {
     val data by viewModel.data.collectAsStateWithLifecycle()
     val todayStart = remember { startOfDay(System.currentTimeMillis()) }
-    val todayJ = remember { JCal.toJalali(todayStart) }
-    var jy by rememberSaveable { mutableIntStateOf(todayJ[0]) }
-    var jm by rememberSaveable { mutableIntStateOf(todayJ[1]) }
-    var selected by rememberSaveable { mutableLongStateOf(todayStart) }
+    val displayed by viewModel.displayedMonth.collectAsStateWithLifecycle()
+    val jy = displayed.first
+    val jm = displayed.second
+    val selected by viewModel.selectedDay.collectAsStateWithLifecycle()
     var adding by rememberSaveable { mutableStateOf(false) }
+    var showPicker by rememberSaveable { mutableStateOf(false) }
 
     val tasksByDay = remember(data) {
         data.tasks
@@ -63,9 +66,8 @@ fun CalendarScreen(
     val logsByDay = remember(data) { data.logs.groupBy { it.dayMillis } }
 
     fun shift(delta: Int) {
-        val idx = (jy * 12 + (jm - 1) + delta).coerceIn(1300 * 12, 1700 * 12 + 11)
-        jy = idx / 12
-        jm = idx % 12 + 1
+        val idx = (jy * 12 + (jm - 1) + delta).coerceIn(1300 * 12, 1500 * 12 + 11)
+        viewModel.goToMonth(idx / 12, idx % 12 + 1)
     }
 
     Column(
@@ -84,19 +86,21 @@ fun CalendarScreen(
                 IconButton(onClick = { shift(-1) }) {
                     Icon(Icons.Filled.ChevronRight, contentDescription = "ماه قبل", tint = Vsoft.colors.textPrimary)
                 }
-                Text(
-                    JCal.monthNames[(jm - 1).coerceIn(0, 11)] + " " + JCal.fa(jy),
-                    color = Vsoft.colors.textPrimary,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
-                )
-                TextButton(onClick = {
-                    jy = todayJ[0]
-                    jm = todayJ[1]
-                    selected = todayStart
-                }) { Text("امروز") }
+                Row(
+                    modifier = Modifier.weight(1f).clip(CircleShape).clickable { showPicker = true }.padding(horizontal = 4.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        JCal.monthNames[(jm - 1).coerceIn(0, 11)] + " " + JCal.fa(jy),
+                        color = Vsoft.colors.textPrimary,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Icon(Icons.Filled.ExpandMore, contentDescription = "انتخاب ماه و سال", tint = Vsoft.colors.textSecondary)
+                }
+                TextButton(onClick = { viewModel.goToToday() }) { Text("امروز") }
                 IconButton(onClick = { shift(1) }) {
                     Icon(Icons.Filled.ChevronLeft, contentDescription = "ماه بعد", tint = Vsoft.colors.textPrimary)
                 }
@@ -114,7 +118,7 @@ fun CalendarScreen(
                     selected = selected,
                     tasksByDay = tasksByDay,
                     logsByDay = logsByDay,
-                    onSelect = { selected = it }
+                    onSelect = { viewModel.selectDay(it) }
                 )
             }
         }
@@ -129,6 +133,17 @@ fun CalendarScreen(
                 color = Vsoft.colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(10.dp))
+
+            val selectedJalali = JCal.toJalali(selected)
+            val selectedHoliday = JHolidays.nameOf(selectedJalali[1], selectedJalali[2])
+            if (selectedHoliday != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(7.dp).clip(CircleShape).background(ExpenseRed))
+                    Spacer(Modifier.width(7.dp))
+                    Text("تعطیل رسمی: $selectedHoliday", color = ExpenseRed, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Spacer(Modifier.height(8.dp))
+            }
 
             Text("کارهای این روز", color = BrandBlue, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             if (dayTasks.isEmpty()) {
@@ -174,6 +189,33 @@ fun CalendarScreen(
                 Text("کار جدید برای این روز")
             }
         }
+
+        val monthHolidays = JHolidays.ofMonth(jm)
+        if (monthHolidays.isNotEmpty()) {
+            VCard {
+                Text("مناسبت‌های این ماه", color = Vsoft.colors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
+                monthHolidays.forEach { (day, name) ->
+                    key("$jm-$day") {
+                        Text(
+                            JCal.fa(day) + " " + JCal.monthNames[(jm - 1).coerceIn(0, 11)] + " - " + name,
+                            color = Vsoft.colors.textSecondary, fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showPicker) {
+        MonthYearPickerSheet(
+            initialYear = jy,
+            initialMonth = jm,
+            onPick = { y, m -> viewModel.goToMonth(y, m); showPicker = false },
+            onToday = { viewModel.goToToday(); showPicker = false },
+            onDismiss = { showPicker = false }
+        )
     }
 
     if (adding) {
@@ -250,6 +292,7 @@ private fun MonthGrid(
                             isToday = day == todayStart,
                             isSelected = day == selected,
                             isFriday = c == 6,
+                            isHoliday = JHolidays.nameOf(jm, idx + 1) != null,
                             hasTask = tasksByDay[day].orEmpty().isNotEmpty(),
                             hasLog = logsByDay[day].orEmpty().isNotEmpty(),
                             onClick = { onSelect(day) }
@@ -267,6 +310,7 @@ private fun RowScope.DayCell(
     isToday: Boolean,
     isSelected: Boolean,
     isFriday: Boolean,
+    isHoliday: Boolean,
     hasTask: Boolean,
     hasLog: Boolean,
     onClick: () -> Unit
@@ -288,7 +332,7 @@ private fun RowScope.DayCell(
                 label,
                 color = when {
                     isSelected -> Color.White
-                    isFriday -> ExpenseRed
+                    isFriday || isHoliday -> ExpenseRed
                     else -> Vsoft.colors.textPrimary
                 },
                 fontSize = 14.sp,
