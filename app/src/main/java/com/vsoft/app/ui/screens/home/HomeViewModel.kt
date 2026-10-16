@@ -6,6 +6,7 @@ import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.data.repository.FinanceRepository
 import com.vsoft.app.util.DAY_MS
+import com.vsoft.app.util.JCal
 import com.vsoft.app.util.percentChange
 import com.vsoft.app.util.startOfDay
 import com.vsoft.app.util.weekdayShort
@@ -52,11 +53,13 @@ class HomeViewModel @Inject constructor(
     private fun buildState(tx: List<TransactionEntity>, acc: List<AccountEntity>): HomeUiState {
         val now = System.currentTimeMillis()
         val todayStart = startOfDay(now)
-        val curFrom = now - 30 * DAY_MS
-        val prevFrom = now - 60 * DAY_MS
+        val j = JCal.toJalali(todayStart)
+        val curFrom = JCal.fromJalali(j[0], j[1], 1)
+        val prevFrom = if (j[1] == 1) JCal.fromJalali(j[0] - 1, 12, 1) else JCal.fromJalali(j[0], j[1] - 1, 1)
+        val prevTo = minOf(curFrom, prevFrom + (now - curFrom))
 
         val cur = tx.filter { it.dateMillis >= curFrom }
-        val prev = tx.filter { it.dateMillis >= prevFrom && it.dateMillis < curFrom }
+        val prev = tx.filter { it.dateMillis >= prevFrom && it.dateMillis < prevTo }
 
         val income = cur.filter { it.isIncome }.sumOf { it.amount }
         val expense = cur.filter { !it.isIncome }.sumOf { it.amount }
