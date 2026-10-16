@@ -20,6 +20,8 @@ import com.vsoft.app.ui.screens.PlaceholderScreen
 import com.vsoft.app.ui.screens.accounts.AccountsScreen
 import com.vsoft.app.ui.screens.finance.FinanceScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
+import com.vsoft.app.ui.screens.jobs.JobsScreen
+import com.vsoft.app.ui.screens.jobs.SiteDetailScreen
 import com.vsoft.app.ui.screens.tasks.TaskDetailScreen
 import com.vsoft.app.ui.screens.tasks.TasksScreen
 import com.vsoft.app.ui.screens.transactions.TransactionsScreen
@@ -32,7 +34,7 @@ fun MainScaffold() {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS)
-    val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL)
+    val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.JOBS, Routes.SITE_DETAIL)
 
     fun openRoute(route: String) {
         navController.navigate(route) { launchSingleTop = true }
@@ -105,12 +107,25 @@ fun MainScaffold() {
             composable(Routes.TRANSACTIONS) { TransactionsScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
             composable(Destination.Tasks.route) {
-                TasksScreen(onOpenTask = { id -> openRoute(Routes.taskDetail(id)) })
+                TasksScreen(
+                    onOpenTask = { id -> openRoute(Routes.taskDetail(id)) },
+                    onOpenJobs = { openRoute(Routes.JOBS) }
+                )
             }
             composable(
                 route = Routes.TASK_DETAIL,
                 arguments = listOf(navArgument("id") { type = NavType.LongType })
             ) { TaskDetailScreen(onBack = { navController.popBackStack() }) }
+            composable(Routes.JOBS) {
+                JobsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenSite = { id -> openRoute(Routes.siteDetail(id)) }
+                )
+            }
+            composable(
+                route = Routes.SITE_DETAIL,
+                arguments = listOf(navArgument("id") { type = NavType.LongType })
+            ) { SiteDetailScreen(onBack = { navController.popBackStack() }) }
             composable(Destination.Reports.route) { PlaceholderScreen(title = Destination.Reports.label) }
             composable(Destination.More.route) { PlaceholderScreen(title = Destination.More.label) }
         }
