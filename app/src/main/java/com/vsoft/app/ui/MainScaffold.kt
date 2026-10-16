@@ -18,6 +18,7 @@ import com.vsoft.app.ui.navigation.Destination
 import com.vsoft.app.ui.navigation.Routes
 import com.vsoft.app.ui.screens.PlaceholderScreen
 import com.vsoft.app.ui.screens.accounts.AccountsScreen
+import com.vsoft.app.ui.screens.calendar.CalendarScreen
 import com.vsoft.app.ui.screens.finance.FinanceScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
 import com.vsoft.app.ui.screens.jobs.JobsScreen
@@ -34,7 +35,7 @@ fun MainScaffold() {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS)
-    val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.JOBS, Routes.SITE_DETAIL)
+    val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.JOBS, Routes.SITE_DETAIL, Routes.CALENDAR)
 
     fun openRoute(route: String) {
         navController.navigate(route) { launchSingleTop = true }
@@ -109,7 +110,8 @@ fun MainScaffold() {
             composable(Destination.Tasks.route) {
                 TasksScreen(
                     onOpenTask = { id -> openRoute(Routes.taskDetail(id)) },
-                    onOpenJobs = { openRoute(Routes.JOBS) }
+                    onOpenJobs = { openRoute(Routes.JOBS) },
+                    onOpenCalendar = { openRoute(Routes.CALENDAR) }
                 )
             }
             composable(
@@ -126,6 +128,12 @@ fun MainScaffold() {
                 route = Routes.SITE_DETAIL,
                 arguments = listOf(navArgument("id") { type = NavType.LongType })
             ) { SiteDetailScreen(onBack = { navController.popBackStack() }) }
+            composable(Routes.CALENDAR) {
+                CalendarScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenTask = { id -> openRoute(Routes.taskDetail(id)) }
+                )
+            }
             composable(Destination.Reports.route) { PlaceholderScreen(title = Destination.Reports.label) }
             composable(Destination.More.route) { PlaceholderScreen(title = Destination.More.label) }
         }
