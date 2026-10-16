@@ -87,7 +87,7 @@ fun ProjectEditorSheet(
     onDelete: (() -> Unit)? = null
 ) {
     var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
-    var dueIndex by remember { mutableStateOf<Int?>(if (initial?.dueDateMillis != null) null else 0) }
+    var dueIndex by rememberSaveable { mutableStateOf<Int?>(if (initial?.dueDateMillis != null) null else 0) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
     FormSheet(onDismiss) {
