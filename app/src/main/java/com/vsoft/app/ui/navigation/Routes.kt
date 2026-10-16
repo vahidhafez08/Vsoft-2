@@ -6,6 +6,7 @@ object Routes {
     const val TASK_DETAIL = "task/{id}"
     const val JOBS = "jobs"
     const val SITE_DETAIL = "site/{id}"
+    const val CALENDAR = "calendar"
 
     fun taskDetail(id: Long): String = "task/$id"
     fun siteDetail(id: Long): String = "site/$id"
