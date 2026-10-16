@@ -22,6 +22,7 @@ import com.vsoft.app.ui.screens.calendar.CalendarScreen
 import com.vsoft.app.ui.screens.reports.ReportsScreen
 import com.vsoft.app.ui.screens.finance.FinanceScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
+import com.vsoft.app.ui.screens.more.MoreScreen
 import com.vsoft.app.ui.screens.jobs.JobsScreen
 import com.vsoft.app.ui.screens.jobs.SiteDetailScreen
 import com.vsoft.app.ui.screens.tasks.TaskDetailScreen
@@ -136,7 +137,7 @@ fun MainScaffold() {
                 )
             }
             composable(Destination.Reports.route) { ReportsScreen() }
-            composable(Destination.More.route) { PlaceholderScreen(title = Destination.More.label) }
+            composable(Destination.More.route) { MoreScreen() }
         }
     }
 }
