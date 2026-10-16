@@ -1,7 +1,0 @@
-<resources>
-    <style name="Theme.Vsoft" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/vs_bg</item>
-        <item name="android:statusBarColor">@color/vs_bg</item>
-        <item name="android:navigationBarColor">@color/vs_bg</item>
-    </style>
-</resources>
