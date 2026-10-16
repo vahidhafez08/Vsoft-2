@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
@@ -163,7 +164,7 @@ internal fun ChipGroup(labels: List<String>, isSelected: (Int) -> Boolean, onSel
 
 @Composable
 fun SingleInputSheet(title: String, label: String, confirmLabel: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
+    var text by rememberSaveable { mutableStateOf("") }
     FormSheet(onDismiss) {
         SheetTitle(title)
         OutlinedTextField(

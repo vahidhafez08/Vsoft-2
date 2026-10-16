@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.vsoft.app.data.model.*
@@ -54,7 +55,7 @@ fun JobNameSheet(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var text by remember { mutableStateOf(initial) }
+    var text by rememberSaveable { mutableStateOf(initial) }
     FormSheet(onDismiss) {
         SheetTitle(title)
         OutlinedTextField(
@@ -78,11 +79,11 @@ fun JobSiteSheet(
     onSave: (SiteEntity) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
-    var name by remember { mutableStateOf(initial?.name ?: "") }
-    var client by remember { mutableStateOf(initial?.client ?: "") }
-    var address by remember { mutableStateOf(initial?.address ?: "") }
-    var amount by remember { mutableStateOf(initial?.contractAmount?.takeIf { it > 0L }?.toString() ?: "") }
-    var confirmDelete by remember { mutableStateOf(false) }
+    var name by rememberSaveable { mutableStateOf(initial?.name ?: "") }
+    var client by rememberSaveable { mutableStateOf(initial?.client ?: "") }
+    var address by rememberSaveable { mutableStateOf(initial?.address ?: "") }
+    var amount by rememberSaveable { mutableStateOf(initial?.contractAmount?.takeIf { it > 0L }?.toString() ?: "") }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
     FormSheet(onDismiss) {
         SheetTitle(if (initial == null) "کارگاه جدید" else "ویرایش کارگاه")
@@ -139,9 +140,9 @@ fun JobItemSheet(
     onDismiss: () -> Unit,
     onSave: (title: String, unit: String, target: Int) -> Unit
 ) {
-    var title by remember { mutableStateOf(initial?.title ?: "") }
-    var unitIdx by remember { mutableIntStateOf(initial?.let { itemUnits.indexOf(it.unit) }?.takeIf { it >= 0 } ?: 1) }
-    var target by remember { mutableStateOf(initial?.targetQty?.toString() ?: "") }
+    var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
+    var unitIdx by rememberSaveable { mutableIntStateOf(initial?.let { itemUnits.indexOf(it.unit) }?.takeIf { it >= 0 } ?: 1) }
+    var target by rememberSaveable { mutableStateOf(initial?.targetQty?.toString() ?: "") }
     val targetQty = parseJobNumber(target)?.takeIf { it in 1L..1_000_000L }?.toInt()
 
     FormSheet(onDismiss) {
@@ -178,9 +179,9 @@ fun JobLogSheet(
     var itemId by remember {
         mutableStateOf<Long?>(preselectItemId ?: withItems.firstOrNull()?.items?.firstOrNull()?.item?.id)
     }
-    var qty by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-    var dayIdx by remember { mutableIntStateOf(0) }
+    var qty by rememberSaveable { mutableStateOf("") }
+    var note by rememberSaveable { mutableStateOf("") }
+    var dayIdx by rememberSaveable { mutableIntStateOf(0) }
 
     val floor = withItems.firstOrNull { it.floor.id == floorId }
     val items = floor?.items.orEmpty()
@@ -198,7 +199,7 @@ fun JobLogSheet(
                 { withItems[it].floor.id == floorId },
                 {
                     floorId = withItems[it].floor.id
-                    itemId = withItems[it].items.first().item.id
+                    itemId = withItems.getOrNull(it)?.items?.firstOrNull()?.item?.id
                 }
             )
             SheetLabel("کار انجام‌شده")
@@ -227,9 +228,9 @@ fun JobLogSheet(
 
 @Composable
 fun JobPaymentSheet(onDismiss: () -> Unit, onSave: (amount: Long, note: String, dateMillis: Long) -> Unit) {
-    var amount by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-    var dayIdx by remember { mutableIntStateOf(0) }
+    var amount by rememberSaveable { mutableStateOf("") }
+    var note by rememberSaveable { mutableStateOf("") }
+    var dayIdx by rememberSaveable { mutableIntStateOf(0) }
     val value = parseJobNumber(amount)?.takeIf { it > 0L }
 
     FormSheet(onDismiss) {

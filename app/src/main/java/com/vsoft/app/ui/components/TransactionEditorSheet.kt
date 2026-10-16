@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,11 +51,11 @@ fun TransactionEditorSheet(
     onSave: (TransactionEntity) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
-    var isIncome by remember { mutableStateOf(initial?.isIncome ?: defaultIncome) }
+    var isIncome by rememberSaveable { mutableStateOf(initial?.isIncome ?: defaultIncome) }
     val categories = if (isIncome) IncomeCategories else ExpenseCategories
-    var title by remember { mutableStateOf(initial?.title ?: "") }
-    var amountText by remember { mutableStateOf(initial?.amount?.toString() ?: "") }
-    var category by remember { mutableStateOf(initial?.category ?: categories.first()) }
+    var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
+    var amountText by rememberSaveable { mutableStateOf(initial?.amount?.toString() ?: "") }
+    var category by rememberSaveable { mutableStateOf(initial?.category ?: categories.first()) }
     var dayOffset by remember { mutableStateOf<Int?>(if (initial == null) 0 else null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val amount = amountText.toLongOrNull() ?: 0L

@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,11 +60,11 @@ fun AccountEditorSheet(
     onSave: (AccountEntity) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
-    var name by remember { mutableStateOf(initial?.name ?: "") }
-    var last4 by remember { mutableStateOf(initial?.last4 ?: "") }
-    var balanceText by remember { mutableStateOf(initial?.balance?.toString() ?: "") }
-    var colorKey by remember { mutableStateOf(initial?.colorKey ?: "blue") }
-    var confirmDelete by remember { mutableStateOf(false) }
+    var name by rememberSaveable { mutableStateOf(initial?.name ?: "") }
+    var last4 by rememberSaveable { mutableStateOf(initial?.last4 ?: "") }
+    var balanceText by rememberSaveable { mutableStateOf(initial?.balance?.toString() ?: "") }
+    var colorKey by rememberSaveable { mutableStateOf(initial?.colorKey ?: "blue") }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val balance = balanceText.toLongOrNull() ?: 0L
 
@@ -106,7 +107,7 @@ fun AccountEditorSheet(
             )
             OutlinedTextField(
                 value = balanceText,
-                onValueChange = { v -> balanceText = v.toLatinDigits().filter { it.isDigit() }.take(13) },
+                onValueChange = { v -> balanceText = v.toLatinDigits().filter { it.isDigit() }.take(12) },
                 label = { Text("موجودی (تومان)") },
                 supportingText = { if (balance > 0) Text(balance.toMoney()) },
                 singleLine = true,
@@ -190,16 +191,20 @@ fun TransferSheet(
     onDismiss: () -> Unit,
     onTransfer: (fromId: Long, toId: Long, amount: Long) -> Unit
 ) {
-    var fromId by remember { mutableLongStateOf(accounts.first().id) }
-    var toId by remember { mutableLongStateOf(accounts.getOrElse(1) { accounts.first() }.id) }
-    var amountText by remember { mutableStateOf("") }
+    if (accounts.size < 2) return
+
+    var fromId by rememberSaveable { mutableLongStateOf(accounts.first().id) }
+    var toId by rememberSaveable { mutableLongStateOf(accounts[1].id) }
+    var amountText by rememberSaveable { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val amount = amountText.toLongOrNull() ?: 0L
     val from = accounts.firstOrNull { it.id == fromId }
+    val to = accounts.firstOrNull { it.id == toId }
 
     val error: String? = when {
         fromId == toId -> "حساب مبدأ و مقصد نباید یکی باشد"
-        amount > 0L && from != null && amount > from.balance -> "موجودی حساب مبدأ کافی نیست"
+        from == null || to == null -> "حساب انتخاب‌شده در دسترس نیست"
+        amount > 0L && amount > from.balance -> "موجودی حساب مبدأ کافی نیست"
         else -> null
     }
 

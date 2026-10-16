@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -42,9 +43,9 @@ fun AddTransactionSheet(
     onSave: (title: String, amount: Long, category: String) -> Unit
 ) {
     val categories = if (isIncome) IncomeCategories else ExpenseCategories
-    var title by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf(categories.first()) }
+    var title by rememberSaveable { mutableStateOf("") }
+    var amountText by rememberSaveable { mutableStateOf("") }
+    var category by rememberSaveable { mutableStateOf(categories.first()) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val amount = amountText.toLongOrNull() ?: 0L
 

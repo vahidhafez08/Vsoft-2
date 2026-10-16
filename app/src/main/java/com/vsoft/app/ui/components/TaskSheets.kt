@@ -3,6 +3,7 @@ package com.vsoft.app.ui.components
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import com.vsoft.app.data.model.ProjectEntity
 import com.vsoft.app.data.model.TaskEntity
@@ -19,7 +20,7 @@ private val projectDueOffsets = listOf<Int?>(null, 14, 30, 90)
 
 /** idx == null means "keep the existing due date". */
 private fun resolveDue(idx: Int?, offsets: List<Int?>, current: Long?): Long? =
-    if (idx == null) current else offsets[idx]?.let { startOfDay(System.currentTimeMillis()) + it * DAY_MS }
+    if (idx == null) current else offsets.getOrNull(idx)?.let { startOfDay(System.currentTimeMillis()) + it * DAY_MS }
 
 private fun dueTitle(idx: Int?, current: Long?, default: String): String =
     if (idx == null && current != null) "موعد فعلی: " + formatJalali(current) else default
@@ -32,10 +33,10 @@ fun TaskEditorSheet(
     onDismiss: () -> Unit,
     onSave: (TaskEntity) -> Unit
 ) {
-    var title by remember { mutableStateOf(initial?.title ?: "") }
-    var desc by remember { mutableStateOf(initial?.description ?: "") }
-    var priority by remember { mutableIntStateOf(initial?.priority ?: 1) }
-    var projectId by remember { mutableStateOf(initial?.projectId ?: defaultProjectId) }
+    var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
+    var desc by rememberSaveable { mutableStateOf(initial?.description ?: "") }
+    var priority by rememberSaveable { mutableIntStateOf(initial?.priority ?: 1) }
+    var projectId by rememberSaveable { mutableStateOf(initial?.projectId ?: defaultProjectId) }
     var dueIndex by remember { mutableStateOf<Int?>(if (initial?.dueDateMillis != null) null else 0) }
 
     FormSheet(onDismiss) {
@@ -85,9 +86,9 @@ fun ProjectEditorSheet(
     onSave: (ProjectEntity) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
-    var title by remember { mutableStateOf(initial?.title ?: "") }
+    var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
     var dueIndex by remember { mutableStateOf<Int?>(if (initial?.dueDateMillis != null) null else 0) }
-    var confirmDelete by remember { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
     FormSheet(onDismiss) {
         SheetTitle(if (initial == null) "پروژه جدید" else "ویرایش پروژه")
