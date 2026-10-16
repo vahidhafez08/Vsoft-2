@@ -40,15 +40,15 @@ fun SiteDetailScreen(onBack: () -> Unit, viewModel: SiteDetailViewModel = hiltVi
     val state by viewModel.state.collectAsStateWithLifecycle()
     val site = state.site
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    var handledMissing by remember { mutableStateOf(false) }
-    var editingSite by remember { mutableStateOf(false) }
-    var addingFloor by remember { mutableStateOf(false) }
+    var handledMissing by rememberSaveable { mutableStateOf(false) }
+    var editingSite by rememberSaveable { mutableStateOf(false) }
+    var addingFloor by rememberSaveable { mutableStateOf(false) }
     var renamingFloor by remember { mutableStateOf<FloorEntity?>(null) }
-    var itemFloorId by remember { mutableStateOf<Long?>(null) }
+    var itemFloorId by rememberSaveable { mutableStateOf<Long?>(null) }
     var editingItem by remember { mutableStateOf<WorkItemEntity?>(null) }
-    var logOpen by remember { mutableStateOf(false) }
-    var logPreselect by remember { mutableStateOf<Long?>(null) }
-    var addingPayment by remember { mutableStateOf(false) }
+    var logOpen by rememberSaveable { mutableStateOf(false) }
+    var logPreselect by rememberSaveable { mutableStateOf<Long?>(null) }
+    var addingPayment by rememberSaveable { mutableStateOf(false) }
     var confirmText by remember { mutableStateOf<String?>(null) }
     var confirmAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 

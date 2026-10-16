@@ -36,10 +36,10 @@ import com.vsoft.app.util.toPersianText
 fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val task = state.task
-    var handledMissing by remember { mutableStateOf(false) }
-    var editing by remember { mutableStateOf(false) }
-    var addingSub by remember { mutableStateOf(false) }
-    var confirmDelete by remember { mutableStateOf(false) }
+    var handledMissing by rememberSaveable { mutableStateOf(false) }
+    var editing by rememberSaveable { mutableStateOf(false) }
+    var addingSub by rememberSaveable { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
     // If the task disappears (deleted), leave this screen exactly once.
     LaunchedEffect(state.loaded, task == null) {
