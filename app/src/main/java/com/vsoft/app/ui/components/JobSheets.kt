@@ -171,12 +171,12 @@ fun JobLogSheet(
     onSave: (ItemUi, Int, String, Long) -> Unit
 ) {
     val withItems = floors.filter { it.items.isNotEmpty() }
-    var floorId by remember {
+    var floorId by rememberSaveable {
         mutableStateOf<Long?>(
             (withItems.firstOrNull { f -> f.items.any { it.item.id == preselectItemId } } ?: withItems.firstOrNull())?.floor?.id
         )
     }
-    var itemId by remember {
+    var itemId by rememberSaveable {
         mutableStateOf<Long?>(preselectItemId ?: withItems.firstOrNull()?.items?.firstOrNull()?.item?.id)
     }
     var qty by rememberSaveable { mutableStateOf("") }

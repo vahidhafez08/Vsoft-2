@@ -37,7 +37,7 @@ fun TaskEditorSheet(
     var desc by rememberSaveable { mutableStateOf(initial?.description ?: "") }
     var priority by rememberSaveable { mutableIntStateOf(initial?.priority ?: 1) }
     var projectId by rememberSaveable { mutableStateOf(initial?.projectId ?: defaultProjectId) }
-    var dueIndex by remember { mutableStateOf<Int?>(if (initial?.dueDateMillis != null) null else 0) }
+    var dueIndex by rememberSaveable { mutableStateOf<Int?>(if (initial?.dueDateMillis != null) null else 0) }
 
     FormSheet(onDismiss) {
         SheetTitle(if (initial == null) "کار جدید" else "ویرایش کار")

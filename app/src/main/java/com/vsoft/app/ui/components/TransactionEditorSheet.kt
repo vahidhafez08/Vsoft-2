@@ -56,7 +56,7 @@ fun TransactionEditorSheet(
     var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
     var amountText by rememberSaveable { mutableStateOf(initial?.amount?.toString() ?: "") }
     var category by rememberSaveable { mutableStateOf(initial?.category ?: categories.first()) }
-    var dayOffset by remember { mutableStateOf<Int?>(if (initial == null) 0 else null) }
+    var dayOffset by rememberSaveable { mutableStateOf<Int?>(if (initial == null) 0 else null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val amount = amountText.toLongOrNull() ?: 0L
     val accent = if (isIncome) IncomeGreen else ExpenseRed
