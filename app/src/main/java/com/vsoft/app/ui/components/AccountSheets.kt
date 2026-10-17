@@ -1,5 +1,7 @@
 package com.vsoft.app.ui.components
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.background
@@ -8,8 +10,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -57,7 +56,7 @@ import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountEditorSheet(
     initial: AccountEntity?,
@@ -124,9 +123,9 @@ fun AccountEditorSheet(
             )
             Text("موجودی اولیه‌ی حساب (تراکنش‌ها جداگانه حساب می‌شن)", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
             Text("رنگ کارت", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 AccountColorKeys.forEach { key ->
                     val selected = key == colorKey

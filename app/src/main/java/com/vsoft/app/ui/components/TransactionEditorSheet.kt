@@ -5,8 +5,6 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -20,6 +18,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import com.vsoft.app.ui.components.VChip
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -56,7 +55,7 @@ import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionEditorSheet(
     initial: TransactionEntity?,
@@ -155,29 +154,17 @@ fun TransactionEditorSheet(
                 }
             }
             Text("دسته‌بندی", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                categories.forEach { c ->
-                    FilterChip(selected = c == category, onClick = { category = c }, label = { Text(c) })
-                }
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.sm)) {
+                categories.forEach { c -> VChip(text = c, selected = c == category, onClick = { category = c }) }
             }
             Text(
                 text = if (initial == null) "تاریخ" else "تاریخ فعلی: " + formatJalali(initial.dateMillis),
                 color = Vsoft.colors.textSecondary,
                 fontSize = 13.sp
             )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.sm)) {
                 dayLabels.forEachIndexed { index, label ->
-                    FilterChip(
-                        selected = dayOffset == index,
-                        onClick = { dayOffset = index },
-                        label = { Text(label) }
-                    )
+                    VChip(text = label, selected = dayOffset == index, onClick = { dayOffset = index })
                 }
             }
             Button(
