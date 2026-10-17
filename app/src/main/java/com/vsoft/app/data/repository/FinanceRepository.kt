@@ -84,6 +84,13 @@ class FinanceRepository @Inject constructor(
             require(currentAccounts.any { it.id == from.id } && currentAccounts.any { it.id == to.id }) {
                 "حساب انتخاب‌شده در دسترس نیست"
             }
+            val balances = computeBalances(currentAccounts, transactionDao.getAllOnce(), transferDao.getAllOnce())
+            try {
+                Math.subtractExact(balances[from.id] ?: from.balance, amount)
+                Math.addExact(balances[to.id] ?: to.balance, amount)
+            } catch (overflow: ArithmeticException) {
+                throw IllegalArgumentException("مبلغ انتقال خیلی بزرگه")
+            }
             transferDao.insert(
                 TransferEntity(fromAccountId = from.id, toAccountId = to.id, amount = amount, dateMillis = dateMillis, note = note.trim())
             )
