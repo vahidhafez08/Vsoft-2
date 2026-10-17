@@ -76,6 +76,7 @@ import com.vsoft.app.ui.components.VCard
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.JCal
 import com.vsoft.app.util.UiEvents
 import com.vsoft.app.util.formatSize
@@ -155,7 +156,7 @@ fun DocumentsScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 104.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.listItemSpacing)
         ) {
             item(key = "documents_header") {
                 ScreenHeader(
@@ -229,7 +230,7 @@ fun DocumentsScreen(
 
         ExtendedFloatingActionButton(
             onClick = { picker.launch(arrayOf("*/*")) },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(Dimens.lg),
             containerColor = BrandBlue,
             contentColor = Color.White,
             icon = { Icon(Icons.Filled.Add, contentDescription = null) },
@@ -354,7 +355,7 @@ private fun DocumentRow(
         modifier = modifier,
         backgroundContent = {
             Row(
-                Modifier.fillMaxSize().clip(shape).background(ExpenseRed.copy(alpha = 0.16f)).padding(horizontal = 20.dp),
+                Modifier.fillMaxSize().clip(shape).background(ExpenseRed.copy(alpha = 0.16f)).padding(horizontal = Dimens.xl),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {

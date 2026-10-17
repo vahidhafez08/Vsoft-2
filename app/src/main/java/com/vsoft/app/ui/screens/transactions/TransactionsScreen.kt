@@ -81,6 +81,7 @@ import com.vsoft.app.ui.components.VCard
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.formatTime
 import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianText
@@ -127,7 +128,7 @@ fun TransactionsScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 110.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.listItemSpacing)
         ) {
             item(key = "header") {
                 ScreenHeader(
@@ -244,7 +245,7 @@ fun TransactionsScreen(
         SpeedDialFab(
             onIncome = { newMode = 1 },
             onExpense = { newMode = 2 },
-            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+            modifier = Modifier.align(Alignment.BottomStart).padding(Dimens.lg)
         )
     }
 
@@ -347,7 +348,7 @@ private fun TxRow(
                     .fillMaxSize()
                     .clip(shape)
                     .background(bg)
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = Dimens.xl),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {

@@ -35,6 +35,7 @@ import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.isOverdue
 import com.vsoft.app.util.toPersianText
@@ -210,7 +211,7 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
         TasksFab(
             onNewTask = { addingTask = true },
             onNewProject = { addingProject = true },
-            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+            modifier = Modifier.align(Alignment.BottomStart).padding(Dimens.lg)
         )
     }
 
@@ -256,7 +257,7 @@ private fun StatCell(label: String, value: Int, color: Color, modifier: Modifier
 
 @Composable
 private fun ProjectCard(item: ProjectItem, selected: Boolean, onClick: () -> Unit, onEdit: () -> Unit) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(Dimens.cornerCard)
     val accent = if (item.progress >= 100) IncomeGreen else BrandBlue
     Column(
         Modifier

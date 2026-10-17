@@ -28,6 +28,7 @@ import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.WarningOrange
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toMoney
@@ -70,7 +71,7 @@ fun SiteDetailScreen(onBack: () -> Unit, viewModel: SiteDetailViewModel = hiltVi
             .fillMaxSize()
             .background(Vsoft.colors.bg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = Dimens.screenHorizontal)
             .padding(top = 16.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {

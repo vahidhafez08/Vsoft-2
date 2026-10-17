@@ -67,6 +67,7 @@ import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.toPersianText
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toMoney
@@ -88,7 +89,7 @@ fun AccountsScreen(
             .fillMaxSize()
             .background(Vsoft.colors.bg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = Dimens.screenHorizontal)
             .padding(top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -162,7 +163,7 @@ fun AccountsScreen(
                         modifier = Modifier.animateItemPlacement(),
                         backgroundContent = {
                             Row(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ExpenseRed).padding(16.dp),
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ExpenseRed).padding(Dimens.lg),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -300,7 +301,7 @@ private fun ActionPill(
 @Composable
 private fun AddDashedCard(onClick: () -> Unit) {
     val dashColor = Vsoft.colors.textSecondary.copy(alpha = 0.5f)
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(Dimens.cornerCard)
     Box(
         Modifier
             .fillMaxWidth()
