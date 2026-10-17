@@ -1,6 +1,8 @@
 package com.vsoft.app.ui.screens.tasks
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -307,7 +309,7 @@ private fun ProjectCard(item: ProjectItem, selected: Boolean, onClick: () -> Uni
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit) {
     val task = item.task
@@ -372,7 +374,7 @@ private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onT
                     textDecoration = if (task.isDone) TextDecoration.LineThrough else TextDecoration.None
                 )
                 item.projectTitle?.let { Text(it, color = Vsoft.colors.textSecondary, fontSize = 11.sp, maxLines = 1) }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.xs)) {
                     MiniChip(priorityLabel(task.priority), priorityColor(task.priority))
                     task.dueDateMillis?.let { due ->
                         MiniChip(

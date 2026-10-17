@@ -29,11 +29,11 @@ import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.isOverdue
 import com.vsoft.app.util.toPersianText
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -77,7 +77,7 @@ fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltVi
                 VCard {
                     Text(task.title, color = Vsoft.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.sm), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.bounceClick { viewModel.toggleTask(task) }) {
                             MiniChip(
                                 text = if (task.isDone) "انجام شد" else "در حال انجام",
