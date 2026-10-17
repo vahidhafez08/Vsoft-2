@@ -163,6 +163,7 @@ fun AccountsScreen(
     if (transferring && state.accounts.size >= 2) {
         TransferSheet(
             accounts = state.accounts,
+            balances = state.balances,
             onDismiss = { transferring = false },
             onTransfer = { fromId, toId, amount ->
                 viewModel.transfer(fromId, toId, amount)
