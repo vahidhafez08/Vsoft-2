@@ -101,6 +101,11 @@ class FinanceRepository @Inject constructor(
         transferDao.delete(transfer)
     }
 
+    /** Restore a swipe-deleted transfer with its original primary key. */
+    suspend fun restoreTransfer(transfer: TransferEntity) {
+        transferDao.insert(transfer)
+    }
+
     /** Inserts demo data once (first launch only). */
     suspend fun seedDemoDataIfNeeded(prefs: SharedPreferences) {
         if (prefs.getBoolean(KEY_SEEDED, false)) return
