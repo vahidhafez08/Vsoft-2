@@ -389,6 +389,9 @@ private fun TxRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (accountName != null) {
+                    Text(accountName, color = Vsoft.colors.textSecondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
             Spacer(Modifier.width(8.dp))
             Column(horizontalAlignment = Alignment.End) {
