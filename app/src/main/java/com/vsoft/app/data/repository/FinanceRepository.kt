@@ -1,38 +1,53 @@
 package com.vsoft.app.data.repository
 
+import android.content.Context
 import android.content.SharedPreferences
+import androidx.room.withTransaction
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.vsoft.app.data.db.AccountDao
 import com.vsoft.app.data.db.TransactionDao
 import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.util.DAY_MS
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class FinanceRepository @Inject constructor(
     private val transactionDao: TransactionDao,
-    private val accountDao: AccountDao
+    private val accountDao: AccountDao,
+    private val db: com.vsoft.app.data.db.AppDatabase,
+    @ApplicationContext private val context: Context
 ) {
     fun observeTransactions(): Flow<List<TransactionEntity>> = transactionDao.observeAll()
     fun observeAccounts(): Flow<List<AccountEntity>> = accountDao.observeAll()
 
-    suspend fun addTransaction(title: String, amount: Long, isIncome: Boolean, category: String) {
+    fun observeAccountBalances(): Flow<Map<Long, Long>> = combine(observeAccounts(), observeTransactions()) { accounts, transactions -> computeBalances(accounts, transactions) }
+
+    suspend fun addTransaction(title: String, amount: Long, isIncome: Boolean, category: String, accountId: Long? = null) {
         transactionDao.upsert(
             TransactionEntity(
                 title = title,
                 amount = amount,
                 isIncome = isIncome,
                 category = category,
-                dateMillis = System.currentTimeMillis()
+                dateMillis = System.currentTimeMillis(),
+                accountId = accountId
             )
         )
+        rememberLastAccount(accountId)
     }
 
     /** Insert or update (also used to restore a deleted item with its old id). */
     suspend fun saveTransaction(tx: TransactionEntity) {
         transactionDao.upsert(tx)
+        rememberLastAccount(tx.accountId)
+    }
+
+    private fun rememberLastAccount(accountId: Long?) {
+        context.getSharedPreferences("vsoft_prefs", Context.MODE_PRIVATE).edit().putLong("last_account_id", accountId ?: -1L).apply()
     }
 
     suspend fun deleteTransaction(tx: TransactionEntity) {
@@ -43,8 +58,13 @@ class FinanceRepository @Inject constructor(
         accountDao.upsert(account)
     }
 
-    suspend fun deleteAccount(account: AccountEntity) {
-        accountDao.delete(account)
+    suspend fun deleteAccount(account: AccountEntity) = deleteAccountDetachingTransactions(account)
+
+    suspend fun deleteAccountDetachingTransactions(account: AccountEntity) {
+        db.withTransaction {
+            transactionDao.detachAccount(account.id)
+            accountDao.delete(account)
+        }
     }
 
     suspend fun transfer(from: AccountEntity, to: AccountEntity, amount: Long) {
@@ -97,4 +117,17 @@ class FinanceRepository @Inject constructor(
     private companion object {
         const val KEY_SEEDED = "demo_seeded"
     }
+}
+
+
+fun computeBalances(accounts: List<AccountEntity>, transactions: List<TransactionEntity>): Map<Long, Long> {
+    val totals = accounts.associate { it.id to it.balance }.toMutableMap()
+    transactions.forEach { tx ->
+        val id = tx.accountId
+        if (id != null && totals.containsKey(id)) {
+            val delta = if (tx.isIncome) tx.amount else -tx.amount
+            totals[id] = (totals[id] ?: 0L) + delta
+        }
+    }
+    return totals
 }
