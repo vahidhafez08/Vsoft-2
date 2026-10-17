@@ -46,6 +46,7 @@ import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.DAY_MS
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toLatinDigits
@@ -93,7 +94,7 @@ fun TransactionEditorSheet(
                 .navigationBarsPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = Dimens.xl)
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
