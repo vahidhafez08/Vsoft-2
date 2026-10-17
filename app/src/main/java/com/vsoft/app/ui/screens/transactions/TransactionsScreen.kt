@@ -56,6 +56,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusManager
@@ -94,6 +96,7 @@ fun TransactionsScreen(
     onBack: () -> Unit,
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
+    val haptics = LocalHapticFeedback.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableIntStateOf(0) }
@@ -110,6 +113,7 @@ fun TransactionsScreen(
     }
 
     fun deleteWithUndo(tx: TransactionEntity) {
+        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         viewModel.delete(tx)
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()

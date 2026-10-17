@@ -38,6 +38,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -79,6 +81,7 @@ fun AccountsScreen(
     onBack: () -> Unit,
     viewModel: AccountsViewModel = hiltViewModel()
 ) {
+    val haptics = LocalHapticFeedback.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     var adding by rememberSaveable { mutableStateOf(false) }
     var transferring by rememberSaveable { mutableStateOf(false) }
@@ -153,6 +156,7 @@ fun AccountsScreen(
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { value ->
                             if (value != SwipeToDismissBoxValue.Settled) {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 viewModel.deleteTransfer(transfer) { viewModel.restoreTransfer(transfer) }
                                 true
                             } else false
