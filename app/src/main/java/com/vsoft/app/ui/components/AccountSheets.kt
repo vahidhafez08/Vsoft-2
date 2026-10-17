@@ -65,6 +65,7 @@ fun AccountEditorSheet(
     onSave: (AccountEntity) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
+    val haptics = LocalHapticFeedback.current
     var name by rememberSaveable { mutableStateOf(initial?.name ?: "") }
     var last4 by rememberSaveable { mutableStateOf(initial?.last4 ?: "") }
     var balanceText by rememberSaveable { mutableStateOf(initial?.balance?.toString() ?: "") }

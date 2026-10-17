@@ -64,6 +64,7 @@ fun TransferSheet(
     onDismiss: () -> Unit,
     onTransfer: (fromId: Long, toId: Long, amount: Long, dateMillis: Long, note: String) -> Unit
 ) {
+    val haptics = LocalHapticFeedback.current
     var fromId by rememberSaveable(accounts) { mutableStateOf(accounts.firstOrNull()?.id ?: -1L) }
     var toId by rememberSaveable(accounts) { mutableStateOf(accounts.getOrNull(1)?.id ?: -1L) }
     var amountText by rememberSaveable { mutableStateOf("") }
