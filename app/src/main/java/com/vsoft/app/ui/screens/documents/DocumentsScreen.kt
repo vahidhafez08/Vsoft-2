@@ -317,18 +317,33 @@ private fun DocumentRow(
     val shape = RoundedCornerShape(18.dp)
     val categoryColor = DocumentCategories.color(document.category)
     val cachedBitmap = remember(document.id) { mutableStateOf<Bitmap?>(null) }
-    LaunchedEffect(document.id, document.storedName, exists, document.mimeType) {
-        if (exists && document.mimeType.startsWith("image/", ignoreCase = true) && cachedBitmap.value == null) {
-            cachedBitmap.value = withContext(Dispatchers.IO) {
-                runCatching {
+    val producedBitmap by produceState<Bitmap?>(
+        initialValue = cachedBitmap.value,
+        key1 = document.id,
+        key2 = document.storedName,
+        key3 = exists,
+        key4 = document.mimeType
+    ) {
+        if (value == null && exists && document.mimeType.startsWith("image/", ignoreCase = true)) {
+            value = withContext(Dispatchers.IO) {
+                try {
                     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                     BitmapFactory.decodeFile(file.absolutePath, bounds)
-                    val maxSide = maxOf(bounds.outWidth, bounds.outHeight)
-                    val sample = if (maxSide > 96) (maxSide / 96).coerceAtLeast(1) else 1
-                    val options = BitmapFactory.Options().apply { inSampleSize = sample }
-                    BitmapFactory.decodeFile(file.absolutePath, options)
-                }.getOrNull()
+                    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                        null
+                    } else {
+                        val maxSide = maxOf(bounds.outWidth, bounds.outHeight)
+                        val sample = if (maxSide > 96) (maxSide / 96).coerceAtLeast(1) else 1
+                        val options = BitmapFactory.Options().apply { inSampleSize = sample }
+                        BitmapFactory.decodeFile(file.absolutePath, options)
+                    }
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    null
+                }
             }
+            cachedBitmap.value = value
         }
     }
 
@@ -351,7 +366,7 @@ private fun DocumentRow(
                 .clickable(enabled = exists, onClick = onOpen)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val preview = cachedBitmap.value
+                val preview = producedBitmap ?: cachedBitmap.value
                 if (preview != null) {
                     Image(
                         bitmap = preview.asImageBitmap(),
