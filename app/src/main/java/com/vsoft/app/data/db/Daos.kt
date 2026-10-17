@@ -10,6 +10,7 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions") suspend fun getAllOnce(): List<TransactionEntity>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllRaw(items: List<TransactionEntity>)
     @Query("DELETE FROM transactions") suspend fun deleteAllRaw()
+    @Query("UPDATE transactions SET accountId = NULL WHERE accountId = :id") suspend fun detachAccount(id: Long)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsert(item: TransactionEntity): Long
     @Delete suspend fun delete(item: TransactionEntity)
 }
