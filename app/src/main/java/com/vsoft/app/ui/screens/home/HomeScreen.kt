@@ -183,9 +183,10 @@ fun HomeScreen(
         val isIncome = sheetMode == 1
         AddTransactionSheet(
             isIncome = isIncome,
+            accounts = state.accounts,
             onDismiss = { sheetMode = 0 },
-            onSave = { title, amount, category ->
-                viewModel.addTransaction(title, amount, isIncome, category)
+            onSave = { title, amount, category, accountId ->
+                viewModel.addTransaction(title, amount, isIncome, category, accountId)
                 sheetMode = 0
             }
         )
