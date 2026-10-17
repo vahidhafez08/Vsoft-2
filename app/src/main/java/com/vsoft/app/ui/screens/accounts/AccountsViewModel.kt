@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -16,6 +17,7 @@ import javax.inject.Inject
 data class AccountsUiState(
     val accounts: List<AccountEntity> = emptyList(),
     val total: Long = 0L,
+    val balances: Map<Long, Long> = emptyMap(),
     val loaded: Boolean = false
 )
 
@@ -25,9 +27,9 @@ class AccountsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state: StateFlow<AccountsUiState> =
-        repository.observeAccounts()
-            .map { list -> AccountsUiState(list, list.sumOf { it.balance }, true) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AccountsUiState())
+        combine(repository.observeAccounts(), repository.observeAccountBalances()) { list, balances ->
+            AccountsUiState(list, list.sumOf { balances[it.id] ?: it.balance }, balances, true)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AccountsUiState())
 
     fun save(account: AccountEntity) {
         safeLaunch { repository.saveAccount(account) }
