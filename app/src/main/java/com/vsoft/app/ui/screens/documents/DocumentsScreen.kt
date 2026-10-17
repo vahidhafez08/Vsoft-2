@@ -321,8 +321,7 @@ private fun DocumentRow(
         initialValue = cachedBitmap.value,
         key1 = document.id,
         key2 = document.storedName,
-        key3 = exists,
-        key4 = document.mimeType
+        key3 = "${exists}:${document.mimeType}"
     ) {
         if (value == null && exists && document.mimeType.startsWith("image/", ignoreCase = true)) {
             value = withContext(Dispatchers.IO) {
