@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -60,6 +61,7 @@ fun SegmentedTabs(
                     .weight(1f)
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (isSelected) BrandBlue else Color.Transparent)
+                    .defaultMinSize(minHeight = Dimens.minTouchTarget)
                     .bounceClick { onSelect(index) }
                     .padding(vertical = Dimens.md),
                 contentAlignment = Alignment.Center
