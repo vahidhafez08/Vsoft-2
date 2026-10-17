@@ -1,6 +1,5 @@
 package com.vsoft.app.ui.screens.home
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +61,7 @@ import kotlin.math.abs
 fun HomeScreen(
     onOpenTransactions: () -> Unit = {},
     onOpenAccounts: () -> Unit = {},
+    onOpenDocuments: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -70,7 +69,6 @@ fun HomeScreen(
     val userName by settingsViewModel.userName.collectAsStateWithLifecycle()
     // 0 = hidden, 1 = add income, 2 = add expense
     var sheetMode by rememberSaveable { mutableIntStateOf(0) }
-    val context = LocalContext.current
     val isDark = Vsoft.colors.isDark
 
     val balanceBrush = if (isDark)
@@ -173,9 +171,7 @@ fun HomeScreen(
             QuickAction("انتقال وجه", Icons.Filled.SwapHoriz, BrandBlue, Modifier.weight(1f)) {
                 onOpenAccounts()
             }
-            QuickAction("اسناد", Icons.Filled.Description, BrandPurple, Modifier.weight(1f)) {
-                Toast.makeText(context, "به‌زودی", Toast.LENGTH_SHORT).show()
-            }
+            QuickAction("اسناد", Icons.Filled.Description, BrandPurple, Modifier.weight(1f), onClick = onOpenDocuments)
         }
     }
 
