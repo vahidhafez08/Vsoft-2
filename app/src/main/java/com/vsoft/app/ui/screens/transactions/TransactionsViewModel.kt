@@ -3,6 +3,7 @@ package com.vsoft.app.ui.screens.transactions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.TransactionEntity
+import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.data.repository.FinanceRepository
 import com.vsoft.app.util.dayLabel
 import com.vsoft.app.util.startOfDay
@@ -22,7 +23,8 @@ import javax.inject.Inject
 data class TxFilters(
     val query: String = "",
     val type: Int = 0,          // 0 all, 1 income, 2 expense
-    val category: String? = null
+    val category: String? = null,
+    val accountId: Long? = null
 )
 
 data class TxGroup(
@@ -38,6 +40,8 @@ data class TransactionsUiState(
     val expense: Long = 0L,
     val count: Int = 0,
     val categories: List<String> = emptyList(),
+    val accounts: List<AccountEntity> = emptyList(),
+    val accountNames: Map<Long, String> = emptyMap(),
     val loaded: Boolean = false
 )
 
@@ -49,7 +53,7 @@ class TransactionsViewModel @Inject constructor(
     private val filters = MutableStateFlow(TxFilters())
 
     val state: StateFlow<TransactionsUiState> =
-        combine(repository.observeTransactions(), filters) { all, f -> build(all, f) }
+        combine(repository.observeTransactions(), repository.observeAccounts(), filters) { all, accounts, f -> build(all, accounts, f) }
             .flowOn(Dispatchers.Default)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TransactionsUiState())
 
@@ -69,14 +73,15 @@ class TransactionsViewModel @Inject constructor(
         safeLaunch { repository.saveTransaction(tx) }
     }
 
-    private fun build(all: List<TransactionEntity>, f: TxFilters): TransactionsUiState {
+    private fun build(all: List<TransactionEntity>, accounts: List<AccountEntity>, f: TxFilters): TransactionsUiState {
         val byType = all.filter {
             f.type == 0 || (f.type == 1 && it.isIncome) || (f.type == 2 && !it.isIncome)
         }
         val categories = byType.map { it.category }.distinct()
         val q = f.query.trim().toLatinDigits().lowercase()
         val filtered = byType.filter { t ->
-            (f.category == null || t.category == f.category) &&
+            (f.accountId == null || t.accountId == f.accountId) &&
+                (f.category == null || t.category == f.category) &&
                 (q.isEmpty() ||
                     t.title.lowercase().contains(q) ||
                     t.category.contains(q) ||
@@ -100,6 +105,8 @@ class TransactionsViewModel @Inject constructor(
             expense = expense,
             count = filtered.size,
             categories = categories,
+            accounts = accounts,
+            accountNames = accounts.associate { it.id to it.name },
             loaded = true
         )
     }
