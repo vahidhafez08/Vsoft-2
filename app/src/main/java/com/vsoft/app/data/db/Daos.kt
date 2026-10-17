@@ -74,3 +74,30 @@ interface SubtaskDao {
     @Query("DELETE FROM subtasks WHERE taskId = :taskId") suspend fun deleteForTask(taskId: Long)
     @Query("UPDATE subtasks SET isDone = :done WHERE taskId = :taskId") suspend fun setAllDone(taskId: Long, done: Boolean)
 }
+
+@Dao
+interface DocumentDao {
+    @Query("SELECT * FROM documents ORDER BY createdAt DESC, id DESC")
+    fun observeAll(): Flow<List<DocumentEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(item: DocumentEntity): Long
+
+    @Update
+    suspend fun update(item: DocumentEntity)
+
+    @Delete
+    suspend fun delete(item: DocumentEntity)
+
+    @Query("SELECT * FROM documents WHERE id = :id")
+    suspend fun getById(id: Long): DocumentEntity?
+
+    @Query("SELECT * FROM documents")
+    suspend fun getAllOnce(): List<DocumentEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllRaw(items: List<DocumentEntity>)
+
+    @Query("DELETE FROM documents")
+    suspend fun deleteAllRaw()
+}
