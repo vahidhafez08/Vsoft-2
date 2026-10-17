@@ -3,6 +3,8 @@ package com.vsoft.app
 import android.app.Application
 import android.util.Log
 import com.vsoft.app.data.db.AppDatabase
+import com.vsoft.app.notify.NotificationHelper
+import com.vsoft.app.notify.ReminderScheduler
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +21,12 @@ class VsoftApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        try {
+            NotificationHelper.ensureChannel(this)
+            ReminderScheduler.schedule(this)
+        } catch (e: Exception) {
+            Log.e("VsoftApp", "Setting up task reminders failed", e)
+        }
         // The app no longer seeds demo data. Wipe the old demo data exactly once.
         appScope.launch {
             val prefs = getSharedPreferences("vsoft_prefs", MODE_PRIVATE)
