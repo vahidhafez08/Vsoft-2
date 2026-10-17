@@ -19,6 +19,6 @@ val LightTextSecondary = Color(0xFF475569)
 
 val BrandBlue = Color(0xFF3B6CF6)
 val BrandPurple = Color(0xFF8B5CF6)
-val IncomeGreen = Color(0xFF15803D)
-val ExpenseRed = Color(0xFFB91C1C)
+val IncomeGreen = Color(0xFF16A34A)
+val ExpenseRed = Color(0xFFDC2626)
 val WarningOrange = Color(0xFFB45309)
