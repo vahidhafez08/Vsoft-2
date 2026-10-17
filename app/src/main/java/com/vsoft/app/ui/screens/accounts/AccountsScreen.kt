@@ -152,7 +152,7 @@ fun AccountsScreen(
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { value ->
                             if (value != SwipeToDismissBoxValue.Settled) {
-                                viewModel.deleteTransfer(transfer)
+                                viewModel.deleteTransfer(transfer) { viewModel.restoreTransfer(transfer) }
                                 true
                             } else false
                         }
