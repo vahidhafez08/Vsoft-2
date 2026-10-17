@@ -17,6 +17,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -125,7 +126,7 @@ class BackupManager @Inject constructor(
             append("تاریخ,نوع,دسته,مبلغ,توضیحات\r\n")
             rows.forEach { transaction ->
                 val jalali = JCal.toJalali(transaction.dateMillis)
-                val date = "%04d/%02d/%02d".format(jalali[0], jalali[1], jalali[2])
+                val date = "%04d/%02d/%02d".format(Locale.US, jalali[0], jalali[1], jalali[2])
                 val type = if (transaction.isIncome) "درآمد" else "هزینه"
                 val fields = listOf(
                     date,
