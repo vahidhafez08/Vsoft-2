@@ -189,6 +189,7 @@ fun AccountEditorSheet(
 @Composable
 fun TransferSheet(
     accounts: List<AccountEntity>,
+    balances: Map<Long, Long> = emptyMap(),
     onDismiss: () -> Unit,
     onTransfer: (fromId: Long, toId: Long, amount: Long) -> Unit
 ) {
@@ -201,11 +202,12 @@ fun TransferSheet(
     val amount = amountText.toLongOrNull() ?: 0L
     val from = accounts.firstOrNull { it.id == fromId }
     val to = accounts.firstOrNull { it.id == toId }
+    val fromBalance = from?.let { balances[it.id] ?: it.balance } ?: 0L
 
     val error: String? = when {
         fromId == toId -> "حساب مبدأ و مقصد نباید یکی باشد"
         from == null || to == null -> "حساب انتخاب‌شده در دسترس نیست"
-        amount > 0L && amount > from.balance -> "موجودی حساب مبدأ کافی نیست"
+        amount > 0L && amount > fromBalance -> "موجودی حساب مبدأ کافی نیست"
         else -> null
     }
 
@@ -250,7 +252,7 @@ fun TransferSheet(
             }
             if (from != null) {
                 Text(
-                    "موجودی مبدأ: " + from.balance.toMoney() + " تومان",
+                    "موجودی مبدأ: " + fromBalance.toMoney() + " تومان",
                     color = Vsoft.colors.textSecondary,
                     fontSize = 12.sp
                 )
