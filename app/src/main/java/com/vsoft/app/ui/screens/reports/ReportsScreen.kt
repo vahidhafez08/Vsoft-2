@@ -13,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +46,7 @@ private fun signedMoney(v: Long): String = (if (v < 0L) "−" else "") + abs(v).
 
 @Composable
 fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
+    val haptics = LocalHapticFeedback.current
     val s by viewModel.state.collectAsStateWithLifecycle()
     val includeJobIncome by viewModel.includeJobIncome.collectAsStateWithLifecycle()
     var period by rememberSaveable { mutableIntStateOf(1) }
