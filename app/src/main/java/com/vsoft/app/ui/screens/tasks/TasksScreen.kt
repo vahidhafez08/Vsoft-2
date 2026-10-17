@@ -62,7 +62,7 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
         viewModel.deleteTask(task)
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()
-            val result = snackbar.showSnackbar("کار حذف شد", actionLabel = "بازگردانی", duration = SnackbarDuration.Short)
+            val result = snackbar.showSnackbar("کار حذف شد", actionLabel = "واگرد", duration = SnackbarDuration.Long)
             if (result == SnackbarResult.ActionPerformed) viewModel.restoreLastDeleted()
         }
     }
