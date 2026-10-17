@@ -16,6 +16,17 @@ interface TransactionDao {
 }
 
 @Dao
+interface TransferDao {
+    @Query("SELECT * FROM transfers ORDER BY dateMillis DESC, id DESC") fun observeAll(): Flow<List<TransferEntity>>
+    @Insert suspend fun insert(item: TransferEntity): Long
+    @Delete suspend fun delete(item: TransferEntity)
+    @Query("DELETE FROM transfers WHERE fromAccountId = :id OR toAccountId = :id") suspend fun deleteForAccount(id: Long)
+    @Query("SELECT * FROM transfers") suspend fun getAllOnce(): List<TransferEntity>
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllRaw(items: List<TransferEntity>)
+    @Query("DELETE FROM transfers") suspend fun deleteAllRaw()
+}
+
+@Dao
 interface AccountDao {
     @Query("SELECT * FROM accounts ORDER BY id ASC") fun observeAll(): Flow<List<AccountEntity>>
     @Query("SELECT * FROM accounts") suspend fun getAllOnce(): List<AccountEntity>
