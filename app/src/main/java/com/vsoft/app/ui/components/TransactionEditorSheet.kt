@@ -182,6 +182,7 @@ fun TransactionEditorSheet(
             }
             Button(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     val off = dayOffset
                     val now = System.currentTimeMillis()
                     val date = if (off != null) now - off * DAY_MS else (initial?.dateMillis ?: now)
