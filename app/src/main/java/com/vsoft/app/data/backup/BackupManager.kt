@@ -121,9 +121,10 @@ class BackupManager @Inject constructor(
 
     suspend fun exportTransactionsCsv(): String = withContext(Dispatchers.IO) {
         val rows = db.transactionDao().getAllOnce().sortedByDescending { it.dateMillis }
+        val accountNames = db.accountDao().getAllOnce().associate { it.id to it.name }
         buildString {
             append('\uFEFF')
-            append("تاریخ,نوع,دسته,مبلغ,توضیحات\r\n")
+            append("تاریخ,نوع,دسته,حساب,مبلغ,توضیحات\r\n")
             rows.forEach { transaction ->
                 val jalali = JCal.toJalali(transaction.dateMillis)
                 val date = "%04d/%02d/%02d".format(Locale.US, jalali[0], jalali[1], jalali[2])
@@ -132,6 +133,7 @@ class BackupManager @Inject constructor(
                     date,
                     type,
                     transaction.category,
+                    transaction.accountId?.let { accountNames[it] }.orEmpty(),
                     transaction.amount.toString(),
                     transaction.title
                 )
@@ -185,7 +187,8 @@ class BackupManager @Inject constructor(
             amount = requiredLong("amount"),
             isIncome = requiredBoolean("isIncome"),
             category = requiredString("category"),
-            dateMillis = requiredLong("dateMillis")
+            dateMillis = requiredLong("dateMillis"),
+            accountId = optionalNullableLong("accountId")
         ) }
         val accounts = tableObject.requiredArray("accounts").mapObjects { AccountEntity(
             id = requiredLong("id"),
@@ -265,7 +268,7 @@ class BackupManager @Inject constructor(
         val notifications = settingsObject.optionalBooleanOrNull("notifications")
 
         return ParsedBackup(
-            transactions, accounts, projects, tasks, subtasks, sites, floors,
+            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }) }, accounts, projects, tasks, subtasks, sites, floors,
             workItems, workLogs, sitePayments, userName, themeMode, notifications
         )
     }
@@ -289,6 +292,7 @@ class BackupManager @Inject constructor(
     private fun TransactionEntity.toJson() = JSONObject()
         .put("id", id).put("title", title).put("amount", amount)
         .put("isIncome", isIncome).put("category", category).put("dateMillis", dateMillis)
+        .put("accountId", accountId ?: JSONObject.NULL)
 
     private fun AccountEntity.toJson() = JSONObject()
         .put("id", id).put("name", name).put("last4", last4)
