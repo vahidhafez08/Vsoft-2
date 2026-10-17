@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.vsoft.app.data.model.ExpenseCategories
 import com.vsoft.app.data.model.IncomeCategories
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
@@ -77,7 +78,7 @@ fun AddTransactionSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = Dimens.xl)
                 .padding(bottom = 24.dp)
                 .navigationBarsPadding()
                 .imePadding(),
