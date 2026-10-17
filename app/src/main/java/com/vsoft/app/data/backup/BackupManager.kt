@@ -38,6 +38,9 @@ class BackupManager @Inject constructor(
             .put("transfers", JSONArray().apply {
                 db.transferDao().getAllOnce().forEach { put(it.toJson()) }
             })
+            .put("documents", JSONArray().apply {
+                db.documentDao().getAllOnce().forEach { put(it.toJson()) }
+            })
             .put("projects", JSONArray().apply {
                 db.projectDao().getAllOnce().forEach { put(it.toJson()) }
             })
@@ -92,6 +95,7 @@ class BackupManager @Inject constructor(
                     db.jobDao().deleteAllFloorsRaw()
                     db.transactionDao().deleteAllRaw()
                     db.transferDao().deleteAllRaw()
+                    db.documentDao().deleteAllRaw()
                     db.taskDao().deleteAllRaw()
                     db.projectDao().deleteAllRaw()
                     db.accountDao().deleteAllRaw()
@@ -100,6 +104,7 @@ class BackupManager @Inject constructor(
                     // Insert parents before children, retaining original IDs.
                     db.accountDao().insertAllRaw(parsed.accounts)
                     db.transferDao().insertAllRaw(parsed.transfers)
+                    db.documentDao().insertAllRaw(parsed.documents)
                     db.projectDao().insertAllRaw(parsed.projects)
                     db.jobDao().insertAllSitesRaw(parsed.sites)
                     db.transactionDao().insertAllRaw(parsed.transactions)
@@ -217,6 +222,21 @@ class BackupManager @Inject constructor(
             transfer.fromAccountId != transfer.toAccountId && transfer.amount > 0L &&
                 accounts.any { it.id == transfer.fromAccountId } && accounts.any { it.id == transfer.toAccountId }
         }
+        val documents = if (!tableObject.has("documents") || tableObject.isNull("documents")) {
+            emptyList()
+        } else {
+            tableObject.requiredArray("documents").mapObjects { DocumentEntity(
+                id = requiredLong("id"),
+                title = requiredString("title"),
+                category = optionalInt("category", 4).coerceIn(0, 4),
+                fileName = requiredString("fileName"),
+                mimeType = optionalString("mimeType", ""),
+                sizeBytes = optionalLong("sizeBytes", 0L).coerceAtLeast(0L),
+                storedName = requiredString("storedName"),
+                note = optionalString("note", ""),
+                createdAt = requiredLong("createdAt")
+            ) }
+        }
         val projects = tableObject.requiredArray("projects").mapObjects { ProjectEntity(
             id = requiredLong("id"),
             title = requiredString("title"),
@@ -288,7 +308,7 @@ class BackupManager @Inject constructor(
         val notifications = settingsObject.optionalBooleanOrNull("notifications")
 
         return ParsedBackup(
-            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }) }, accounts, transfers, projects, tasks, subtasks, sites, floors,
+            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }) }, accounts, transfers, documents, projects, tasks, subtasks, sites, floors,
             workItems, workLogs, sitePayments, userName, themeMode, notifications
         )
     }
@@ -297,6 +317,7 @@ class BackupManager @Inject constructor(
         val transactions: List<TransactionEntity>,
         val accounts: List<AccountEntity>,
         val transfers: List<TransferEntity>,
+        val documents: List<DocumentEntity>,
         val projects: List<ProjectEntity>,
         val tasks: List<TaskEntity>,
         val subtasks: List<SubtaskEntity>,
@@ -322,6 +343,11 @@ class BackupManager @Inject constructor(
     private fun TransferEntity.toJson() = JSONObject()
         .put("id", id).put("fromAccountId", fromAccountId).put("toAccountId", toAccountId)
         .put("amount", amount).put("dateMillis", dateMillis).put("note", note)
+
+    private fun DocumentEntity.toJson() = JSONObject()
+        .put("id", id).put("title", title).put("category", category)
+        .put("fileName", fileName).put("mimeType", mimeType).put("sizeBytes", sizeBytes)
+        .put("storedName", storedName).put("note", note).put("createdAt", createdAt)
 
     private fun ProjectEntity.toJson() = JSONObject()
         .put("id", id).put("title", title).put("progress", progress)
