@@ -1,5 +1,6 @@
 package com.vsoft.app.ui.components
 
+import com.vsoft.app.ui.theme.Dimens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

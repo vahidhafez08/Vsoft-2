@@ -279,7 +279,7 @@ fun DocumentsScreen(
     }
 }
 
-@Composable
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DocumentRow(
     document: DocumentEntity,
