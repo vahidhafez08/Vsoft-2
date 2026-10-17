@@ -33,6 +33,7 @@ import com.vsoft.app.ui.screens.jobs.SiteDetailScreen
 import com.vsoft.app.ui.screens.tasks.TaskDetailScreen
 import com.vsoft.app.ui.screens.tasks.TasksScreen
 import com.vsoft.app.ui.screens.transactions.TransactionsScreen
+import com.vsoft.app.ui.screens.documents.DocumentsScreen
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.UiEvents
@@ -117,7 +118,8 @@ fun MainScaffold() {
             composable(Destination.Home.route) {
                 HomeScreen(
                     onOpenTransactions = { openRoute(Routes.TRANSACTIONS) },
-                    onOpenAccounts = { openRoute(Routes.ACCOUNTS) }
+                    onOpenAccounts = { openRoute(Routes.ACCOUNTS) },
+                    onOpenDocuments = { openRoute(Routes.DOCUMENTS) }
                 )
             }
             composable(Destination.Finance.route) {
@@ -128,6 +130,7 @@ fun MainScaffold() {
             }
             composable(Routes.TRANSACTIONS) { TransactionsScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
+            composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
             composable(Destination.Tasks.route) {
                 TasksScreen(
                     onOpenTask = { id -> openRoute(Routes.taskDetail(id)) },
