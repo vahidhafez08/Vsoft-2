@@ -160,12 +160,14 @@ internal fun SheetTitle(text: String) =
 internal fun SheetLabel(text: String) =
     Text(text, color = Vsoft.colors.textSecondary, fontSize = 13.sp)
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ChipGroup(labels: List<String>, isSelected: (Int) -> Boolean, onSelect: (Int) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        labels.forEachIndexed { i, l ->
-            FilterChip(selected = isSelected(i), onClick = { onSelect(i) }, label = { Text(l) })
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.sm)
+    ) {
+        labels.forEachIndexed { i, label ->
+            VChip(text = label, selected = isSelected(i), onClick = { onSelect(i) })
         }
     }
 }

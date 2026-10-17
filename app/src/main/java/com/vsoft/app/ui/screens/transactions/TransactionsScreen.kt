@@ -34,7 +34,6 @@ import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -78,6 +77,7 @@ import com.vsoft.app.ui.components.SegmentedTabs
 import com.vsoft.app.ui.components.SpeedDialFab
 import com.vsoft.app.ui.components.TransactionEditorSheet
 import com.vsoft.app.ui.components.VCard
+import com.vsoft.app.ui.components.VChip
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
@@ -185,18 +185,10 @@ fun TransactionsScreen(
                 item(key = "cats") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         item {
-                            FilterChip(
-                                selected = category == null,
-                                onClick = { category = null },
-                                label = { Text("همه دسته‌ها") }
-                            )
+                            VChip(text = "همه دسته‌ها", selected = category == null, onClick = { category = null })
                         }
                         items(state.categories, key = { it }) { c ->
-                            FilterChip(
-                                selected = category == c,
-                                onClick = { category = if (category == c) null else c },
-                                label = { Text(c) }
-                            )
+                            VChip(text = c, selected = category == c, onClick = { category = if (category == c) null else c })
                         }
                     }
                 }
@@ -204,9 +196,9 @@ fun TransactionsScreen(
             if (state.accounts.isNotEmpty()) {
                 item(key = "accounts") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item { FilterChip(selected = accountFilter == null, onClick = { accountFilter = null }, label = { Text("همه حساب‌ها") }) }
+                        item { VChip(text = "همه حساب‌ها", selected = accountFilter == null, onClick = { accountFilter = null }) }
                         items(state.accounts, key = { it.id }) { account ->
-                            FilterChip(selected = accountFilter == account.id, onClick = { accountFilter = if (accountFilter == account.id) null else account.id }, label = { Text(account.name) })
+                            VChip(text = account.name, selected = accountFilter == account.id, onClick = { accountFilter = if (accountFilter == account.id) null else account.id })
                         }
                     }
                 }

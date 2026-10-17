@@ -72,20 +72,6 @@ fun HomeScreen(
     val userName by settingsViewModel.userName.collectAsStateWithLifecycle()
     // 0 = hidden, 1 = add income, 2 = add expense
     var sheetMode by rememberSaveable { mutableIntStateOf(0) }
-    val isDark = Vsoft.colors.isDark
-
-    val balanceBrush = if (isDark)
-        Brush.linearGradient(listOf(Color(0xFF14532D), Color(0xFF15803D)))
-    else
-        Brush.linearGradient(listOf(Color(0xFFD1FAE5), Color(0xFFA7F3D0)))
-    val balanceContent = if (isDark) Color.White else Color(0xFF064E3B)
-
-    val incomeBrush = if (isDark)
-        Brush.linearGradient(listOf(Color(0xFF1E3A8A), Color(0xFF1D4ED8)))
-    else
-        Brush.linearGradient(listOf(Color(0xFFDBEAFE), Color(0xFFBFDBFE)))
-    val incomeContent = if (isDark) Color.White else Color(0xFF1E3A8A)
-
     Column(
         modifier = Modifier
             .fillMaxSize()
