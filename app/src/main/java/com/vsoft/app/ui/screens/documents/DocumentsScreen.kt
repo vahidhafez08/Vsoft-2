@@ -334,7 +334,8 @@ private fun DocumentRow(
                         null
                     } else {
                         val maxSide = maxOf(bounds.outWidth, bounds.outHeight)
-                        val sample = if (maxSide > 96) (maxSide / 96).coerceAtLeast(1) else 1
+                        var sample = 1
+                        while (maxSide > 0 && maxSide / sample > 96 && sample < 32) sample *= 2
                         val options = BitmapFactory.Options().apply { inSampleSize = sample }
                         BitmapFactory.decodeFile(file.absolutePath, options)
                     }
