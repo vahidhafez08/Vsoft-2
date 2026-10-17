@@ -114,6 +114,7 @@ fun AccountEditorSheet(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
+            Text("موجودی اولیه‌ی حساب (تراکنش‌ها جداگانه حساب می‌شن)", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
             Text("رنگ کارت", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
