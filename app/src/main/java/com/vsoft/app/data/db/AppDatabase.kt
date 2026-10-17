@@ -8,15 +8,16 @@ import com.vsoft.app.data.model.*
 
 @Database(
     entities = [
-        TransactionEntity::class, AccountEntity::class, ProjectEntity::class, TaskEntity::class, SubtaskEntity::class,
+        TransactionEntity::class, AccountEntity::class, TransferEntity::class, ProjectEntity::class, TaskEntity::class, SubtaskEntity::class,
         SiteEntity::class, FloorEntity::class, WorkItemEntity::class, WorkLogEntity::class, SitePaymentEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun accountDao(): AccountDao
+    abstract fun transferDao(): TransferDao
     abstract fun projectDao(): ProjectDao
     abstract fun taskDao(): TaskDao
     abstract fun subtaskDao(): SubtaskDao
@@ -64,5 +65,12 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
                 "`siteId` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `dateMillis` INTEGER NOT NULL, " +
                 "`note` TEXT NOT NULL)"
         )
+    }
+}
+
+
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS `transfers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fromAccountId` INTEGER NOT NULL, `toAccountId` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `dateMillis` INTEGER NOT NULL, `note` TEXT NOT NULL)")
     }
 }
