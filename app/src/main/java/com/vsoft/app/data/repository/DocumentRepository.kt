@@ -30,7 +30,8 @@ class DocumentRepository @Inject constructor(
             var partialFile: File? = null
             try {
                 val metadata = queryMetadata(uri)
-                if (metadata.second != null && metadata.second > MAX_FILE_BYTES) {
+                val knownSize = metadata.second
+                if (knownSize != null && knownSize > MAX_FILE_BYTES) {
                     throw IllegalArgumentException("حجم فایل بیشتر از ۲۵ مگابایت است")
                 }
                 val displayName = metadata.first.ifBlank { "document" }
