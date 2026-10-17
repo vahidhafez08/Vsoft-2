@@ -171,7 +171,7 @@ fun AccountEditorSheet(
             onDismissRequest = { confirmDelete = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف حساب؟", color = Vsoft.colors.textPrimary) },
-            text = { Text("این حساب برای همیشه حذف می‌شود.", color = Vsoft.colors.textSecondary) },
+            text = { Text("این حساب برای همیشه حذف می‌شود. انتقال‌های مربوط به این حساب هم حذف می‌شن", color = Vsoft.colors.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
