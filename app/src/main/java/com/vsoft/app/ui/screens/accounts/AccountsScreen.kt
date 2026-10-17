@@ -121,7 +121,7 @@ fun AccountsScreen(
                     AccountCardView(
                         name = acc.name,
                         last4 = acc.last4,
-                        balance = acc.balance,
+                        balance = state.balances[acc.id] ?: acc.balance,
                         colorKey = acc.colorKey,
                         modifier = Modifier.bounceClick { editing = acc }
                     )
