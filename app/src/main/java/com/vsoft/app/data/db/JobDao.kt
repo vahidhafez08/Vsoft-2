@@ -19,6 +19,24 @@ interface JobDao {
     @Query("SELECT * FROM site_payments ORDER BY dateMillis DESC, id DESC") fun observeAllPayments(): Flow<List<SitePaymentEntity>>
     @Query("SELECT * FROM site_payments WHERE siteId = :siteId ORDER BY dateMillis DESC, id DESC") fun observePayments(siteId: Long): Flow<List<SitePaymentEntity>>
 
+    @Query("SELECT * FROM sites") suspend fun getAllSitesOnce(): List<SiteEntity>
+    @Query("SELECT * FROM floors") suspend fun getAllFloorsOnce(): List<FloorEntity>
+    @Query("SELECT * FROM work_items") suspend fun getAllWorkItemsOnce(): List<WorkItemEntity>
+    @Query("SELECT * FROM work_logs") suspend fun getAllWorkLogsOnce(): List<WorkLogEntity>
+    @Query("SELECT * FROM site_payments") suspend fun getAllSitePaymentsOnce(): List<SitePaymentEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllSitesRaw(items: List<SiteEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllFloorsRaw(items: List<FloorEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllWorkItemsRaw(items: List<WorkItemEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllWorkLogsRaw(items: List<WorkLogEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllSitePaymentsRaw(items: List<SitePaymentEntity>)
+
+    @Query("DELETE FROM sites") suspend fun deleteAllSitesRaw()
+    @Query("DELETE FROM floors") suspend fun deleteAllFloorsRaw()
+    @Query("DELETE FROM work_items") suspend fun deleteAllWorkItemsRaw()
+    @Query("DELETE FROM work_logs") suspend fun deleteAllWorkLogsRaw()
+    @Query("DELETE FROM site_payments") suspend fun deleteAllSitePaymentsRaw()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertSite(item: SiteEntity): Long
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertFloor(item: FloorEntity): Long
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertItem(item: WorkItemEntity): Long
