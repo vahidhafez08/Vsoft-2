@@ -200,6 +200,16 @@ fun TransactionsScreen(
                     }
                 }
             }
+            if (state.accounts.isNotEmpty()) {
+                item(key = "accounts") {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item { FilterChip(selected = accountFilter == null, onClick = { accountFilter = null }, label = { Text("همه حساب‌ها") }) }
+                        items(state.accounts, key = { it.id }) { account ->
+                            FilterChip(selected = accountFilter == account.id, onClick = { accountFilter = if (accountFilter == account.id) null else account.id }, label = { Text(account.name) })
+                        }
+                    }
+                }
+            }
             if (state.loaded && state.groups.isEmpty()) {
                 item(key = "empty") {
                     val noFilters = query.isBlank() && type == 0 && category == null
