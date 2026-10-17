@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.vsoft.app.data.db.AppDatabase
 import com.vsoft.app.data.db.MIGRATION_1_2
 import com.vsoft.app.data.db.MIGRATION_2_3
+import com.vsoft.app.data.db.MIGRATION_3_4
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,7 +19,7 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideDb(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "vsoft.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .fallbackToDestructiveMigration()
             .build()
 
