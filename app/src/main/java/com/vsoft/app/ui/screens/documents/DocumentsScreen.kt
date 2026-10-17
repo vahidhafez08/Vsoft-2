@@ -356,9 +356,10 @@ private fun DocumentRow(
                 .clickable(enabled = exists, onClick = onOpen)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (cachedBitmap.value != null) {
+                val preview = cachedBitmap.value
+                if (preview != null) {
                     Image(
-                        bitmap = cachedBitmap.value!!.asImageBitmap(),
+                        bitmap = preview.asImageBitmap(),
                         contentDescription = "پیش‌نمایش سند",
                         modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp))
                     )
