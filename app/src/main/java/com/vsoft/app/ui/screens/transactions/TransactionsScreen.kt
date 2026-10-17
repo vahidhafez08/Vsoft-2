@@ -97,14 +97,15 @@ fun TransactionsScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableIntStateOf(0) }
     var category by rememberSaveable { mutableStateOf<String?>(null) }
+    var accountFilter by rememberSaveable { mutableStateOf<Long?>(null) }
     var newMode by rememberSaveable { mutableIntStateOf(0) } // 0 none, 1 income, 2 expense
     var editing by remember { mutableStateOf<TransactionEntity?>(null) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val focus: FocusManager = LocalFocusManager.current
 
-    LaunchedEffect(query, type, category) {
-        viewModel.setFilters(TxFilters(query, type, category))
+    LaunchedEffect(query, type, category, accountFilter) {
+        viewModel.setFilters(TxFilters(query, type, category, accountFilter))
     }
 
     fun deleteWithUndo(tx: TransactionEntity) {
