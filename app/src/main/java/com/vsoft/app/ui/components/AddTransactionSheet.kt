@@ -1,5 +1,7 @@
 package com.vsoft.app.ui.components
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,6 +73,8 @@ fun AddTransactionSheet(
     val amount = amountText.toLongOrNull() ?: 0L
 
     ModalBottomSheet(
+        shape = RoundedCornerShape(Dimens.cornerSheet),
+        dragHandle = { BottomSheetDefaults.DragHandle() },
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Vsoft.colors.surface

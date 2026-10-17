@@ -1,5 +1,7 @@
 package com.vsoft.app.ui.components
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -49,6 +51,7 @@ import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
@@ -69,6 +72,8 @@ fun AccountEditorSheet(
     val balance = balanceText.toLongOrNull() ?: 0L
 
     ModalBottomSheet(
+        shape = RoundedCornerShape(Dimens.cornerSheet),
+        dragHandle = { BottomSheetDefaults.DragHandle() },
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Vsoft.colors.surface
@@ -79,7 +84,7 @@ fun AccountEditorSheet(
                 .navigationBarsPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = Dimens.xl)
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

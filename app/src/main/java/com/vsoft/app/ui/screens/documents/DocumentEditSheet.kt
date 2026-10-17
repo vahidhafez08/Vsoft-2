@@ -1,5 +1,6 @@
 package com.vsoft.app.ui.screens.documents
 
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.vsoft.app.data.model.DocumentEntity
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,13 +52,15 @@ fun DocumentEditSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
+        shape = RoundedCornerShape(Dimens.cornerSheet),
+        dragHandle = { BottomSheetDefaults.DragHandle() },
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Vsoft.colors.surface
     ) {
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding().imePadding()
-                .padding(horizontal = 20.dp).padding(bottom = 24.dp),
+                .padding(horizontal = Dimens.xl).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(

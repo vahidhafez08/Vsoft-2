@@ -1,5 +1,6 @@
 package com.vsoft.app.ui.components
 
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -25,6 +26,7 @@ import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.WarningOrange
 
 fun priorityLabel(p: Int): String = when (p) {
@@ -131,13 +133,15 @@ private fun FabMini(label: String, icon: ImageVector, tint: Color, onClick: () -
 @Composable
 internal fun FormSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     ModalBottomSheet(
+        shape = RoundedCornerShape(Dimens.cornerSheet),
+        dragHandle = { BottomSheetDefaults.DragHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = Vsoft.colors.surface
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding()
-                .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp),
+                .verticalScroll(rememberScrollState()).padding(horizontal = Dimens.xl).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             content = content
         )

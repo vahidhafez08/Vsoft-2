@@ -1,5 +1,6 @@
 package com.vsoft.app.ui.components
 
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.WarningOrange
 import com.vsoft.app.util.JCal
 import com.vsoft.app.util.startOfDay
@@ -73,10 +75,16 @@ fun TransferSheet(
     val sameAccount = fromId == toId
     val amountMissing = amount <= 0L
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = Vsoft.colors.surface) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(Dimens.cornerSheet),
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = Vsoft.colors.surface
+    ) {
         Column(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding()
-                .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp),
+                .verticalScroll(rememberScrollState()).padding(horizontal = Dimens.xl).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text("انتقال بین حساب‌ها", color = Vsoft.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
