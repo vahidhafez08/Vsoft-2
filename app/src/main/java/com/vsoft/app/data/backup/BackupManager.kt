@@ -35,6 +35,9 @@ class BackupManager @Inject constructor(
             .put("accounts", JSONArray().apply {
                 db.accountDao().getAllOnce().forEach { put(it.toJson()) }
             })
+            .put("transfers", JSONArray().apply {
+                db.transferDao().getAllOnce().forEach { put(it.toJson()) }
+            })
             .put("projects", JSONArray().apply {
                 db.projectDao().getAllOnce().forEach { put(it.toJson()) }
             })
@@ -88,6 +91,7 @@ class BackupManager @Inject constructor(
                     db.jobDao().deleteAllWorkItemsRaw()
                     db.jobDao().deleteAllFloorsRaw()
                     db.transactionDao().deleteAllRaw()
+                    db.transferDao().deleteAllRaw()
                     db.taskDao().deleteAllRaw()
                     db.projectDao().deleteAllRaw()
                     db.accountDao().deleteAllRaw()
@@ -95,6 +99,7 @@ class BackupManager @Inject constructor(
 
                     // Insert parents before children, retaining original IDs.
                     db.accountDao().insertAllRaw(parsed.accounts)
+                    db.transferDao().insertAllRaw(parsed.transfers)
                     db.projectDao().insertAllRaw(parsed.projects)
                     db.jobDao().insertAllSitesRaw(parsed.sites)
                     db.transactionDao().insertAllRaw(parsed.transactions)
@@ -197,6 +202,21 @@ class BackupManager @Inject constructor(
             balance = requiredLong("balance"),
             colorKey = requiredString("colorKey")
         ) }
+        val transfers = if (!tableObject.has("transfers") || tableObject.isNull("transfers")) {
+            emptyList()
+        } else {
+            tableObject.requiredArray("transfers").mapObjects { TransferEntity(
+                id = requiredLong("id"),
+                fromAccountId = requiredLong("fromAccountId"),
+                toAccountId = requiredLong("toAccountId"),
+                amount = requiredLong("amount"),
+                dateMillis = requiredLong("dateMillis"),
+                note = optionalString("note", "")
+            ) }
+        }.filter { transfer ->
+            transfer.fromAccountId != transfer.toAccountId && transfer.amount > 0L &&
+                accounts.any { it.id == transfer.fromAccountId } && accounts.any { it.id == transfer.toAccountId }
+        }
         val projects = tableObject.requiredArray("projects").mapObjects { ProjectEntity(
             id = requiredLong("id"),
             title = requiredString("title"),
@@ -268,7 +288,7 @@ class BackupManager @Inject constructor(
         val notifications = settingsObject.optionalBooleanOrNull("notifications")
 
         return ParsedBackup(
-            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }) }, accounts, projects, tasks, subtasks, sites, floors,
+            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }) }, accounts, transfers, projects, tasks, subtasks, sites, floors,
             workItems, workLogs, sitePayments, userName, themeMode, notifications
         )
     }
@@ -276,6 +296,7 @@ class BackupManager @Inject constructor(
     private data class ParsedBackup(
         val transactions: List<TransactionEntity>,
         val accounts: List<AccountEntity>,
+        val transfers: List<TransferEntity>,
         val projects: List<ProjectEntity>,
         val tasks: List<TaskEntity>,
         val subtasks: List<SubtaskEntity>,
@@ -297,6 +318,10 @@ class BackupManager @Inject constructor(
     private fun AccountEntity.toJson() = JSONObject()
         .put("id", id).put("name", name).put("last4", last4)
         .put("balance", balance).put("colorKey", colorKey)
+
+    private fun TransferEntity.toJson() = JSONObject()
+        .put("id", id).put("fromAccountId", fromAccountId).put("toAccountId", toAccountId)
+        .put("amount", amount).put("dateMillis", dateMillis).put("note", note)
 
     private fun ProjectEntity.toJson() = JSONObject()
         .put("id", id).put("title", title).put("progress", progress)
