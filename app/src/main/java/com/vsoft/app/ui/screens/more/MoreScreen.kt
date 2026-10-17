@@ -1,6 +1,9 @@
 package com.vsoft.app.ui.screens.more
 
 import android.net.Uri
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,10 +17,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -37,6 +43,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,8 +65,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vsoft.app.notify.ReminderScheduler
 import com.vsoft.app.ui.components.SegmentedTabs
 import com.vsoft.app.ui.components.VCard
 import com.vsoft.app.ui.theme.BrandBlue
@@ -69,6 +78,7 @@ import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.ui.theme.WarningOrange
 import com.vsoft.app.util.JCal
+import com.vsoft.app.util.UiEvents
 import com.vsoft.app.util.toPersianDigits
 import java.util.Locale
 
@@ -79,6 +89,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
     val busy by viewModel.busy.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var reminderHour by remember { mutableIntStateOf(ReminderScheduler.getHour(context)) }
     // 0 = none, 1 = edit name, 2 = privacy, 3 = about, 4 = logout confirm, 5 = restore confirm
     var dialog by rememberSaveable { mutableIntStateOf(0) }
     var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
@@ -89,6 +100,32 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val backupFileName = remember {
         val date = JCal.toJalali(System.currentTimeMillis())
         "vsoft-backup-%04d-%02d-%02d.json".format(Locale.US, date[0], date[1], date[2])
+    }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            viewModel.setNotifications(true)
+            ReminderScheduler.schedule(context)
+        } else {
+            viewModel.setNotifications(false)
+            ReminderScheduler.cancel(context)
+            UiEvents.show("برای دریافت یادآوری باید اجازه‌ی اعلان رو بدی")
+        }
+    }
+    fun setNotificationsEnabled(enabled: Boolean) {
+        if (!enabled) {
+            viewModel.setNotifications(false)
+            ReminderScheduler.cancel(context)
+        } else if (
+            Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            viewModel.setNotifications(true)
+            ReminderScheduler.schedule(context)
+        }
     }
     val backupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -173,11 +210,19 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             RowDivider()
             SettingsRow(
                 Icons.Filled.Notifications, WarningOrange, "اعلان‌ها",
-                onClick = { viewModel.setNotifications(!notifications) },
+                onClick = { setNotificationsEnabled(!notifications) },
                 trailing = {
-                    Switch(checked = notifications, onCheckedChange = { viewModel.setNotifications(it) })
+                    Switch(checked = notifications, onCheckedChange = { setNotificationsEnabled(it) })
                 }
             )
+            if (notifications) {
+                RowDivider()
+                SettingsRow(
+                    Icons.Filled.Notifications, BrandBlue, "ساعت یادآوری",
+                    subtitle = "هر روز ساعت ${reminderHour}:00".toPersianDigits(),
+                    onClick = { dialog = 6 }
+                )
+            }
         }
 
         Text(
@@ -269,6 +314,9 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.resetSettings()
+                    ReminderScheduler.setHour(context, 8)
+                    reminderHour = 8
+                    ReminderScheduler.schedule(context)
                     dialog = 0
                 }) { Text("بازنشانی", color = ExpenseRed) }
             },
@@ -299,6 +347,52 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     pendingRestoreUri = null
                     dialog = 0
                 }) { Text("انصراف") }
+            }
+        )
+        6 -> AlertDialog(
+            onDismissRequest = { dialog = 0 },
+            containerColor = Vsoft.colors.surface,
+            title = { Text("ساعت یادآوری", color = Vsoft.colors.textPrimary) },
+            text = {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp)
+                ) {
+                    items((5..23).toList()) { hour ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (reminderHour == hour) BrandBlue.copy(alpha = 0.12f) else Color.Transparent)
+                                .clickable {
+                                    reminderHour = hour
+                                    ReminderScheduler.setHour(context, hour)
+                                    ReminderScheduler.schedule(context)
+                                    dialog = 0
+                                }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = reminderHour == hour,
+                                onClick = {
+                                    reminderHour = hour
+                                    ReminderScheduler.setHour(context, hour)
+                                    ReminderScheduler.schedule(context)
+                                    dialog = 0
+                                }
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "${hour}:00".toPersianDigits(),
+                                color = Vsoft.colors.textPrimary,
+                                fontWeight = if (reminderHour == hour) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { dialog = 0 }) { Text("بستن") }
             }
         )
     }
