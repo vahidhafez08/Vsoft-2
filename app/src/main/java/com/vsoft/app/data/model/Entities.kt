@@ -10,6 +10,16 @@ data class TransactionEntity(
     val accountId: Long? = null
 )
 
+@Entity(tableName = "transfers")
+data class TransferEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val fromAccountId: Long,
+    val toAccountId: Long,
+    val amount: Long,
+    val dateMillis: Long,
+    val note: String = ""
+)
+
 @Entity(tableName = "accounts")
 data class AccountEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
