@@ -6,8 +6,10 @@ import androidx.room.withTransaction
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.vsoft.app.data.db.AccountDao
 import com.vsoft.app.data.db.TransactionDao
+import com.vsoft.app.data.db.TransferDao
 import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.data.model.TransactionEntity
+import com.vsoft.app.data.model.TransferEntity
 import com.vsoft.app.util.DAY_MS
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -18,13 +20,19 @@ import javax.inject.Singleton
 class FinanceRepository @Inject constructor(
     private val transactionDao: TransactionDao,
     private val accountDao: AccountDao,
+    private val transferDao: TransferDao,
     private val db: com.vsoft.app.data.db.AppDatabase,
     @ApplicationContext private val context: Context
 ) {
     fun observeTransactions(): Flow<List<TransactionEntity>> = transactionDao.observeAll()
     fun observeAccounts(): Flow<List<AccountEntity>> = accountDao.observeAll()
 
-    fun observeAccountBalances(): Flow<Map<Long, Long>> = combine(observeAccounts(), observeTransactions()) { accounts, transactions -> computeBalances(accounts, transactions) }
+    fun observeTransfers(): Flow<List<TransferEntity>> = transferDao.observeAll()
+
+    fun observeAccountBalances(): Flow<Map<Long, Long>> =
+        combine(observeAccounts(), observeTransactions(), observeTransfers()) { accounts, transactions, transfers ->
+            computeBalances(accounts, transactions, transfers)
+        }
 
     suspend fun addTransaction(title: String, amount: Long, isIncome: Boolean, category: String, accountId: Long? = null) {
         transactionDao.upsert(
@@ -63,13 +71,25 @@ class FinanceRepository @Inject constructor(
     suspend fun deleteAccountDetachingTransactions(account: AccountEntity) {
         db.withTransaction {
             transactionDao.detachAccount(account.id)
+            transferDao.deleteForAccount(account.id)
             accountDao.delete(account)
         }
     }
 
-    suspend fun transfer(from: AccountEntity, to: AccountEntity, amount: Long) {
-        accountDao.upsert(from.copy(balance = from.balance - amount))
-        accountDao.upsert(to.copy(balance = to.balance + amount))
+    suspend fun addTransfer(from: AccountEntity, to: AccountEntity, amount: Long, dateMillis: Long, note: String = "") {
+        require(from.id != to.id) { "حساب مبدأ و مقصد باید متفاوت باشن" }
+        require(amount > 0L) { "مبلغ رو وارد کن" }
+        val currentAccounts = accountDao.getAllOnce()
+        require(currentAccounts.any { it.id == from.id } && currentAccounts.any { it.id == to.id }) {
+            "حساب انتخاب‌شده در دسترس نیست"
+        }
+        transferDao.insert(
+            TransferEntity(fromAccountId = from.id, toAccountId = to.id, amount = amount, dateMillis = dateMillis, note = note.trim())
+        )
+    }
+
+    suspend fun deleteTransfer(transfer: TransferEntity) {
+        transferDao.delete(transfer)
     }
 
     /** Inserts demo data once (first launch only). */
@@ -120,13 +140,25 @@ class FinanceRepository @Inject constructor(
 }
 
 
-fun computeBalances(accounts: List<AccountEntity>, transactions: List<TransactionEntity>): Map<Long, Long> {
+fun computeBalances(
+    accounts: List<AccountEntity>,
+    transactions: List<TransactionEntity>,
+    transfers: List<TransferEntity> = emptyList()
+): Map<Long, Long> {
     val totals = accounts.associate { it.id to it.balance }.toMutableMap()
     transactions.forEach { tx ->
         val id = tx.accountId
         if (id != null && totals.containsKey(id)) {
             val delta = if (tx.isIncome) tx.amount else -tx.amount
             totals[id] = (totals[id] ?: 0L) + delta
+        }
+    }
+    transfers.forEach { transfer ->
+        if (totals.containsKey(transfer.fromAccountId)) {
+            totals[transfer.fromAccountId] = (totals[transfer.fromAccountId] ?: 0L) - transfer.amount
+        }
+        if (totals.containsKey(transfer.toAccountId)) {
+            totals[transfer.toAccountId] = (totals[transfer.toAccountId] ?: 0L) + transfer.amount
         }
     }
     return totals
