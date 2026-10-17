@@ -16,8 +16,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import com.vsoft.app.ui.components.VChip
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -139,17 +137,7 @@ fun TransactionEditorSheet(
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     (listOf<AccountEntity?>(null) + accounts).forEach { account ->
                         val selected = accountId == account?.id
-                        FilterChip(
-                            selected = selected,
-                            onClick = { accountId = account?.id },
-                            label = { Text(account?.name ?: "بدون حساب") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Vsoft.colors.surfaceHigh,
-                                labelColor = Vsoft.colors.textPrimary,
-                                selectedContainerColor = BrandBlue,
-                                selectedLabelColor = Color.White
-                            )
-                        )
+                        VChip(text = account?.name ?: "بدون حساب", selected = selected, onClick = { accountId = account?.id })
                     }
                 }
             }
