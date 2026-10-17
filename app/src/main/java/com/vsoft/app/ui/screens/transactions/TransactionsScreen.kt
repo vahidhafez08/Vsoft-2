@@ -227,6 +227,7 @@ fun TransactionsScreen(
                 items(group.items, key = { "tx" + it.id }) { tx ->
                     TxRow(
                         tx = tx,
+                        accountName = tx.accountId?.let { state.accountNames[it] },
                         modifier = Modifier.animateItemPlacement(),
                         onClick = { editing = tx },
                         onDelete = { deleteWithUndo(tx) }
@@ -251,6 +252,7 @@ fun TransactionsScreen(
         TransactionEditorSheet(
             initial = tx,
             defaultIncome = tx.isIncome,
+            accounts = state.accounts,
             onDismiss = { editing = null },
             onSave = {
                 viewModel.save(it)
@@ -267,6 +269,7 @@ fun TransactionsScreen(
         TransactionEditorSheet(
             initial = null,
             defaultIncome = newMode == 1,
+            accounts = state.accounts,
             onDismiss = { newMode = 0 },
             onSave = {
                 viewModel.save(it)
@@ -307,6 +310,7 @@ private fun DayHeader(label: String, net: Long, modifier: Modifier) {
 @Composable
 private fun TxRow(
     tx: TransactionEntity,
+    accountName: String?,
     modifier: Modifier,
     onClick: () -> Unit,
     onDelete: () -> Unit
