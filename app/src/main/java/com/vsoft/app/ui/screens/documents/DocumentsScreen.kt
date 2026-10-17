@@ -39,8 +39,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -73,6 +71,7 @@ import com.vsoft.app.data.model.DocumentEntity
 import com.vsoft.app.ui.components.EmptyState
 import com.vsoft.app.ui.components.ScreenHeader
 import com.vsoft.app.ui.components.VCard
+import com.vsoft.app.ui.components.VChip
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
@@ -188,19 +187,9 @@ fun DocumentsScreen(
                     Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    FilterChip(
-                        selected = categoryFilter == null,
-                        onClick = { viewModel.categoryFilter.value = null },
-                        label = { Text("همه") },
-                        colors = categoryChipColors()
-                    )
+                    VChip(text = "همه", selected = categoryFilter == null, onClick = { viewModel.categoryFilter.value = null })
                     DocumentCategories.all.forEachIndexed { index, category ->
-                        FilterChip(
-                            selected = categoryFilter == index,
-                            onClick = { viewModel.categoryFilter.value = index },
-                            label = { Text(category.title) },
-                            colors = categoryChipColors()
-                        )
+                        VChip(text = category.title, selected = categoryFilter == index, onClick = { viewModel.categoryFilter.value = index })
                     }
                 }
             }
@@ -290,14 +279,6 @@ fun DocumentsScreen(
 }
 
 @Composable
-private fun categoryChipColors() = FilterChipDefaults.filterChipColors(
-    containerColor = Vsoft.colors.surfaceHigh,
-    labelColor = Vsoft.colors.textPrimary,
-    selectedContainerColor = BrandBlue,
-    selectedLabelColor = Color.White
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DocumentRow(
     document: DocumentEntity,

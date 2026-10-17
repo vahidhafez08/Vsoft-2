@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,8 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -44,10 +40,11 @@ import com.vsoft.app.data.model.ExpenseCategories
 import com.vsoft.app.data.model.IncomeCategories
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.ui.theme.Dimens
+import com.vsoft.app.ui.components.VChip
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionSheet(
     isIncome: Boolean,
@@ -112,33 +109,19 @@ fun AddTransactionSheet(
             )
             if (accounts.isNotEmpty()) {
                 Text("حساب", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.sm)) {
                     (listOf<AccountEntity?>(null) + accounts).forEach { account ->
-                        FilterChip(
-                            selected = accountId == account?.id,
-                            onClick = { accountId = account?.id },
-                            label = { Text(account?.name ?: "بدون حساب") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Vsoft.colors.surfaceHigh,
-                                labelColor = Vsoft.colors.textPrimary,
-                                selectedContainerColor = BrandBlue,
-                                selectedLabelColor = Color.White
-                            )
-                        )
+                        VChip(text = account?.name ?: "بدون حساب", selected = accountId == account?.id, onClick = { accountId = account?.id })
                     }
                 }
             }
             Text("دسته‌بندی", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.sm)
             ) {
                 categories.forEach { c ->
-                    FilterChip(
-                        selected = c == category,
-                        onClick = { category = c },
-                        label = { Text(c) }
-                    )
+                    VChip(text = c, selected = c == category, onClick = { category = c })
                 }
             }
             Spacer(Modifier.height(4.dp))

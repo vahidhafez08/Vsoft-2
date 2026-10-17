@@ -5,6 +5,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -109,7 +111,7 @@ fun CalendarScreen(
             Spacer(Modifier.height(8.dp))
             AnimatedContent(
                 targetState = jy * 12 + (jm - 1),
-                transitionSpec = { fadeIn(tween(200)).togetherWith(fadeOut(tween(120))) },
+                transitionSpec = { (fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 14 }).togetherWith(fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { -it / 14 }) },
                 label = "calendarMonth"
             ) { ym ->
                 MonthGrid(

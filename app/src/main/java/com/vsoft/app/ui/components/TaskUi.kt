@@ -20,6 +20,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.sp
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.BrandPurple
@@ -45,7 +48,7 @@ fun priorityColor(p: Int): Color = when (p) {
 fun AnimatedProgressBar(fraction: Float, color: Color, modifier: Modifier = Modifier, height: Dp = 8.dp) {
     val animated by animateFloatAsState(
         targetValue = fraction.coerceIn(0f, 1f),
-        animationSpec = tween(600, easing = FastOutSlowInEasing),
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
         label = "progress"
     )
     Box(
@@ -57,6 +60,7 @@ fun AnimatedProgressBar(fraction: Float, color: Color, modifier: Modifier = Modi
 
 @Composable
 fun TaskCheck(done: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, color: Color = IncomeGreen) {
+    val haptics = LocalHapticFeedback.current
     val fill by animateColorAsState(if (done) color else Color.Transparent, label = "checkFill")
     val borderColor by animateColorAsState(if (done) color else Vsoft.colors.textSecondary, label = "checkBorder")
     val checkScale by animateFloatAsState(
@@ -64,7 +68,7 @@ fun TaskCheck(done: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "checkScale"
     )
-    Box(modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(modifier.size(Dimens.minTouchTarget).clip(CircleShape).clickable(role = Role.Button) { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClick() }, contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(24.dp).clip(CircleShape).background(fill).border(2.dp, borderColor, CircleShape),
             contentAlignment = Alignment.Center
