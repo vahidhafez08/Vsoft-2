@@ -48,7 +48,7 @@ class DocumentsViewModel @Inject constructor(
                 val result = repository.addFromUri(uri, title, category, note)
                 result.fold(
                     onSuccess = { UiEvents.show("سند ذخیره شد ✅") },
-                    onFailure = { UiEvents.show(it.message?.takeIf(String::isNotBlank) ?: "ذخیره‌ی سند ناموفق بود") }
+                    onFailure = { UiEvents.show(it.message?.takeIf { message -> message.isNotBlank() } ?: "ذخیره‌ی سند ناموفق بود") }
                 )
             } catch (cancelled: CancellationException) {
                 throw cancelled
