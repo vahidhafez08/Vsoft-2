@@ -88,11 +88,11 @@ class DocumentRepository @Inject constructor(
             }
         }
 
-    suspend fun update(document: DocumentEntity) {
+    suspend fun update(document: DocumentEntity) = withContext(Dispatchers.IO) {
         dao.update(document.copy(category = document.category.coerceIn(0, 4)))
     }
 
-    suspend fun delete(document: DocumentEntity) {
+    suspend fun delete(document: DocumentEntity) = withContext(Dispatchers.IO) {
         dao.delete(document)
         try {
             fileOf(document).delete()
