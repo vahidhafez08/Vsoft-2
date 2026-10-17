@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -76,8 +78,10 @@ fun SpeedDialFab(
         }
         FloatingActionButton(
             onClick = { expanded = !expanded },
-            containerColor = BrandBlue,
+            modifier = Modifier.size(56.dp).background(Brush.horizontalGradient(listOf(BrandBlue, com.vsoft.app.ui.theme.BrandPurple)), CircleShape),
+            containerColor = Color.Transparent,
             contentColor = Color.White,
+            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
             shape = CircleShape
         ) {
             Icon(Icons.Filled.Add, contentDescription = "افزودن", modifier = Modifier.rotate(rotation))
