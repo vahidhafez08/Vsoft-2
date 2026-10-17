@@ -212,7 +212,7 @@ fun TransactionsScreen(
             }
             if (state.loaded && state.groups.isEmpty()) {
                 item(key = "empty") {
-                    val noFilters = query.isBlank() && type == 0 && category == null
+                    val noFilters = query.isBlank() && type == 0 && category == null && accountFilter == null
                     EmptyState(
                         icon = if (noFilters) Icons.Filled.Inbox else Icons.Filled.SearchOff,
                         title = if (noFilters) "هنوز تراکنشی ثبت نشده" else "نتیجه‌ای پیدا نشد",
