@@ -21,8 +21,6 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -99,17 +97,15 @@ fun TransferSheet(
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     accounts.forEach { account ->
                         val disabled = account.id == toId
-                        FilterChip(
-                            selected = account.id == fromId, enabled = !disabled,
+                        VChip(
+                            text = account.name, selected = account.id == fromId,
                             onClick = {
-                                fromId = account.id
-                                if (toId == account.id) toId = accounts.firstOrNull { it.id != account.id }?.id ?: toId
+                                if (!disabled) {
+                                    fromId = account.id
+                                    if (toId == account.id) toId = accounts.firstOrNull { it.id != account.id }?.id ?: toId
+                                }
                             },
-                            label = { Text(account.name) }, modifier = Modifier.alpha(if (disabled) 0.4f else 1f),
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Vsoft.colors.surfaceHigh, labelColor = Vsoft.colors.textPrimary,
-                                selectedContainerColor = BrandBlue, selectedLabelColor = Color.White
-                            )
+                            modifier = Modifier.alpha(if (disabled) 0.4f else 1f)
                         )
                     }
                 }
@@ -117,17 +113,15 @@ fun TransferSheet(
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     accounts.forEach { account ->
                         val disabled = account.id == fromId
-                        FilterChip(
-                            selected = account.id == toId, enabled = !disabled,
+                        VChip(
+                            text = account.name, selected = account.id == toId,
                             onClick = {
-                                toId = account.id
-                                if (fromId == account.id) fromId = accounts.firstOrNull { it.id != account.id }?.id ?: fromId
+                                if (!disabled) {
+                                    toId = account.id
+                                    if (fromId == account.id) fromId = accounts.firstOrNull { it.id != account.id }?.id ?: fromId
+                                }
                             },
-                            label = { Text(account.name) }, modifier = Modifier.alpha(if (disabled) 0.4f else 1f),
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Vsoft.colors.surfaceHigh, labelColor = Vsoft.colors.textPrimary,
-                                selectedContainerColor = BrandBlue, selectedLabelColor = Color.White
-                            )
+                            modifier = Modifier.alpha(if (disabled) 0.4f else 1f)
                         )
                     }
                 }
