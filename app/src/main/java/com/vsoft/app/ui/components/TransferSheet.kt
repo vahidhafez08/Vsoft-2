@@ -35,6 +35,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -157,7 +159,7 @@ fun TransferSheet(
                 OutlinedTextField(value = note, onValueChange = { note = it.take(160) },
                     label = { Text("یادداشت (اختیاری)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Button(
-                    onClick = { from?.let { source -> to?.let { destination -> onTransfer(source.id, destination.id, amount, dateMillis, note) } } },
+                    onClick = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); from?.let { source -> to?.let { destination -> onTransfer(source.id, destination.id, amount, dateMillis, note) } } },
                     enabled = !sameAccount && !amountMissing && from != null && to != null,
                     colors = ButtonDefaults.buttonColors(containerColor = BrandBlue), modifier = Modifier.fillMaxWidth()
                 ) { Text("ثبت انتقال") }

@@ -31,6 +31,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,6 +55,7 @@ fun AddTransactionSheet(
     onSave: (title: String, amount: Long, category: String, accountId: Long?) -> Unit
 ) {
     val categories = if (isIncome) IncomeCategories else ExpenseCategories
+    val haptics = LocalHapticFeedback.current
     var title by rememberSaveable { mutableStateOf("") }
     var amountText by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf(categories.first()) }
@@ -126,7 +129,7 @@ fun AddTransactionSheet(
             }
             Spacer(Modifier.height(4.dp))
             Button(
-                onClick = { onSave(title.trim().ifBlank { category }, amount, category, accountId?.takeIf { id -> accounts.any { it.id == id } }) },
+                onClick = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); onSave(title.trim().ifBlank { category }, amount, category, accountId?.takeIf { id -> accounts.any { it.id == id } }) },
                 enabled = amount > 0L,
                 modifier = Modifier.fillMaxWidth()
             ) {

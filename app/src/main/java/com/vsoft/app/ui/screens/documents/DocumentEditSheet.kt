@@ -28,6 +28,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +48,7 @@ fun DocumentEditSheet(
     onDismiss: () -> Unit,
     onSave: (title: String, category: Int, note: String) -> Unit
 ) {
+    val haptics = LocalHapticFeedback.current
     var title by rememberSaveable(initial?.id) { mutableStateOf(initial?.title.orEmpty()) }
     var category by rememberSaveable(initial?.id) { mutableIntStateOf(initial?.category ?: 4) }
     var note by rememberSaveable(initial?.id) { mutableStateOf(initial?.note.orEmpty()) }
@@ -105,7 +108,7 @@ fun DocumentEditSheet(
                 label = { Text("یادداشت (اختیاری)") }
             )
             Button(
-                onClick = { onSave(title.trim(), category, note.trim()) },
+                onClick = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); onSave(title.trim(), category, note.trim()) },
                 enabled = !busy && (initial == null || title.isNotBlank()),
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = BrandBlue)

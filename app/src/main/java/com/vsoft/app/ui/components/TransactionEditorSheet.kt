@@ -37,6 +37,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -66,6 +68,7 @@ fun TransactionEditorSheet(
 ) {
     var isIncome by rememberSaveable { mutableStateOf(initial?.isIncome ?: defaultIncome) }
     val categories = if (isIncome) IncomeCategories else ExpenseCategories
+    val haptics = LocalHapticFeedback.current
     var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
     var amountText by rememberSaveable { mutableStateOf(initial?.amount?.toString() ?: "") }
     var category by rememberSaveable { mutableStateOf(initial?.category ?: categories.first()) }
