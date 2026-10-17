@@ -1,5 +1,9 @@
 package com.vsoft.app.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -55,7 +59,7 @@ fun ScreenHeader(
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = Vsoft.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(title, color = Vsoft.colors.textPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             if (subtitle != null) {
                 Text(subtitle, color = Vsoft.colors.textSecondary, fontSize = 12.sp)
             }
@@ -66,6 +70,7 @@ fun ScreenHeader(
 
 @Composable
 fun EmptyState(icon: ImageVector, title: String, subtitle: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
+    AnimatedVisibility(visible = true, enter = fadeIn(tween(240)) + scaleIn(tween(240))) {
     Column(
         Modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -80,6 +85,7 @@ fun EmptyState(icon: ImageVector, title: String, subtitle: String, actionLabel: 
         Text(title, color = Vsoft.colors.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Text(subtitle, color = Vsoft.colors.textSecondary, fontSize = 12.sp, textAlign = TextAlign.Center)
         if (actionLabel != null && onAction != null) VPrimaryButton(actionLabel, onAction, modifier = Modifier.fillMaxWidth(0.72f).padding(top = Dimens.sm))
+    }
     }
 }
 

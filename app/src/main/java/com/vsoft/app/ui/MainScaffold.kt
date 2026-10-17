@@ -120,8 +120,8 @@ fun MainScaffold() {
             navController = navController,
             startDestination = Destination.Home.route,
             modifier = Modifier.padding(padding),
-            enterTransition = { fadeIn(tween(260)) + slideInHorizontally(tween(260), initialOffsetX = { -it / 14 }) },
-            exitTransition = { fadeOut(tween(160)) },
+            enterTransition = { fadeIn(tween(280)) + slideInHorizontally(tween(260), initialOffsetX = { -it / 14 }) },
+            exitTransition = { fadeOut(tween(280)) },
             popEnterTransition = { fadeIn(tween(260)) },
             popExitTransition = { fadeOut(tween(160)) + slideOutHorizontally(tween(260), targetOffsetX = { -it / 14 }) }
         ) {
