@@ -23,6 +23,7 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val totalBalance: Long = 0L,
+    val accounts: List<AccountEntity> = emptyList(),
     val income: Long = 0L,
     val expense: Long = 0L,
     val todayExpense: Long = 0L,
@@ -81,6 +82,7 @@ class HomeViewModel @Inject constructor(
 
         return HomeUiState(
             totalBalance = acc.sumOf { balances[it.id] ?: it.balance },
+            accounts = acc,
             income = income,
             expense = expense,
             todayExpense = todayExpense,
