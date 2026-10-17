@@ -50,3 +50,15 @@ fun weekdayShort(millis: Long): String {
 
 fun percentChange(current: Long, previous: Long): Int? =
     if (previous <= 0L) null else (((current - previous) * 100) / previous).toInt()
+
+/** Human-readable Persian file size. */
+fun formatSize(bytes: Long): String {
+    val safeBytes = bytes.coerceAtLeast(0L)
+    val megabytes = safeBytes >= 1024L * 1024L
+    val value = if (megabytes) safeBytes.toDouble() / (1024.0 * 1024.0)
+        else safeBytes.toDouble() / 1024.0
+    val number = if (megabytes) String.format(Locale.US, "%.1f", value)
+        else String.format(Locale.US, "%.0f", value)
+    val unit = if (megabytes) "مگابایت" else "کیلوبایت"
+    return number.toPersianDigits().replace(".", "٫") + " " + unit
+}
