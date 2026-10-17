@@ -40,6 +40,7 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id") fun observeById(id: Long): Flow<TaskEntity?>
     @Query("SELECT * FROM tasks WHERE id = :id") suspend fun getById(id: Long): TaskEntity?
     @Query("SELECT * FROM tasks") suspend fun getAllOnce(): List<TaskEntity>
+    @Query("SELECT COUNT(*) FROM tasks WHERE isDone = 0 AND dueDateMillis IS NOT NULL AND dueDateMillis < :endExclusive") suspend fun countDueUntil(endExclusive: Long): Int
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllRaw(items: List<TaskEntity>)
     @Query("DELETE FROM tasks") suspend fun deleteAllRaw()
     @Query("UPDATE tasks SET projectId = NULL WHERE projectId = :projectId") suspend fun detachProject(projectId: Long)
