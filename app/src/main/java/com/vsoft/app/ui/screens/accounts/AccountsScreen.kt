@@ -49,14 +49,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.data.model.AccountEntity
-import com.vsoft.app.data.model.TransferEntity
 import com.vsoft.app.ui.components.AccountCardView
 import com.vsoft.app.ui.components.AccountEditorSheet
 import com.vsoft.app.ui.components.AnimatedMoney
@@ -72,6 +70,7 @@ import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.toPersianText
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toMoney
+import com.vsoft.app.util.toPersianDigits
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -183,7 +182,7 @@ fun AccountsScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(transfer.amount.toMoney() + " تومان", color = BrandBlue, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                            Text(formatJalali(transfer.dateMillis), color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                            Text(formatJalali(transfer.dateMillis).toPersianDigits(), color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                             if (transfer.note.isNotBlank()) Text(transfer.note, color = Vsoft.colors.textSecondary, fontSize = 12.sp)
                         }
                     }
