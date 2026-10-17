@@ -79,13 +79,15 @@ class FinanceRepository @Inject constructor(
     suspend fun addTransfer(from: AccountEntity, to: AccountEntity, amount: Long, dateMillis: Long, note: String = "") {
         require(from.id != to.id) { "حساب مبدأ و مقصد باید متفاوت باشن" }
         require(amount > 0L) { "مبلغ رو وارد کن" }
-        val currentAccounts = accountDao.getAllOnce()
-        require(currentAccounts.any { it.id == from.id } && currentAccounts.any { it.id == to.id }) {
-            "حساب انتخاب‌شده در دسترس نیست"
+        db.withTransaction {
+            val currentAccounts = accountDao.getAllOnce()
+            require(currentAccounts.any { it.id == from.id } && currentAccounts.any { it.id == to.id }) {
+                "حساب انتخاب‌شده در دسترس نیست"
+            }
+            transferDao.insert(
+                TransferEntity(fromAccountId = from.id, toAccountId = to.id, amount = amount, dateMillis = dateMillis, note = note.trim())
+            )
         }
-        transferDao.insert(
-            TransferEntity(fromAccountId = from.id, toAccountId = to.id, amount = amount, dateMillis = dateMillis, note = note.trim())
-        )
     }
 
     suspend fun deleteTransfer(transfer: TransferEntity) {
