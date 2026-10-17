@@ -114,6 +114,7 @@ fun AccountEditorSheet(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
+            Text("موجودی اولیه‌ی حساب (تراکنش‌ها جداگانه حساب می‌شن)", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
             Text("رنگ کارت", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -170,7 +171,7 @@ fun AccountEditorSheet(
             onDismissRequest = { confirmDelete = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف حساب؟", color = Vsoft.colors.textPrimary) },
-            text = { Text("این حساب برای همیشه حذف می‌شود.", color = Vsoft.colors.textSecondary) },
+            text = { Text("این حساب برای همیشه حذف می‌شود. انتقال‌های مربوط به این حساب هم حذف می‌شن", color = Vsoft.colors.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
@@ -181,133 +182,5 @@ fun AccountEditorSheet(
                 TextButton(onClick = { confirmDelete = false }) { Text("انصراف") }
             }
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
-@Composable
-fun TransferSheet(
-    accounts: List<AccountEntity>,
-    onDismiss: () -> Unit,
-    onTransfer: (fromId: Long, toId: Long, amount: Long) -> Unit
-) {
-    if (accounts.size < 2) return
-
-    var fromId by rememberSaveable { mutableLongStateOf(accounts.first().id) }
-    var toId by rememberSaveable { mutableLongStateOf(accounts[1].id) }
-    var amountText by rememberSaveable { mutableStateOf("") }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val amount = amountText.toLongOrNull() ?: 0L
-    val from = accounts.firstOrNull { it.id == fromId }
-    val to = accounts.firstOrNull { it.id == toId }
-
-    val error: String? = when {
-        fromId == toId -> "حساب مبدأ و مقصد نباید یکی باشد"
-        from == null || to == null -> "حساب انتخاب‌شده در دسترس نیست"
-        amount > 0L && amount > from.balance -> "موجودی حساب مبدأ کافی نیست"
-        else -> null
-    }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = Vsoft.colors.surface
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                "انتقال وجه",
-                color = Vsoft.colors.textPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text("از حساب", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                accounts.forEach { a ->
-                    FilterChip(
-                        selected = a.id == fromId,
-                        onClick = {
-                            fromId = a.id
-                            if (toId == a.id) {
-                                toId = accounts.firstOrNull { it.id != a.id }?.id ?: toId
-                            }
-                        },
-                        label = { Text(a.name) }
-                    )
-                }
-            }
-            if (from != null) {
-                Text(
-                    "موجودی مبدأ: " + from.balance.toMoney() + " تومان",
-                    color = Vsoft.colors.textSecondary,
-                    fontSize = 12.sp
-                )
-            }
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Box(
-                    Modifier
-                        .size(40.dp)
-                        .bounceClick {
-                            val t = fromId
-                            fromId = toId
-                            toId = t
-                        }
-                        .clip(CircleShape)
-                        .background(BrandBlue.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.SwapVert, contentDescription = "جابه‌جایی", tint = BrandBlue)
-                }
-            }
-            Text("به حساب", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                accounts.forEach { a ->
-                    FilterChip(
-                        selected = a.id == toId,
-                        onClick = {
-                            toId = a.id
-                            if (fromId == a.id) {
-                                fromId = accounts.firstOrNull { it.id != a.id }?.id ?: fromId
-                            }
-                        },
-                        label = { Text(a.name) }
-                    )
-                }
-            }
-            OutlinedTextField(
-                value = amountText,
-                onValueChange = { v -> amountText = v.toLatinDigits().filter { it.isDigit() }.take(12) },
-                label = { Text("مبلغ (تومان)") },
-                supportingText = {
-                    if (error != null) Text(error, color = ExpenseRed)
-                    else if (amount > 0) Text(amount.toMoney())
-                },
-                isError = error != null,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Button(
-                onClick = { onTransfer(fromId, toId, amount) },
-                enabled = amount > 0L && error == null,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("انتقال")
-            }
-        }
     }
 }

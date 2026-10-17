@@ -22,7 +22,8 @@ data class FinanceUiState(
     val prevExpense: Long = 0L,
     val incomeByCategory: List<Pair<String, Long>> = emptyList(),
     val expenseByCategory: List<Pair<String, Long>> = emptyList(),
-    val accounts: List<AccountEntity> = emptyList()
+    val accounts: List<AccountEntity> = emptyList(),
+    val accountBalances: Map<Long, Long> = emptyMap()
 )
 
 @HiltViewModel
@@ -31,19 +32,19 @@ class FinanceViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state: StateFlow<FinanceUiState> =
-        combine(repository.observeTransactions(), repository.observeAccounts()) { tx, acc ->
-            build(tx, acc)
+        combine(repository.observeTransactions(), repository.observeAccounts(), repository.observeAccountBalances()) { tx, acc, balances ->
+            build(tx, acc, balances)
         }
             .flowOn(Dispatchers.Default)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FinanceUiState())
 
-    private fun build(tx: List<TransactionEntity>, acc: List<AccountEntity>): FinanceUiState {
+    private fun build(tx: List<TransactionEntity>, acc: List<AccountEntity>, balances: Map<Long, Long>): FinanceUiState {
         val now = System.currentTimeMillis()
         val curFrom = JRange.monthStart(now)
         val prevFrom = JRange.prevMonthStart(now)
         val prevTo = minOf(curFrom, prevFrom + (now - curFrom))
 
-        val current = tx.filter { it.dateMillis >= curFrom }
+        val current = tx.filter { it.dateMillis >= curFrom && it.dateMillis <= now }
         val previous = tx.filter { it.dateMillis >= prevFrom && it.dateMillis < prevTo }
         val incomes = current.filter { it.isIncome }
         val expenses = current.filter { !it.isIncome }
@@ -60,7 +61,8 @@ class FinanceViewModel @Inject constructor(
             prevExpense = previous.filter { !it.isIncome }.sumOf { it.amount },
             incomeByCategory = group(incomes),
             expenseByCategory = group(expenses),
-            accounts = acc
+            accounts = acc,
+            accountBalances = balances
         )
     }
 }

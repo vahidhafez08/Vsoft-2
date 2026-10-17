@@ -97,14 +97,15 @@ fun TransactionsScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableIntStateOf(0) }
     var category by rememberSaveable { mutableStateOf<String?>(null) }
+    var accountFilter by rememberSaveable { mutableStateOf<Long?>(null) }
     var newMode by rememberSaveable { mutableIntStateOf(0) } // 0 none, 1 income, 2 expense
     var editing by remember { mutableStateOf<TransactionEntity?>(null) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val focus: FocusManager = LocalFocusManager.current
 
-    LaunchedEffect(query, type, category) {
-        viewModel.setFilters(TxFilters(query, type, category))
+    LaunchedEffect(query, type, category, accountFilter) {
+        viewModel.setFilters(TxFilters(query, type, category, accountFilter))
     }
 
     fun deleteWithUndo(tx: TransactionEntity) {
@@ -199,9 +200,19 @@ fun TransactionsScreen(
                     }
                 }
             }
+            if (state.accounts.isNotEmpty()) {
+                item(key = "accounts") {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item { FilterChip(selected = accountFilter == null, onClick = { accountFilter = null }, label = { Text("همه حساب‌ها") }) }
+                        items(state.accounts, key = { it.id }) { account ->
+                            FilterChip(selected = accountFilter == account.id, onClick = { accountFilter = if (accountFilter == account.id) null else account.id }, label = { Text(account.name) })
+                        }
+                    }
+                }
+            }
             if (state.loaded && state.groups.isEmpty()) {
                 item(key = "empty") {
-                    val noFilters = query.isBlank() && type == 0 && category == null
+                    val noFilters = query.isBlank() && type == 0 && category == null && accountFilter == null
                     EmptyState(
                         icon = if (noFilters) Icons.Filled.Inbox else Icons.Filled.SearchOff,
                         title = if (noFilters) "هنوز تراکنشی ثبت نشده" else "نتیجه‌ای پیدا نشد",
@@ -216,6 +227,7 @@ fun TransactionsScreen(
                 items(group.items, key = { "tx" + it.id }) { tx ->
                     TxRow(
                         tx = tx,
+                        accountName = tx.accountId?.let { state.accountNames[it] },
                         modifier = Modifier.animateItemPlacement(),
                         onClick = { editing = tx },
                         onDelete = { deleteWithUndo(tx) }
@@ -240,6 +252,7 @@ fun TransactionsScreen(
         TransactionEditorSheet(
             initial = tx,
             defaultIncome = tx.isIncome,
+            accounts = state.accounts,
             onDismiss = { editing = null },
             onSave = {
                 viewModel.save(it)
@@ -256,6 +269,7 @@ fun TransactionsScreen(
         TransactionEditorSheet(
             initial = null,
             defaultIncome = newMode == 1,
+            accounts = state.accounts,
             onDismiss = { newMode = 0 },
             onSave = {
                 viewModel.save(it)
@@ -296,6 +310,7 @@ private fun DayHeader(label: String, net: Long, modifier: Modifier) {
 @Composable
 private fun TxRow(
     tx: TransactionEntity,
+    accountName: String?,
     modifier: Modifier,
     onClick: () -> Unit,
     onDelete: () -> Unit
@@ -374,6 +389,9 @@ private fun TxRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (accountName != null) {
+                    Text(accountName, color = Vsoft.colors.textSecondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
             Spacer(Modifier.width(8.dp))
             Column(horizontalAlignment = Alignment.End) {

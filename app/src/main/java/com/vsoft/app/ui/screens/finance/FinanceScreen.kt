@@ -98,13 +98,13 @@ private fun buildContent(tab: Int, s: FinanceUiState): TabContent = when (tab) {
             RowItem(
                 a.name,
                 "•••• " + a.last4.toPersianDigits(),
-                a.balance,
+                s.accountBalances[a.id] ?: a.balance,
                 accountPalette[i % accountPalette.size],
                 Icons.Filled.AccountBalance
             )
         },
         centerTitle = "کل موجودی",
-        centerValue = s.accounts.sumOf { it.balance }
+        centerValue = s.accounts.sumOf { s.accountBalances[it.id] ?: it.balance }
     )
 }
 

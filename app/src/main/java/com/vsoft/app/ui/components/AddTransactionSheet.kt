@@ -2,6 +2,9 @@ package com.vsoft.app.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
@@ -14,10 +17,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import com.vsoft.app.data.model.AccountEntity
+import com.vsoft.app.ui.theme.BrandBlue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,13 +48,24 @@ import com.vsoft.app.util.toMoney
 @Composable
 fun AddTransactionSheet(
     isIncome: Boolean,
+    accounts: List<AccountEntity> = emptyList(),
     onDismiss: () -> Unit,
-    onSave: (title: String, amount: Long, category: String) -> Unit
+    onSave: (title: String, amount: Long, category: String, accountId: Long?) -> Unit
 ) {
     val categories = if (isIncome) IncomeCategories else ExpenseCategories
     var title by rememberSaveable { mutableStateOf("") }
     var amountText by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf(categories.first()) }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("vsoft_prefs", Context.MODE_PRIVATE) }
+    var accountId by rememberSaveable { mutableStateOf<Long?>(null) }
+    androidx.compose.runtime.LaunchedEffect(accounts) {
+        if (accountId == null) {
+            val lastId = prefs.getLong("last_account_id", -1L)
+            if (accounts.any { it.id == lastId }) accountId = lastId
+        }
+        if (accountId != null && accounts.none { it.id == accountId }) accountId = null
+    }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val amount = amountText.toLongOrNull() ?: 0L
 
@@ -85,6 +105,24 @@ fun AddTransactionSheet(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
+            if (accounts.isNotEmpty()) {
+                Text("حساب", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    (listOf<AccountEntity?>(null) + accounts).forEach { account ->
+                        FilterChip(
+                            selected = accountId == account?.id,
+                            onClick = { accountId = account?.id },
+                            label = { Text(account?.name ?: "بدون حساب") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Vsoft.colors.surfaceHigh,
+                                labelColor = Vsoft.colors.textPrimary,
+                                selectedContainerColor = BrandBlue,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+            }
             Text("دسته‌بندی", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -100,7 +138,7 @@ fun AddTransactionSheet(
             }
             Spacer(Modifier.height(4.dp))
             Button(
-                onClick = { onSave(title.trim().ifBlank { category }, amount, category) },
+                onClick = { onSave(title.trim().ifBlank { category }, amount, category, accountId?.takeIf { id -> accounts.any { it.id == id } }) },
                 enabled = amount > 0L,
                 modifier = Modifier.fillMaxWidth()
             ) {

@@ -73,137 +73,85 @@ fun TransferSheet(
     val sameAccount = fromId == toId
     val amountMissing = amount <= 0L
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = Vsoft.colors.surface
-    ) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = Vsoft.colors.surface) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding()
+                .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                "انتقال بین حساب‌ها",
-                color = Vsoft.colors.textPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text("انتقال بین حساب‌ها", color = Vsoft.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             if (accounts.size < 2) {
-                Text(
-                    "برای انتقال حداقل دو حساب لازمه",
-                    color = Vsoft.colors.textSecondary,
-                    fontSize = 14.sp,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp)
-                )
+                Text("برای انتقال حداقل دو حساب لازمه", color = Vsoft.colors.textSecondary, fontSize = 14.sp,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp))
             } else {
                 Text("از حساب", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     accounts.forEach { account ->
                         val disabled = account.id == toId
                         FilterChip(
-                            selected = account.id == fromId,
-                            enabled = !disabled,
+                            selected = account.id == fromId, enabled = !disabled,
                             onClick = {
                                 fromId = account.id
                                 if (toId == account.id) toId = accounts.firstOrNull { it.id != account.id }?.id ?: toId
                             },
-                            label = { Text(account.name) },
-                            modifier = Modifier.alpha(if (disabled) 0.4f else 1f),
+                            label = { Text(account.name) }, modifier = Modifier.alpha(if (disabled) 0.4f else 1f),
                             colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Vsoft.colors.surfaceHigh,
-                                labelColor = Vsoft.colors.textPrimary,
-                                selectedContainerColor = BrandBlue,
-                                selectedLabelColor = Color.White
+                                containerColor = Vsoft.colors.surfaceHigh, labelColor = Vsoft.colors.textPrimary,
+                                selectedContainerColor = BrandBlue, selectedLabelColor = Color.White
                             )
                         )
                     }
                 }
                 Text("به حساب", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     accounts.forEach { account ->
                         val disabled = account.id == fromId
                         FilterChip(
-                            selected = account.id == toId,
-                            enabled = !disabled,
+                            selected = account.id == toId, enabled = !disabled,
                             onClick = {
                                 toId = account.id
                                 if (fromId == account.id) fromId = accounts.firstOrNull { it.id != account.id }?.id ?: fromId
                             },
-                            label = { Text(account.name) },
-                            modifier = Modifier.alpha(if (disabled) 0.4f else 1f),
+                            label = { Text(account.name) }, modifier = Modifier.alpha(if (disabled) 0.4f else 1f),
                             colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Vsoft.colors.surfaceHigh,
-                                labelColor = Vsoft.colors.textPrimary,
-                                selectedContainerColor = BrandBlue,
-                                selectedLabelColor = Color.White
+                                containerColor = Vsoft.colors.surfaceHigh, labelColor = Vsoft.colors.textPrimary,
+                                selectedContainerColor = BrandBlue, selectedLabelColor = Color.White
                             )
                         )
                     }
                 }
-                if (from != null) {
-                    Text(
-                        "موجودی فعلی مبدأ: " + fromBalance.toMoney() + " تومان",
-                        color = Vsoft.colors.textSecondary,
-                        fontSize = 12.sp
-                    )
-                }
+                if (from != null) Text("موجودی فعلی مبدأ: " + fromBalance.toMoney() + " تومان", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { value -> amountText = value.toLatinDigits().filter { it.isDigit() }.take(18) },
-                    label = { Text("مبلغ (تومان)") },
-                    supportingText = { if (amount > 0L) Text(amount.toMoney()) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    label = { Text("مبلغ (تومان)") }, supportingText = { if (amount > 0L) Text(amount.toMoney()) },
+                    singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (sameAccount) Text("حساب مبدأ و مقصد باید متفاوت باشن", color = ExpenseRed, fontSize = 12.sp)
                 if (amountMissing) Text("مبلغ رو وارد کن", color = ExpenseRed, fontSize = 12.sp)
-                if (amount > 0L && amount > fromBalance) {
-                    Text("موجودی حساب مبدأ منفی می‌شه", color = WarningOrange, fontSize = 12.sp)
-                }
+                if (amount > 0L && amount > fromBalance) Text("موجودی حساب مبدأ منفی می‌شه", color = WarningOrange, fontSize = 12.sp)
                 Text("تاریخ انتقال", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
                 Row(
                     modifier = Modifier.fillMaxWidth().background(Vsoft.colors.surfaceHigh, RoundedCornerShape(12.dp)).padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(onClick = {
-                        dateMillis = Calendar.getInstance().apply { timeInMillis = dateMillis; add(Calendar.DAY_OF_YEAR, -1) }.timeInMillis
-                    }) { Icon(Icons.Filled.ChevronRight, contentDescription = "روز قبل", tint = Vsoft.colors.textPrimary) }
+                    IconButton(onClick = { dateMillis = Calendar.getInstance().apply { timeInMillis = dateMillis; add(Calendar.DAY_OF_YEAR, -1) }.timeInMillis }) {
+                        Icon(Icons.Filled.ChevronRight, contentDescription = "روز قبل", tint = Vsoft.colors.textPrimary)
+                    }
                     val jalali = JCal.toJalali(dateMillis)
-                    Text(
-                        JCal.fa(jalali[2]) + " " + JCal.monthNames.getOrNull(jalali[1] - 1).orEmpty() + " " + JCal.fa(jalali[0]),
-                        color = Vsoft.colors.textPrimary,
-                        fontSize = 14.sp
-                    )
-                    IconButton(onClick = {
-                        dateMillis = Calendar.getInstance().apply { timeInMillis = dateMillis; add(Calendar.DAY_OF_YEAR, 1) }.timeInMillis
-                    }) { Icon(Icons.Filled.ChevronLeft, contentDescription = "روز بعد", tint = Vsoft.colors.textPrimary) }
+                    Text(JCal.fa(jalali[2]) + " " + JCal.monthNames.getOrNull(jalali[1] - 1).orEmpty() + " " + JCal.fa(jalali[0]),
+                        color = Vsoft.colors.textPrimary, fontSize = 14.sp)
+                    IconButton(onClick = { dateMillis = Calendar.getInstance().apply { timeInMillis = dateMillis; add(Calendar.DAY_OF_YEAR, 1) }.timeInMillis }) {
+                        Icon(Icons.Filled.ChevronLeft, contentDescription = "روز بعد", tint = Vsoft.colors.textPrimary)
+                    }
                 }
-                OutlinedTextField(
-                    value = note,
-                    onValueChange = { note = it.take(160) },
-                    label = { Text("یادداشت (اختیاری)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                OutlinedTextField(value = note, onValueChange = { note = it.take(160) },
+                    label = { Text("یادداشت (اختیاری)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Button(
                     onClick = { from?.let { source -> to?.let { destination -> onTransfer(source.id, destination.id, amount, dateMillis, note) } } },
                     enabled = !sameAccount && !amountMissing && from != null && to != null,
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandBlue),
-                    modifier = Modifier.fillMaxWidth()
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandBlue), modifier = Modifier.fillMaxWidth()
                 ) { Text("ثبت انتقال") }
             }
             Spacer(Modifier.padding(bottom = 4.dp))

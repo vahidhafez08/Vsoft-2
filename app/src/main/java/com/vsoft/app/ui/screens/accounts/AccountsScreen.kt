@@ -1,6 +1,14 @@
 package com.vsoft.app.ui.screens.accounts
 
-import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +49,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,16 +65,20 @@ import com.vsoft.app.ui.components.bounceClick
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.IncomeGreen
+import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.toPersianText
+import com.vsoft.app.util.formatJalali
+import com.vsoft.app.util.toMoney
+import com.vsoft.app.util.toPersianDigits
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AccountsScreen(
     onBack: () -> Unit,
     viewModel: AccountsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     var adding by rememberSaveable { mutableStateOf(false) }
     var transferring by rememberSaveable { mutableStateOf(false) }
     var editing by remember { mutableStateOf<AccountEntity?>(null) }
@@ -103,11 +114,7 @@ fun AccountsScreen(
         Appear(1) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 ActionPill("انتقال وجه", Icons.Filled.SwapHoriz, BrandBlue, Modifier.weight(1f)) {
-                    if (state.accounts.size >= 2) {
-                        transferring = true
-                    } else {
-                        Toast.makeText(context, "برای انتقال، حداقل دو حساب لازم است", Toast.LENGTH_SHORT).show()
-                    }
+                    transferring = true
                 }
                 ActionPill("حساب جدید", Icons.Filled.Add, IncomeGreen, Modifier.weight(1f)) {
                     adding = true
@@ -121,7 +128,7 @@ fun AccountsScreen(
                     AccountCardView(
                         name = acc.name,
                         last4 = acc.last4,
-                        balance = acc.balance,
+                        balance = state.balances[acc.id] ?: acc.balance,
                         colorKey = acc.colorKey,
                         modifier = Modifier.bounceClick { editing = acc }
                     )
@@ -131,6 +138,56 @@ fun AccountsScreen(
 
         Appear(state.accounts.size + 2) {
             AddDashedCard { adding = true }
+        }
+
+        Text("آخرین انتقال‌ها", color = Vsoft.colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        if (state.transfers.isEmpty()) {
+            Text("هنوز انتقالی ثبت نشده", color = Vsoft.colors.textSecondary, fontSize = 13.sp, modifier = Modifier.fillMaxWidth().padding(vertical = 18.dp))
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(state.transfers.take(10), key = { it.id }) { transfer ->
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { value ->
+                            if (value != SwipeToDismissBoxValue.Settled) {
+                                viewModel.deleteTransfer(transfer)
+                                true
+                            } else false
+                        }
+                    )
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        modifier = Modifier.animateItemPlacement(),
+                        backgroundContent = {
+                            Row(
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ExpenseRed).padding(16.dp),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Filled.Delete, contentDescription = "حذف انتقال", tint = Color.White)
+                            }
+                        }
+                    ) {
+                        Column(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Vsoft.colors.surfaceHigh).padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                (state.accountNames[transfer.fromAccountId] ?: "حساب حذف‌شده") + " ← " +
+                                    (state.accountNames[transfer.toAccountId] ?: "حساب حذف‌شده"),
+                                color = Vsoft.colors.textPrimary,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(transfer.amount.toMoney() + " تومان", color = BrandBlue, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(formatJalali(transfer.dateMillis).toPersianDigits(), color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                            if (transfer.note.isNotBlank()) Text(transfer.note, color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -160,14 +217,14 @@ fun AccountsScreen(
         )
     }
 
-    if (transferring && state.accounts.size >= 2) {
+    if (transferring) {
         TransferSheet(
             accounts = state.accounts,
+            balances = state.balances,
             onDismiss = { transferring = false },
-            onTransfer = { fromId, toId, amount ->
-                viewModel.transfer(fromId, toId, amount)
+            onTransfer = { fromId, toId, amount, dateMillis, note ->
+                viewModel.addTransfer(fromId, toId, amount, dateMillis, note)
                 transferring = false
-                Toast.makeText(context, "انتقال انجام شد", Toast.LENGTH_SHORT).show()
             }
         )
     }

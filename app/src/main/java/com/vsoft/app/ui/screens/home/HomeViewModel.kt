@@ -23,6 +23,7 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val totalBalance: Long = 0L,
+    val accounts: List<AccountEntity> = emptyList(),
     val income: Long = 0L,
     val expense: Long = 0L,
     val todayExpense: Long = 0L,
@@ -39,19 +40,19 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state: StateFlow<HomeUiState> =
-        combine(repository.observeTransactions(), repository.observeAccounts()) { tx, acc ->
-            buildState(tx, acc)
+        combine(repository.observeTransactions(), repository.observeAccounts(), repository.observeAccountBalances()) { tx, acc, balances ->
+            buildState(tx, acc, balances)
         }
             .flowOn(Dispatchers.Default)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
-    fun addTransaction(title: String, amount: Long, isIncome: Boolean, category: String) {
+    fun addTransaction(title: String, amount: Long, isIncome: Boolean, category: String, accountId: Long? = null) {
         safeLaunch {
-            repository.addTransaction(title, amount, isIncome, category)
+            repository.addTransaction(title, amount, isIncome, category, accountId)
         }
     }
 
-    private fun buildState(tx: List<TransactionEntity>, acc: List<AccountEntity>): HomeUiState {
+    private fun buildState(tx: List<TransactionEntity>, acc: List<AccountEntity>, balances: Map<Long, Long>): HomeUiState {
         val now = System.currentTimeMillis()
         val todayStart = startOfDay(now)
         val j = JCal.toJalali(todayStart)
@@ -80,7 +81,8 @@ class HomeViewModel @Inject constructor(
         }
 
         return HomeUiState(
-            totalBalance = acc.sumOf { it.balance },
+            totalBalance = acc.sumOf { balances[it.id] ?: it.balance },
+            accounts = acc,
             income = income,
             expense = expense,
             todayExpense = todayExpense,
