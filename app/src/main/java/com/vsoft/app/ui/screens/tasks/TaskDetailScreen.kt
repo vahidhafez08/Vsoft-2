@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -166,7 +167,7 @@ fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltVi
                                         modifier = Modifier.weight(1f)
                                     )
                                     Box(
-                                        Modifier.size(36.dp).clip(CircleShape).clickable { viewModel.deleteSubtask(sub) },
+                                        Modifier.size(44.dp).clip(CircleShape).clickable(role = Role.Button) { viewModel.deleteSubtask(sub) },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
@@ -214,6 +215,7 @@ fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltVi
 
     if (confirmDelete && task != null) {
         AlertDialog(
+        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { confirmDelete = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف کار؟", color = Vsoft.colors.textPrimary) },

@@ -62,6 +62,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,6 +92,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
     val busy by viewModel.busy.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val haptics = LocalHapticFeedback.current
     var reminderHour by remember { mutableIntStateOf(ReminderScheduler.getHour(context)) }
     // 0 = none, 1 = edit name, 2 = privacy, 3 = about, 4 = logout confirm, 5 = restore confirm
     var dialog by rememberSaveable { mutableIntStateOf(0) }
@@ -213,7 +216,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 Icons.Filled.Notifications, WarningOrange, "اعلان‌ها",
                 onClick = { setNotificationsEnabled(!notifications) },
                 trailing = {
-                    Switch(checked = notifications, onCheckedChange = { setNotificationsEnabled(it) })
+                    Switch(checked = notifications, onCheckedChange = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); setNotificationsEnabled(it) })
                 }
             )
             if (notifications) {
@@ -303,6 +306,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             onDismiss = { dialog = 0 }
         )
         4 -> AlertDialog(
+        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { dialog = 0 },
             containerColor = Vsoft.colors.surface,
             title = { Text("خروج", color = Vsoft.colors.textPrimary) },
@@ -324,6 +328,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             dismissButton = { TextButton(onClick = { dialog = 0 }) { Text("انصراف") } }
         )
         5 -> AlertDialog(
+        shape = RoundedCornerShape(20.dp),
             onDismissRequest = {
                 pendingRestoreUri = null
                 dialog = 0
@@ -351,6 +356,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             }
         )
         6 -> AlertDialog(
+        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { dialog = 0 },
             containerColor = Vsoft.colors.surface,
             title = { Text("ساعت یادآوری", color = Vsoft.colors.textPrimary) },
@@ -473,6 +479,7 @@ private fun RowDivider() {
 @Composable
 private fun InfoDialog(title: String, text: String, onDismiss: () -> Unit) {
     AlertDialog(
+        shape = RoundedCornerShape(20.dp),
         onDismissRequest = onDismiss,
         containerColor = Vsoft.colors.surface,
         title = { Text(title, color = Vsoft.colors.textPrimary) },
@@ -486,6 +493,7 @@ private fun NameDialog(current: String, onDismiss: () -> Unit, onSave: (String) 
     var text by rememberSaveable { mutableStateOf(current) }
     val valid = text.trim().isNotEmpty()
     AlertDialog(
+        shape = RoundedCornerShape(20.dp),
         onDismissRequest = onDismiss,
         containerColor = Vsoft.colors.surface,
         title = { Text("نام شما", color = Vsoft.colors.textPrimary) },

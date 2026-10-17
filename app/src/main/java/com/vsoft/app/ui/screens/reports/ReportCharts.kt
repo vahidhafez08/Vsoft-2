@@ -16,7 +16,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -37,7 +36,7 @@ fun ReportLines(labels: List<String>, income: List<Long>, expense: List<Long>, m
     val progress = remember { Animatable(0f) }
     LaunchedEffect(labels, income, expense) {
         progress.snapTo(0f)
-        progress.animateTo(1f, tween(800, easing = FastOutSlowInEasing))
+        progress.animateTo(1f, tween(380, easing = FastOutSlowInEasing))
     }
     val grid = Vsoft.colors.outline
     val labelColor = Vsoft.colors.textSecondary

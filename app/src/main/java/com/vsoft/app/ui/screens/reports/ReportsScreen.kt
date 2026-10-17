@@ -77,7 +77,7 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
                 )
                 Switch(
                     checked = includeJobIncome,
-                    onCheckedChange = { viewModel.setIncludeJobs(it) }
+                    onCheckedChange = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); viewModel.setIncludeJobs(it) }
                 )
             }
         }

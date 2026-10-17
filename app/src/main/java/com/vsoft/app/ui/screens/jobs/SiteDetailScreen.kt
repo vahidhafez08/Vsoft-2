@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -228,7 +229,7 @@ private fun MiniStat(label: String, value: Int, color: Color, modifier: Modifier
 @Composable
 private fun SmallIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(34.dp).clip(CircleShape).clickable(onClick = onClick),
+        Modifier.size(44.dp).clip(CircleShape).clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = description, tint = Vsoft.colors.textSecondary, modifier = Modifier.size(17.dp))

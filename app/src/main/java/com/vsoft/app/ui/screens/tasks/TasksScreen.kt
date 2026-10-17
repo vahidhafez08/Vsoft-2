@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -276,7 +277,7 @@ private fun ProjectCard(item: ProjectItem, selected: Boolean, onClick: () -> Uni
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
             )
             Box(
-                Modifier.size(30.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onEdit),
+                Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).clickable(role = Role.Button, onClick = onEdit),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

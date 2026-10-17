@@ -258,6 +258,7 @@ fun DocumentsScreen(
 
     pendingDelete?.let { document ->
         AlertDialog(
+        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { pendingDelete = null },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف سند", color = Vsoft.colors.textPrimary) },
