@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vsoft.app.ui.theme.BrandBlue
+import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.Vsoft
 
@@ -43,7 +44,7 @@ fun ScreenHeader(
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier
-                .size(40.dp)
+                .size(Dimens.minTouchTarget)
                 .bounceClick(onBack)
                 .clip(CircleShape)
                 .background(Vsoft.colors.surface)
@@ -64,20 +65,21 @@ fun ScreenHeader(
 }
 
 @Composable
-fun EmptyState(icon: ImageVector, title: String, subtitle: String) {
+fun EmptyState(icon: ImageVector, title: String, subtitle: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
     Column(
         Modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
-            Modifier.size(72.dp).clip(CircleShape).background(Vsoft.colors.surfaceHigh),
+            Modifier.size(112.dp).clip(CircleShape).background(BrandBlue.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = Vsoft.colors.textSecondary, modifier = Modifier.size(32.dp))
+            Icon(icon, null, tint = Vsoft.colors.textSecondary, modifier = Modifier.size(56.dp))
         }
         Text(title, color = Vsoft.colors.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Text(subtitle, color = Vsoft.colors.textSecondary, fontSize = 12.sp, textAlign = TextAlign.Center)
+        if (actionLabel != null && onAction != null) VPrimaryButton(actionLabel, onAction, modifier = Modifier.fillMaxWidth(0.72f).padding(top = Dimens.sm))
     }
 }
 
