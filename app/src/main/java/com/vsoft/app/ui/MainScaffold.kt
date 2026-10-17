@@ -6,6 +6,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,7 +54,12 @@ fun MainScaffold() {
     LaunchedEffect(Unit) {
         UiEvents.messages.collect { msg ->
             snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar(msg, duration = SnackbarDuration.Short)
+            val result = snackbarHostState.showSnackbar(
+                message = msg.text,
+                actionLabel = msg.actionLabel,
+                duration = if (msg.actionLabel != null) SnackbarDuration.Long else SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) msg.onAction?.invoke()
         }
     }
 
@@ -66,7 +75,7 @@ fun MainScaffold() {
             }
         },
         bottomBar = {
-            NavigationBar(containerColor = Vsoft.colors.surface) {
+            NavigationBar(modifier = Modifier.height(64.dp).navigationBarsPadding().border(BorderStroke(0.5.dp, Vsoft.colors.outline.copy(alpha = 0.5f))), containerColor = Vsoft.colors.surface) {
                 Destination.values().forEach { dest ->
                     val selected = when (dest) {
                         Destination.Finance -> currentRoute in financeGroup
@@ -93,11 +102,11 @@ fun MainScaffold() {
                             }
                         },
                         icon = { Icon(dest.icon, contentDescription = dest.label) },
-                        label = { Text(dest.label) },
+                        label = { Text(dest.label, fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = BrandBlue,
                             selectedTextColor = BrandBlue,
-                            indicatorColor = Vsoft.colors.surfaceHigh,
+                            indicatorColor = BrandBlue.copy(alpha = 0.15f),
                             unselectedIconColor = Vsoft.colors.textSecondary,
                             unselectedTextColor = Vsoft.colors.textSecondary
                         )
