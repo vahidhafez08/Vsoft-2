@@ -1,5 +1,6 @@
 package com.vsoft.app.ui.components
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -121,6 +122,7 @@ fun ProjectEditorSheet(
 
     if (confirmDelete && onDelete != null) {
         AlertDialog(
+        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { confirmDelete = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف پروژه؟", color = Vsoft.colors.textPrimary) },

@@ -176,6 +176,7 @@ fun AccountEditorSheet(
 
     if (confirmDelete && onDelete != null) {
         AlertDialog(
+        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { confirmDelete = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف حساب؟", color = Vsoft.colors.textPrimary) },
