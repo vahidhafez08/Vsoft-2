@@ -234,7 +234,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         VCard {
             SettingsRow(
                 Icons.Filled.CloudUpload, BrandBlue, "گرفتن بکاپ",
-                subtitle = "ذخیره‌ی همه‌ی اطلاعات در یک فایل",
+                subtitle = "ذخیره‌ی اطلاعات؛ فایل‌های اسناد داخل بکاپ نیستن",
                 enabled = !busy,
                 onClick = { backupLauncher.launch(backupFileName) }
             )
