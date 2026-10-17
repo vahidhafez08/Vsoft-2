@@ -7,11 +7,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -58,7 +55,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,10 +75,9 @@ import com.vsoft.app.ui.components.VCard
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
+import com.vsoft.app.util.JCal
 import com.vsoft.app.util.UiEvents
-import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.formatSize
-import com.vsoft.app.util.toPersianDigits
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -381,8 +376,10 @@ private fun DocumentRow(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    val jalali = JCal.toJalali(document.createdAt)
+                    val jalaliDate = JCal.fa(jalali[0]) + "/" + JCal.fa(jalali[1]) + "/" + JCal.fa(jalali[2])
                     Text(
-                        DocumentCategories.title(document.category) + " • " + formatSize(document.sizeBytes) + " • " + formatJalali(document.createdAt).toPersianDigits(),
+                        DocumentCategories.title(document.category) + " • " + formatSize(document.sizeBytes) + " • " + jalaliDate,
                         color = Vsoft.colors.textSecondary,
                         fontSize = 10.sp,
                         maxLines = 2,
