@@ -114,8 +114,8 @@ fun TransactionsScreen(
             snackbar.currentSnackbarData?.dismiss()
             val result = snackbar.showSnackbar(
                 message = "تراکنش حذف شد",
-                actionLabel = "بازگردانی",
-                duration = SnackbarDuration.Short
+                actionLabel = "واگرد",
+                duration = SnackbarDuration.Long
             )
             if (result == SnackbarResult.ActionPerformed) {
                 viewModel.restore(tx)
