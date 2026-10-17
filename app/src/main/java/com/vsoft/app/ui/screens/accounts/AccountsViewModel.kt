@@ -44,7 +44,7 @@ class AccountsViewModel @Inject constructor(
             val list = state.value.accounts
             val from = list.firstOrNull { it.id == fromId }
             val to = list.firstOrNull { it.id == toId }
-            if (from != null && to != null && from.id != to.id && amount > 0L && amount <= from.balance) {
+            if (from != null && to != null && from.id != to.id && amount > 0L && amount <= (state.value.balances[from.id] ?: from.balance)) {
                 repository.transfer(from, to, amount)
             }
         }
