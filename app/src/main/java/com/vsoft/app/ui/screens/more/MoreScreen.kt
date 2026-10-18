@@ -1,6 +1,8 @@
 package com.vsoft.app.ui.screens.more
 
 import android.net.Uri
+import android.view.WindowManager
+import android.app.Activity
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -8,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +38,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
@@ -48,6 +52,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,12 +68,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.notify.ReminderScheduler
+import com.vsoft.app.security.PinStore
 import com.vsoft.app.ui.components.SegmentedTabs
 import com.vsoft.app.ui.components.VCard
 import com.vsoft.app.ui.theme.BrandBlue
@@ -80,6 +88,7 @@ import com.vsoft.app.ui.theme.WarningOrange
 import com.vsoft.app.util.JCal
 import com.vsoft.app.util.UiEvents
 import com.vsoft.app.util.toPersianDigits
+import com.vsoft.app.util.toLatinDigits
 import java.util.Locale
 
 @Composable
@@ -89,6 +98,8 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
     val busy by viewModel.busy.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var pinEnabled by remember { mutableStateOf(PinStore.isEnabled(context)) }
+    var secureScreen by remember { mutableStateOf(PinStore.isSecureScreen(context)) }
     var reminderHour by remember { mutableIntStateOf(ReminderScheduler.getHour(context)) }
     // 0 = none, 1 = edit name, 2 = privacy, 3 = about, 4 = logout confirm, 5 = restore confirm
     var dialog by rememberSaveable { mutableIntStateOf(0) }
