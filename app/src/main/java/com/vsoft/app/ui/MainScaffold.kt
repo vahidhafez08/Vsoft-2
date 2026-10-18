@@ -62,8 +62,7 @@ import kotlin.math.sign
 private val tabDestinations = Destination.values().toList()
 
 @Composable
-fun MainScaffold() {
-    val navController = rememberNavController()
+fun MainScaffold(navController: NavHostController) {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val snackbarHostState = remember { SnackbarHostState() }
