@@ -139,7 +139,7 @@ fun LockScreen(onUnlocked: () -> Unit) {
             }
             Spacer(Modifier.height(16.dp))
             val message = when {
-                remaining > 0L -> "تا ${((remaining + 999L) / 1_000L).toInt().toPersianDigits()} ثانیه دیگه صبر کن"
+                remaining > 0L -> "تا ${((remaining + 999L) / 1_000L).toInt().toString().toPersianDigits()} ثانیه دیگه صبر کن"
                 error -> "رمز اشتباهه"
                 else -> " "
             }
