@@ -22,6 +22,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
@@ -29,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -71,6 +72,7 @@ fun MainScaffold() {
     val isTabRoute = currentTabIndex >= 0
     val pagerState = rememberPagerState(initialPage = currentTabIndex.coerceAtLeast(0)) { tabDestinations.size }
     val scope = rememberCoroutineScope()
+    var isProgrammaticPageChange by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         UiEvents.messages.collect { msg ->
@@ -107,7 +109,7 @@ fun MainScaffold() {
             .distinctUntilChanged()
             .collect { page ->
                 val destination = tabDestinations.getOrNull(page) ?: return@collect
-                if (navController.currentBackStackEntry?.destination?.route != destination.route) {
+                if (!isProgrammaticPageChange && navController.currentBackStackEntry?.destination?.route != destination.route) {
                     navigateToTab(destination)
                 }
             }
@@ -144,6 +146,7 @@ fun MainScaffold() {
                             if (isTabRoute) {
                                 if (index != pagerState.currentPage && !pagerState.isScrollInProgress) {
                                     scope.launch {
+                                        isProgrammaticPageChange = true
                                         try {
                                             val distance = index - pagerState.currentPage
                                             if (abs(distance) > 1) {
@@ -153,8 +156,11 @@ fun MainScaffold() {
                                                 index,
                                                 animationSpec = tween(280, easing = FastOutSlowInEasing)
                                             )
+                                            tabDestinations.getOrNull(index)?.let(::navigateToTab)
                                         } catch (cancelled: CancellationException) {
                                             throw cancelled
+                                        } finally {
+                                            isProgrammaticPageChange = false
                                         }
                                     }
                                 }
@@ -229,7 +235,6 @@ fun MainScaffold() {
 
             if (isTabRoute) {
                 TabsHost(
-                    navController = navController,
                     pagerState = pagerState,
                     modifier = Modifier.fillMaxSize(),
                     onOpenRoute = ::openRoute
@@ -241,7 +246,6 @@ fun MainScaffold() {
 
 @Composable
 private fun TabsHost(
-    navController: NavController,
     pagerState: PagerState,
     modifier: Modifier = Modifier,
     onOpenRoute: (String) -> Unit
