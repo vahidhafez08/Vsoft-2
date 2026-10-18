@@ -18,6 +18,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
+import com.vsoft.app.security.AppLock
+import com.vsoft.app.ui.screens.lock.LockScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.ui.screens.SplashScreen
 import com.vsoft.app.ui.screens.more.SettingsViewModel
@@ -34,6 +37,8 @@ fun VsoftRoot(settingsViewModel: SettingsViewModel = hiltViewModel()) {
         else -> systemDark
     }
     VsoftTheme(darkTheme = dark) {
+        val navController = rememberNavController()
+        val locked by AppLock.locked.collectAsStateWithLifecycle()
         val view = LocalView.current
         val barBg = Vsoft.colors.bg.toArgb()
         val barSurface = Vsoft.colors.surface.toArgb()
@@ -51,7 +56,9 @@ fun VsoftRoot(settingsViewModel: SettingsViewModel = hiltViewModel()) {
         }
         var showSplash by rememberSaveable { mutableStateOf(true) }
         Box(Modifier.fillMaxSize()) {
-            AnimatedVisibility(visible = !showSplash, enter = fadeIn(), exit = fadeOut()) { MainScaffold() }
+            AnimatedVisibility(visible = !showSplash, enter = fadeIn(), exit = fadeOut()) {
+                if (locked) LockScreen(onUnlocked = { AppLock.unlock() }) else MainScaffold(navController = navController)
+            }
             AnimatedVisibility(visible = showSplash, exit = fadeOut()) { SplashScreen(onFinished = { showSplash = false }) }
         }
     }

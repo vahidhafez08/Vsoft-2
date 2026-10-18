@@ -226,6 +226,72 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         }
 
         Text(
+            "امنیت",
+            color = Vsoft.colors.textPrimary,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+        VCard {
+            SettingsRow(
+                Icons.Filled.Lock, BrandBlue, "قفل برنامه با رمز",
+                subtitle = if (pinEnabled) "قفل چهاررقمی فعاله" else "برای محافظت از برنامه رمز تعیین کن",
+                onClick = { dialog = if (pinEnabled) 8 else 7 },
+                trailing = {
+                    Switch(
+                        checked = pinEnabled,
+                        onCheckedChange = { enabled -> dialog = if (enabled) 7 else 8 }
+                    )
+                }
+            )
+            if (pinEnabled) {
+                RowDivider()
+                SettingsRow(
+                    Icons.Filled.PrivacyTip, BrandPurple, "تغییر رمز",
+                    onClick = { dialog = 9 }
+                )
+            }
+            RowDivider()
+            SettingsRow(
+                Icons.Filled.Info, ExpenseRed, "مخفی‌کردن صفحه در برنامه‌های اخیر",
+                subtitle = "جلوگیری از نمایش پیش‌نمایش برنامه",
+                onClick = {
+                    val enabled = !secureScreen
+                    if (PinStore.setSecureScreen(context, enabled)) {
+                        secureScreen = enabled
+                        try {
+                            val window = (context as? Activity)?.window
+                            if (window != null) {
+                                if (enabled) window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                                else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                            }
+                        } catch (_: Exception) { }
+                    } else {
+                        UiEvents.show("ذخیره‌ی تنظیم امنیتی ناموفق بود")
+                    }
+                },
+                trailing = {
+                    Switch(
+                        checked = secureScreen,
+                        onCheckedChange = { enabled ->
+                            if (PinStore.setSecureScreen(context, enabled)) {
+                                secureScreen = enabled
+                                try {
+                                    val window = (context as? Activity)?.window
+                                    if (window != null) {
+                                        if (enabled) window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                                        else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                                    }
+                                } catch (_: Exception) { }
+                            } else {
+                                UiEvents.show("ذخیره‌ی تنظیم امنیتی ناموفق بود")
+                            }
+                        }
+                    )
+                }
+            )
+        }
+
+        Text(
             "داده‌ها و پشتیبان‌گیری",
             color = Vsoft.colors.textPrimary,
             fontSize = 16.sp,
@@ -347,6 +413,41 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     pendingRestoreUri = null
                     dialog = 0
                 }) { Text("انصراف") }
+            }
+        )
+        7 -> PinSetupDialog(
+            onDismiss = { dialog = 0 },
+            onSuccess = { pin ->
+                if (PinStore.setPin(context, pin)) {
+                    pinEnabled = true
+                    dialog = 0
+                    UiEvents.show("قفل برنامه فعال شد ✅")
+                } else {
+                    UiEvents.show("ذخیره‌ی رمز ناموفق بود")
+                }
+            }
+        )
+        8 -> PinDisableDialog(
+            onDismiss = { dialog = 0 },
+            onSuccess = {
+                if (PinStore.clear(context)) {
+                    pinEnabled = false
+                    dialog = 0
+                    UiEvents.show("قفل برنامه غیرفعال شد")
+                } else {
+                    UiEvents.show("غیرفعال‌کردن قفل ناموفق بود")
+                }
+            }
+        )
+        9 -> PinChangeDialog(
+            onDismiss = { dialog = 0 },
+            onSuccess = { pin ->
+                if (PinStore.setPin(context, pin)) {
+                    dialog = 0
+                    UiEvents.show("رمز برنامه تغییر کرد ✅")
+                } else {
+                    UiEvents.show("ذخیره‌ی رمز ناموفق بود")
+                }
             }
         )
         6 -> AlertDialog(
@@ -499,6 +600,150 @@ private fun NameDialog(current: String, onDismiss: () -> Unit, onSave: (String) 
         },
         confirmButton = {
             TextButton(onClick = { if (valid) onSave(text.trim()) }, enabled = valid) { Text("ذخیره") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("انصراف") } }
+    )
+}
+
+
+private fun sanitizePin(value: String): String =
+    value.toLatinDigits().filter { it in '0'..'9' }.take(4)
+
+@Composable
+private fun PinField(
+    value: String,
+    label: String,
+    onValueChange: (String) -> Unit,
+    enabled: Boolean = true
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = { onValueChange(sanitizePin(it)) },
+        label = { Text(label) },
+        singleLine = true,
+        enabled = enabled,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+        visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun PinSetupDialog(onDismiss: () -> Unit, onSuccess: (String) -> Unit) {
+    var pin by rememberSaveable { mutableStateOf("") }
+    var confirm by rememberSaveable { mutableStateOf("") }
+    var error by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Vsoft.colors.surface,
+        title = { Text("فعال‌کردن قفل برنامه", color = Vsoft.colors.textPrimary) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                PinField(pin, "رمز چهاررقمی", { pin = it; error = "" })
+                PinField(confirm, "تکرار رمز", { confirm = it; error = "" })
+                if (error.isNotEmpty()) Text(error, color = ExpenseRed, fontSize = 12.sp)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                when {
+                    !PinStore.isValidPin(pin) -> error = "رمز باید ۴ رقم باشه"
+                    !PinStore.isValidPin(confirm) -> error = "رمز باید ۴ رقم باشه"
+                    pin != confirm -> error = "رمزها یکسان نیستن"
+                    else -> onSuccess(pin)
+                }
+            }) { Text("فعال‌کردن", color = BrandBlue) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("انصراف") } }
+    )
+}
+
+@Composable
+private fun PinDisableDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
+    val context = LocalContext.current
+    var pin by rememberSaveable { mutableStateOf("") }
+    var error by remember { mutableStateOf("") }
+    var remaining by remember { mutableStateOf(PinStore.remainingLockMillis(context)) }
+    LaunchedEffect(remaining > 0L) {
+        while (remaining > 0L) {
+            kotlinx.coroutines.delay(1_000L)
+            remaining = PinStore.remainingLockMillis(context)
+        }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Vsoft.colors.surface,
+        title = { Text("غیرفعال‌کردن قفل", color = Vsoft.colors.textPrimary) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("برای غیرفعال‌کردن قفل، رمز فعلی رو وارد کن.", color = Vsoft.colors.textPrimary)
+                PinField(pin, "رمز فعلی", { pin = it; error = "" }, enabled = remaining <= 0L)
+                val message = if (remaining > 0L) "تا ${((remaining + 999L) / 1_000L).toInt().toPersianDigits()} ثانیه دیگه صبر کن" else error
+                if (message.isNotEmpty()) Text(message, color = ExpenseRed, fontSize = 12.sp)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = pin.length == 4 && remaining <= 0L,
+                onClick = {
+                    if (PinStore.verify(context, pin)) onSuccess()
+                    else {
+                        PinStore.registerFailure(context)
+                        remaining = PinStore.remainingLockMillis(context)
+                        error = "رمز اشتباهه"
+                        pin = ""
+                    }
+                }
+            ) { Text("غیرفعال‌کردن", color = ExpenseRed) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("انصراف") } }
+    )
+}
+
+@Composable
+private fun PinChangeDialog(onDismiss: () -> Unit, onSuccess: (String) -> Unit) {
+    val context = LocalContext.current
+    var current by rememberSaveable { mutableStateOf("") }
+    var pin by rememberSaveable { mutableStateOf("") }
+    var confirm by rememberSaveable { mutableStateOf("") }
+    var error by remember { mutableStateOf("") }
+    var remaining by remember { mutableStateOf(PinStore.remainingLockMillis(context)) }
+    LaunchedEffect(remaining > 0L) {
+        while (remaining > 0L) {
+            kotlinx.coroutines.delay(1_000L)
+            remaining = PinStore.remainingLockMillis(context)
+        }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Vsoft.colors.surface,
+        title = { Text("تغییر رمز", color = Vsoft.colors.textPrimary) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                PinField(current, "رمز فعلی", { current = it; error = "" }, enabled = remaining <= 0L)
+                PinField(pin, "رمز جدید", { pin = it; error = "" }, enabled = remaining <= 0L)
+                PinField(confirm, "تکرار رمز جدید", { confirm = it; error = "" }, enabled = remaining <= 0L)
+                val message = if (remaining > 0L) "تا ${((remaining + 999L) / 1_000L).toInt().toPersianDigits()} ثانیه دیگه صبر کن" else error
+                if (message.isNotEmpty()) Text(message, color = ExpenseRed, fontSize = 12.sp)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = current.length == 4 && pin.length == 4 && confirm.length == 4 && remaining <= 0L,
+                onClick = {
+                    when {
+                        !PinStore.verify(context, current) -> {
+                            PinStore.registerFailure(context)
+                            remaining = PinStore.remainingLockMillis(context)
+                            error = "رمز اشتباهه"
+                            current = ""
+                        }
+                        !PinStore.isValidPin(pin) || !PinStore.isValidPin(confirm) -> error = "رمز باید ۴ رقم باشه"
+                        pin != confirm -> error = "رمزها یکسان نیستن"
+                        else -> onSuccess(pin)
+                    }
+                }
+            ) { Text("ذخیره رمز", color = BrandBlue) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("انصراف") } }
     )
