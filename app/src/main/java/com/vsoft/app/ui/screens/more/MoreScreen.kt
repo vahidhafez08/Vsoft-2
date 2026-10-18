@@ -689,7 +689,7 @@ private fun PinDisableDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("برای غیرفعال‌کردن قفل، رمز فعلی رو وارد کن.", color = Vsoft.colors.textPrimary)
                 PinField(pin, "رمز فعلی", { pin = it; error = "" }, enabled = remaining <= 0L)
-                val message = if (remaining > 0L) "تا ${((remaining + 999L) / 1_000L).toInt().toPersianDigits()} ثانیه دیگه صبر کن" else error
+                val message = if (remaining > 0L) "تا ${((remaining + 999L) / 1_000L).toInt().toString().toPersianDigits()} ثانیه دیگه صبر کن" else error
                 if (message.isNotEmpty()) Text(message, color = ExpenseRed, fontSize = 12.sp)
             }
         },
@@ -734,7 +734,7 @@ private fun PinChangeDialog(onDismiss: () -> Unit, onSuccess: (String) -> Unit) 
                 PinField(current, "رمز فعلی", { current = it; error = "" }, enabled = remaining <= 0L)
                 PinField(pin, "رمز جدید", { pin = it; error = "" }, enabled = remaining <= 0L)
                 PinField(confirm, "تکرار رمز جدید", { confirm = it; error = "" }, enabled = remaining <= 0L)
-                val message = if (remaining > 0L) "تا ${((remaining + 999L) / 1_000L).toInt().toPersianDigits()} ثانیه دیگه صبر کن" else error
+                val message = if (remaining > 0L) "تا ${((remaining + 999L) / 1_000L).toInt().toString().toPersianDigits()} ثانیه دیگه صبر کن" else error
                 if (message.isNotEmpty()) Text(message, color = ExpenseRed, fontSize = 12.sp)
             }
         },
