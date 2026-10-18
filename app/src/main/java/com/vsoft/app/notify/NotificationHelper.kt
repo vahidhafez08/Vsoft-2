@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.vsoft.app.MainActivity
+import com.vsoft.app.R
 import com.vsoft.app.util.toPersianDigits
 
 object NotificationHelper {
@@ -63,8 +64,8 @@ object NotificationHelper {
             )
             val message = "${count.toString().toPersianDigits()} کار برای امروز یا عقب‌افتاده داری"
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle("یادآوری VSOFT")
+                .setSmallIcon(R.drawable.ic_stat_vesta)
+                .setContentTitle("یادآوری Vesta")
                 .setContentText(message)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(message))
                 .setContentIntent(contentIntent)

@@ -110,7 +110,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     }
     val backupFileName = remember {
         val date = JCal.toJalali(System.currentTimeMillis())
-        "vsoft-backup-%04d-%02d-%02d.json".format(Locale.US, date[0], date[1], date[2])
+        "vesta-backup-%04d-%02d-%02d.json".format(Locale.US, date[0], date[1], date[2])
     }
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -327,7 +327,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 Icons.Filled.FileDownload, BrandPurple, "خروجی CSV تراکنش‌ها",
                 subtitle = "برای باز کردن در اکسل",
                 enabled = !busy,
-                onClick = { csvLauncher.launch("vsoft-transactions.csv") }
+                onClick = { csvLauncher.launch("vesta-transactions.csv") }
             )
             if (busy) {
                 Row(
@@ -350,7 +350,7 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         VCard {
             SettingsRow(Icons.Filled.PrivacyTip, IncomeGreen, "حریم خصوصی", onClick = { dialog = 2 })
             RowDivider()
-            SettingsRow(Icons.Filled.Info, BrandBlue, "درباره VSOFT", onClick = { dialog = 3 })
+            SettingsRow(Icons.Filled.Info, BrandBlue, "درباره Vesta", onClick = { dialog = 3 })
         }
 
         // Logout
@@ -374,8 +374,8 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             onDismiss = { dialog = 0 }
         )
         3 -> InfoDialog(
-            title = "درباره VSOFT",
-            text = "VSOFT مدیریت مالی و کارهای شخصی\nنسخه " + versionName.toPersianDigits(),
+            title = "درباره Vesta",
+            text = "Vesta مدیریت مالی و کارهای شخصی\nنسخه " + versionName.toPersianDigits(),
             onDismiss = { dialog = 0 }
         )
         4 -> AlertDialog(

@@ -186,7 +186,7 @@ class BackupManager @Inject constructor(
 
     private fun parseAndValidate(json: String): ParsedBackup {
         val root = JSONObject(json)
-        require(root.optString("app") == "VSOFT") { "Not a VSOFT backup" }
+        require(root.optString("app") in setOf("VSOFT", "Vesta")) { "Not a supported backup" }
         require(root.requiredInt("version") in MIN_VERSION..CURRENT_VERSION) { "Unsupported backup version" }
         root.requiredLong("exportedAt")
 

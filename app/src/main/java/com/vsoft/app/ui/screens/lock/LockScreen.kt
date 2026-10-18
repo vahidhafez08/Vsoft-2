@@ -118,7 +118,7 @@ fun LockScreen(onUnlocked: () -> Unit) {
                 Text("V", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Black)
             }
             Spacer(Modifier.height(14.dp))
-            Text("VSOFT", color = Vsoft.colors.textPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold, letterSpacing = 4.sp)
+            Text("Vesta", color = Vsoft.colors.textPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold, letterSpacing = 4.sp)
             Spacer(Modifier.height(8.dp))
             Text("رمز چهار رقمی رو وارد کن", color = Vsoft.colors.textSecondary, fontSize = 14.sp)
             Spacer(Modifier.height(26.dp))
