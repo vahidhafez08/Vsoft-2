@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -29,11 +28,11 @@ import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.isOverdue
 import com.vsoft.app.util.toPersianText
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -77,7 +76,7 @@ fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltVi
                 VCard {
                     Text(task.title, color = Vsoft.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.sm), verticalAlignment = Alignment.CenterVertically) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(Modifier.bounceClick { viewModel.toggleTask(task) }) {
                             MiniChip(
                                 text = if (task.isDone) "انجام شد" else "در حال انجام",
@@ -167,7 +166,7 @@ fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltVi
                                         modifier = Modifier.weight(1f)
                                     )
                                     Box(
-                                        Modifier.size(44.dp).clip(CircleShape).clickable(role = Role.Button) { viewModel.deleteSubtask(sub) },
+                                        Modifier.size(36.dp).clip(CircleShape).clickable { viewModel.deleteSubtask(sub) },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
@@ -215,7 +214,6 @@ fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltVi
 
     if (confirmDelete && task != null) {
         AlertDialog(
-        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { confirmDelete = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف کار؟", color = Vsoft.colors.textPrimary) },

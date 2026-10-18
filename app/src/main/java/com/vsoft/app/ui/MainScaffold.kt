@@ -6,10 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -55,12 +50,7 @@ fun MainScaffold() {
     LaunchedEffect(Unit) {
         UiEvents.messages.collect { msg ->
             snackbarHostState.currentSnackbarData?.dismiss()
-            val result = snackbarHostState.showSnackbar(
-                message = msg.text,
-                actionLabel = msg.actionLabel,
-                duration = if (msg.actionLabel != null) SnackbarDuration.Long else SnackbarDuration.Short
-            )
-            if (result == SnackbarResult.ActionPerformed) msg.onAction?.invoke()
+            snackbarHostState.showSnackbar(msg, duration = SnackbarDuration.Short)
         }
     }
 
@@ -76,7 +66,7 @@ fun MainScaffold() {
             }
         },
         bottomBar = {
-            NavigationBar(modifier = Modifier.height(64.dp).navigationBarsPadding().border(BorderStroke(0.5.dp, Vsoft.colors.outline.copy(alpha = 0.5f))), containerColor = Vsoft.colors.surface) {
+            NavigationBar(containerColor = Vsoft.colors.surface) {
                 Destination.values().forEach { dest ->
                     val selected = when (dest) {
                         Destination.Finance -> currentRoute in financeGroup
@@ -103,11 +93,11 @@ fun MainScaffold() {
                             }
                         },
                         icon = { Icon(dest.icon, contentDescription = dest.label) },
-                        label = { Text(dest.label, fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal) },
+                        label = { Text(dest.label) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = BrandBlue,
                             selectedTextColor = BrandBlue,
-                            indicatorColor = BrandBlue.copy(alpha = 0.15f),
+                            indicatorColor = Vsoft.colors.surfaceHigh,
                             unselectedIconColor = Vsoft.colors.textSecondary,
                             unselectedTextColor = Vsoft.colors.textSecondary
                         )
@@ -120,8 +110,8 @@ fun MainScaffold() {
             navController = navController,
             startDestination = Destination.Home.route,
             modifier = Modifier.padding(padding),
-            enterTransition = { fadeIn(tween(280)) + slideInHorizontally(tween(260), initialOffsetX = { -it / 14 }) },
-            exitTransition = { fadeOut(tween(280)) },
+            enterTransition = { fadeIn(tween(260)) + slideInHorizontally(tween(260), initialOffsetX = { -it / 14 }) },
+            exitTransition = { fadeOut(tween(160)) },
             popEnterTransition = { fadeIn(tween(260)) },
             popExitTransition = { fadeOut(tween(160)) + slideOutHorizontally(tween(260), targetOffsetX = { -it / 14 }) }
         ) {

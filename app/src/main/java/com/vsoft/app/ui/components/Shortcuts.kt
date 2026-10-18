@@ -1,9 +1,5 @@
 package com.vsoft.app.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +30,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vsoft.app.ui.theme.BrandBlue
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.Vsoft
 
@@ -48,7 +43,7 @@ fun ScreenHeader(
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier
-                .size(Dimens.minTouchTarget)
+                .size(40.dp)
                 .bounceClick(onBack)
                 .clip(CircleShape)
                 .background(Vsoft.colors.surface)
@@ -59,7 +54,7 @@ fun ScreenHeader(
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = Vsoft.colors.textPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(title, color = Vsoft.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             if (subtitle != null) {
                 Text(subtitle, color = Vsoft.colors.textSecondary, fontSize = 12.sp)
             }
@@ -69,23 +64,20 @@ fun ScreenHeader(
 }
 
 @Composable
-fun EmptyState(icon: ImageVector, title: String, subtitle: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
-    AnimatedVisibility(visible = true, enter = fadeIn(tween(240)) + scaleIn(tween(240))) {
+fun EmptyState(icon: ImageVector, title: String, subtitle: String) {
     Column(
         Modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
-            Modifier.size(112.dp).clip(CircleShape).background(BrandBlue.copy(alpha = 0.12f)),
+            Modifier.size(72.dp).clip(CircleShape).background(Vsoft.colors.surfaceHigh),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = Vsoft.colors.textSecondary, modifier = Modifier.size(56.dp))
+            Icon(icon, null, tint = Vsoft.colors.textSecondary, modifier = Modifier.size(32.dp))
         }
         Text(title, color = Vsoft.colors.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Text(subtitle, color = Vsoft.colors.textSecondary, fontSize = 12.sp, textAlign = TextAlign.Center)
-        if (actionLabel != null && onAction != null) VPrimaryButton(actionLabel, onAction, modifier = Modifier.fillMaxWidth(0.72f).padding(top = Dimens.sm))
-    }
     }
 }
 

@@ -11,8 +11,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 data class VsoftColors(val bg: Color, val surface: Color, val surfaceHigh: Color, val outline: Color, val textPrimary: Color, val textSecondary: Color, val isDark: Boolean)
 val LocalVsoftColors = staticCompositionLocalOf { VsoftColors(LightBg, LightSurface, LightSurfaceHigh, LightOutline, LightTextPrimary, LightTextSecondary, false) }
-private val DarkScheme = darkColorScheme(primary = BrandBlue, secondary = BrandPurple, background = DarkBg, surface = DarkSurface, onBackground = DarkTextPrimary, onSurface = DarkTextPrimary, outline = DarkOutline)
-private val LightScheme = lightColorScheme(primary = BrandBlue, secondary = BrandPurple, background = LightBg, surface = LightSurface, onBackground = LightTextPrimary, onSurface = LightTextPrimary, outline = LightOutline)
+private val DarkScheme = darkColorScheme(primary = BrandBlue, secondary = BrandPurple, background = DarkBg, surface = DarkSurface, onBackground = DarkTextPrimary, onSurface = DarkTextPrimary)
+private val LightScheme = lightColorScheme(primary = BrandBlue, secondary = BrandPurple, background = LightBg, surface = LightSurface, onBackground = LightTextPrimary, onSurface = LightTextPrimary)
 @Composable
 fun VsoftTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors = if (darkTheme) VsoftColors(DarkBg, DarkSurface, DarkSurfaceHigh, DarkOutline, DarkTextPrimary, DarkTextSecondary, true) else VsoftColors(LightBg, LightSurface, LightSurfaceHigh, LightOutline, LightTextPrimary, LightTextSecondary, false)

@@ -1,6 +1,5 @@
 package com.vsoft.app.ui.components
 
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +20,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -33,8 +34,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -46,7 +45,6 @@ import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.WarningOrange
 import com.vsoft.app.util.JCal
 import com.vsoft.app.util.startOfDay
@@ -62,7 +60,6 @@ fun TransferSheet(
     onDismiss: () -> Unit,
     onTransfer: (fromId: Long, toId: Long, amount: Long, dateMillis: Long, note: String) -> Unit
 ) {
-    val haptics = LocalHapticFeedback.current
     var fromId by rememberSaveable(accounts) { mutableStateOf(accounts.firstOrNull()?.id ?: -1L) }
     var toId by rememberSaveable(accounts) { mutableStateOf(accounts.getOrNull(1)?.id ?: -1L) }
     var amountText by rememberSaveable { mutableStateOf("") }
@@ -76,16 +73,10 @@ fun TransferSheet(
     val sameAccount = fromId == toId
     val amountMissing = amount <= 0L
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(Dimens.cornerSheet),
-        dragHandle = { BottomSheetDefaults.DragHandle() },
-        containerColor = Vsoft.colors.surface
-    ) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = Vsoft.colors.surface) {
         Column(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding()
-                .verticalScroll(rememberScrollState()).padding(horizontal = Dimens.xl).padding(bottom = 24.dp),
+                .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text("انتقال بین حساب‌ها", color = Vsoft.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -97,15 +88,17 @@ fun TransferSheet(
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     accounts.forEach { account ->
                         val disabled = account.id == toId
-                        VChip(
-                            text = account.name, selected = account.id == fromId,
+                        FilterChip(
+                            selected = account.id == fromId, enabled = !disabled,
                             onClick = {
-                                if (!disabled) {
-                                    fromId = account.id
-                                    if (toId == account.id) toId = accounts.firstOrNull { it.id != account.id }?.id ?: toId
-                                }
+                                fromId = account.id
+                                if (toId == account.id) toId = accounts.firstOrNull { it.id != account.id }?.id ?: toId
                             },
-                            modifier = Modifier.alpha(if (disabled) 0.4f else 1f)
+                            label = { Text(account.name) }, modifier = Modifier.alpha(if (disabled) 0.4f else 1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Vsoft.colors.surfaceHigh, labelColor = Vsoft.colors.textPrimary,
+                                selectedContainerColor = BrandBlue, selectedLabelColor = Color.White
+                            )
                         )
                     }
                 }
@@ -113,15 +106,17 @@ fun TransferSheet(
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     accounts.forEach { account ->
                         val disabled = account.id == fromId
-                        VChip(
-                            text = account.name, selected = account.id == toId,
+                        FilterChip(
+                            selected = account.id == toId, enabled = !disabled,
                             onClick = {
-                                if (!disabled) {
-                                    toId = account.id
-                                    if (fromId == account.id) fromId = accounts.firstOrNull { it.id != account.id }?.id ?: fromId
-                                }
+                                toId = account.id
+                                if (fromId == account.id) fromId = accounts.firstOrNull { it.id != account.id }?.id ?: fromId
                             },
-                            modifier = Modifier.alpha(if (disabled) 0.4f else 1f)
+                            label = { Text(account.name) }, modifier = Modifier.alpha(if (disabled) 0.4f else 1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Vsoft.colors.surfaceHigh, labelColor = Vsoft.colors.textPrimary,
+                                selectedContainerColor = BrandBlue, selectedLabelColor = Color.White
+                            )
                         )
                     }
                 }
@@ -154,7 +149,7 @@ fun TransferSheet(
                 OutlinedTextField(value = note, onValueChange = { note = it.take(160) },
                     label = { Text("یادداشت (اختیاری)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Button(
-                    onClick = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); from?.let { source -> to?.let { destination -> onTransfer(source.id, destination.id, amount, dateMillis, note) } } },
+                    onClick = { from?.let { source -> to?.let { destination -> onTransfer(source.id, destination.id, amount, dateMillis, note) } } },
                     enabled = !sameAccount && !amountMissing && from != null && to != null,
                     colors = ButtonDefaults.buttonColors(containerColor = BrandBlue), modifier = Modifier.fillMaxWidth()
                 ) { Text("ثبت انتقال") }

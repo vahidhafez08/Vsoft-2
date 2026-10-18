@@ -1,6 +1,5 @@
 package com.vsoft.app.ui.components
 
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -20,16 +19,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.sp
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.WarningOrange
 
 fun priorityLabel(p: Int): String = when (p) {
@@ -48,7 +43,7 @@ fun priorityColor(p: Int): Color = when (p) {
 fun AnimatedProgressBar(fraction: Float, color: Color, modifier: Modifier = Modifier, height: Dp = 8.dp) {
     val animated by animateFloatAsState(
         targetValue = fraction.coerceIn(0f, 1f),
-        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        animationSpec = tween(600, easing = FastOutSlowInEasing),
         label = "progress"
     )
     Box(
@@ -60,7 +55,6 @@ fun AnimatedProgressBar(fraction: Float, color: Color, modifier: Modifier = Modi
 
 @Composable
 fun TaskCheck(done: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, color: Color = IncomeGreen) {
-    val haptics = LocalHapticFeedback.current
     val fill by animateColorAsState(if (done) color else Color.Transparent, label = "checkFill")
     val borderColor by animateColorAsState(if (done) color else Vsoft.colors.textSecondary, label = "checkBorder")
     val checkScale by animateFloatAsState(
@@ -68,7 +62,7 @@ fun TaskCheck(done: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "checkScale"
     )
-    Box(modifier.size(Dimens.minTouchTarget).clip(CircleShape).clickable(role = Role.Button) { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClick() }, contentAlignment = Alignment.Center) {
+    Box(modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(24.dp).clip(CircleShape).background(fill).border(2.dp, borderColor, CircleShape),
             contentAlignment = Alignment.Center
@@ -137,15 +131,13 @@ private fun FabMini(label: String, icon: ImageVector, tint: Color, onClick: () -
 @Composable
 internal fun FormSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     ModalBottomSheet(
-        shape = RoundedCornerShape(Dimens.cornerSheet),
-        dragHandle = { BottomSheetDefaults.DragHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = Vsoft.colors.surface
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding()
-                .verticalScroll(rememberScrollState()).padding(horizontal = Dimens.xl).padding(bottom = 24.dp),
+                .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             content = content
         )
@@ -160,14 +152,12 @@ internal fun SheetTitle(text: String) =
 internal fun SheetLabel(text: String) =
     Text(text, color = Vsoft.colors.textSecondary, fontSize = 13.sp)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ChipGroup(labels: List<String>, isSelected: (Int) -> Boolean, onSelect: (Int) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.sm)
-    ) {
-        labels.forEachIndexed { i, label ->
-            VChip(text = label, selected = isSelected(i), onClick = { onSelect(i) })
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        labels.forEachIndexed { i, l ->
+            FilterChip(selected = isSelected(i), onClick = { onSelect(i) }, label = { Text(l) })
         }
     }
 }

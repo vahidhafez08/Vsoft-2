@@ -53,9 +53,6 @@ import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
-import com.vsoft.app.util.JCal
-import java.util.Locale
 import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianDigits
 import kotlin.math.abs
@@ -72,14 +69,28 @@ fun HomeScreen(
     val userName by settingsViewModel.userName.collectAsStateWithLifecycle()
     // 0 = hidden, 1 = add income, 2 = add expense
     var sheetMode by rememberSaveable { mutableIntStateOf(0) }
+    val isDark = Vsoft.colors.isDark
+
+    val balanceBrush = if (isDark)
+        Brush.linearGradient(listOf(Color(0xFF14532D), Color(0xFF15803D)))
+    else
+        Brush.linearGradient(listOf(Color(0xFFD1FAE5), Color(0xFFA7F3D0)))
+    val balanceContent = if (isDark) Color.White else Color(0xFF064E3B)
+
+    val incomeBrush = if (isDark)
+        Brush.linearGradient(listOf(Color(0xFF1E3A8A), Color(0xFF1D4ED8)))
+    else
+        Brush.linearGradient(listOf(Color(0xFFDBEAFE), Color(0xFFBFDBFE)))
+    val incomeContent = if (isDark) Color.White else Color(0xFF1E3A8A)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Vsoft.colors.bg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = Dimens.screenHorizontal)
-            .padding(top = Dimens.lg, bottom = 96.dp),
-        verticalArrangement = Arrangement.spacedBy(Dimens.md)
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Header
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -95,26 +106,15 @@ fun HomeScreen(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text("سلام $userName", color = Vsoft.colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                val jalaliToday = JCal.toJalali(System.currentTimeMillis())
-                Text("%04d/%02d/%02d".format(Locale.US, jalaliToday[0], jalaliToday[1], jalaliToday[2]).toPersianDigits(), color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                Text("امروز یک قدم به اهداف نزدیک‌تر هستی", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
             }
             Icon(Icons.Filled.Notifications, contentDescription = "اعلان‌ها", tint = Vsoft.colors.textSecondary)
         }
 
-        // Hero balance card
-        Column(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
-                .background(Brush.linearGradient(listOf(BrandBlue, BrandPurple)))
-                .padding(Dimens.xl),
-            verticalArrangement = Arrangement.spacedBy(Dimens.sm)
-        ) {
-            Text("موجودی کل", color = Color.White.copy(alpha = 0.88f), fontSize = 14.sp)
-            AnimatedMoney(state.totalBalance, color = Color.White, fontSize = 28.sp)
-            Text("تومان", color = Color.White.copy(alpha = 0.78f), fontSize = 12.sp)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.sm)) {
-                HeroStatPill("درآمد این ماه", state.income, state.incomeChange, IncomeGreen, Modifier.weight(1f))
-                HeroStatPill("هزینه این ماه", state.expense, state.expenseChange, ExpenseRed, Modifier.weight(1f))
-            }
+        // Balance + income
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatCard("موجودی کل", state.totalBalance, null, balanceBrush, balanceContent, Modifier.weight(1f))
+            StatCard("درآمد (این ماه)", state.income, state.incomeChange, incomeBrush, incomeContent, Modifier.weight(1f))
         }
 
         // Today's expense
@@ -236,7 +236,7 @@ private fun QuickAction(
     onClick: () -> Unit
 ) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(16.dp)).bounceClick(onClick).padding(vertical = 6.dp),
+        modifier = modifier.clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -247,20 +247,5 @@ private fun QuickAction(
             Icon(icon, contentDescription = label, tint = tint)
         }
         Text(label, color = Vsoft.colors.textSecondary, fontSize = 11.sp, maxLines = 1)
-    }
-}
-
-@Composable
-private fun HeroStatPill(title: String, amount: Long, change: Int?, tint: Color, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.clip(RoundedCornerShape(Dimens.cornerSmall))
-            .background(tint.copy(alpha = 0.22f)).padding(horizontal = Dimens.md, vertical = Dimens.sm),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Text(title, color = Color.White.copy(alpha = 0.9f), fontSize = 11.sp, maxLines = 1)
-        Text(amount.toMoney(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-        if (change != null) {
-            Text((if (change >= 0) "▲ " else "▼ ") + abs(change).toString().toPersianDigits() + "٪", color = Color.White, fontSize = 11.sp)
-        }
     }
 }

@@ -38,8 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -69,7 +67,6 @@ import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.toPersianText
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toMoney
@@ -81,7 +78,6 @@ fun AccountsScreen(
     onBack: () -> Unit,
     viewModel: AccountsViewModel = hiltViewModel()
 ) {
-    val haptics = LocalHapticFeedback.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     var adding by rememberSaveable { mutableStateOf(false) }
     var transferring by rememberSaveable { mutableStateOf(false) }
@@ -92,7 +88,7 @@ fun AccountsScreen(
             .fillMaxSize()
             .background(Vsoft.colors.bg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = Dimens.screenHorizontal)
+            .padding(horizontal = 16.dp)
             .padding(top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -156,8 +152,7 @@ fun AccountsScreen(
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { value ->
                             if (value != SwipeToDismissBoxValue.Settled) {
-                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                viewModel.deleteTransfer(transfer) { viewModel.restoreTransfer(transfer) }
+                                viewModel.deleteTransfer(transfer)
                                 true
                             } else false
                         }
@@ -167,7 +162,7 @@ fun AccountsScreen(
                         modifier = Modifier.animateItemPlacement(),
                         backgroundContent = {
                             Row(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ExpenseRed).padding(Dimens.lg),
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ExpenseRed).padding(16.dp),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -305,7 +300,7 @@ private fun ActionPill(
 @Composable
 private fun AddDashedCard(onClick: () -> Unit) {
     val dashColor = Vsoft.colors.textSecondary.copy(alpha = 0.5f)
-    val shape = RoundedCornerShape(Dimens.cornerCard)
+    val shape = RoundedCornerShape(20.dp)
     Box(
         Modifier
             .fillMaxWidth()

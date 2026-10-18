@@ -7,7 +7,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -40,7 +39,7 @@ fun Modifier.bounceClick(onClick: () -> Unit): Modifier = composed {
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
         label = "bounce"
     )
-    this.scale(s).clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
+    this.scale(s).clickable(interactionSource = interaction, indication = null, onClick = onClick)
 }
 
 /** Fades + slides content up when it first appears. Does not change layout size. */
@@ -48,8 +47,8 @@ fun Modifier.bounceClick(onClick: () -> Unit): Modifier = composed {
 fun Appear(index: Int = 0, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val progress = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
-        delay(index.coerceIn(0, 7) * 25L)
-        progress.animateTo(1f, tween(250, easing = FastOutSlowInEasing))
+        delay(index * 70L)
+        progress.animateTo(1f, tween(450, easing = FastOutSlowInEasing))
     }
     Box(
         modifier
@@ -79,7 +78,7 @@ fun AnimatedMoney(
         from = current
         to = target
         progress.snapTo(0f)
-        progress.animateTo(1f, tween(320, easing = FastOutSlowInEasing))
+        progress.animateTo(1f, tween(700, easing = FastOutSlowInEasing))
     }
 
     val shown = from + ((to - from) * progress.value.toDouble()).toLong()

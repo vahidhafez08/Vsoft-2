@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -56,8 +57,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusManager
@@ -79,11 +78,9 @@ import com.vsoft.app.ui.components.SegmentedTabs
 import com.vsoft.app.ui.components.SpeedDialFab
 import com.vsoft.app.ui.components.TransactionEditorSheet
 import com.vsoft.app.ui.components.VCard
-import com.vsoft.app.ui.components.VChip
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.formatTime
 import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianText
@@ -96,7 +93,6 @@ fun TransactionsScreen(
     onBack: () -> Unit,
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
-    val haptics = LocalHapticFeedback.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableIntStateOf(0) }
@@ -113,14 +109,13 @@ fun TransactionsScreen(
     }
 
     fun deleteWithUndo(tx: TransactionEntity) {
-        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         viewModel.delete(tx)
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()
             val result = snackbar.showSnackbar(
                 message = "تراکنش حذف شد",
-                actionLabel = "واگرد",
-                duration = SnackbarDuration.Long
+                actionLabel = "بازگردانی",
+                duration = SnackbarDuration.Short
             )
             if (result == SnackbarResult.ActionPerformed) {
                 viewModel.restore(tx)
@@ -132,7 +127,7 @@ fun TransactionsScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 110.dp),
-            verticalArrangement = Arrangement.spacedBy(Dimens.listItemSpacing)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item(key = "header") {
                 ScreenHeader(
@@ -189,10 +184,18 @@ fun TransactionsScreen(
                 item(key = "cats") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         item {
-                            VChip(text = "همه دسته‌ها", selected = category == null, onClick = { category = null })
+                            FilterChip(
+                                selected = category == null,
+                                onClick = { category = null },
+                                label = { Text("همه دسته‌ها") }
+                            )
                         }
                         items(state.categories, key = { it }) { c ->
-                            VChip(text = c, selected = category == c, onClick = { category = if (category == c) null else c })
+                            FilterChip(
+                                selected = category == c,
+                                onClick = { category = if (category == c) null else c },
+                                label = { Text(c) }
+                            )
                         }
                     }
                 }
@@ -200,9 +203,9 @@ fun TransactionsScreen(
             if (state.accounts.isNotEmpty()) {
                 item(key = "accounts") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item { VChip(text = "همه حساب‌ها", selected = accountFilter == null, onClick = { accountFilter = null }) }
+                        item { FilterChip(selected = accountFilter == null, onClick = { accountFilter = null }, label = { Text("همه حساب‌ها") }) }
                         items(state.accounts, key = { it.id }) { account ->
-                            VChip(text = account.name, selected = accountFilter == account.id, onClick = { accountFilter = if (accountFilter == account.id) null else account.id })
+                            FilterChip(selected = accountFilter == account.id, onClick = { accountFilter = if (accountFilter == account.id) null else account.id }, label = { Text(account.name) })
                         }
                     }
                 }
@@ -241,7 +244,7 @@ fun TransactionsScreen(
         SpeedDialFab(
             onIncome = { newMode = 1 },
             onExpense = { newMode = 2 },
-            modifier = Modifier.align(Alignment.BottomStart).padding(Dimens.lg)
+            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
         )
     }
 
@@ -344,7 +347,7 @@ private fun TxRow(
                     .fillMaxSize()
                     .clip(shape)
                     .background(bg)
-                    .padding(horizontal = Dimens.xl),
+                    .padding(horizontal = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {

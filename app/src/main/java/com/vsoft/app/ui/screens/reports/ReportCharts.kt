@@ -34,9 +34,9 @@ import com.vsoft.app.ui.theme.Vsoft
 @Composable
 fun ReportLines(labels: List<String>, income: List<Long>, expense: List<Long>, modifier: Modifier = Modifier) {
     val progress = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(labels, income, expense) {
         progress.snapTo(0f)
-        progress.animateTo(1f, tween(380, easing = FastOutSlowInEasing))
+        progress.animateTo(1f, tween(800, easing = FastOutSlowInEasing))
     }
     val grid = Vsoft.colors.outline
     val labelColor = Vsoft.colors.textSecondary
@@ -99,7 +99,7 @@ private fun DrawScope.drawSeries(values: List<Long>, maxV: Long, slots: Int, col
 @Composable
 fun ReportDonut(slices: List<Pair<Long, Color>>, modifier: Modifier = Modifier) {
     val progress = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(slices) {
         progress.snapTo(0f)
         progress.animateTo(1f, tween(800, easing = FastOutSlowInEasing))
     }

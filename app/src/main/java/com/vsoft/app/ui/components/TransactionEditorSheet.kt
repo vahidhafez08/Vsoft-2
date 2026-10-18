@@ -1,10 +1,10 @@
 package com.vsoft.app.ui.components
 
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -16,7 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import com.vsoft.app.ui.components.VChip
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -34,8 +35,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,13 +46,12 @@ import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.DAY_MS
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TransactionEditorSheet(
     initial: TransactionEntity?,
@@ -65,7 +63,6 @@ fun TransactionEditorSheet(
 ) {
     var isIncome by rememberSaveable { mutableStateOf(initial?.isIncome ?: defaultIncome) }
     val categories = if (isIncome) IncomeCategories else ExpenseCategories
-    val haptics = LocalHapticFeedback.current
     var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
     var amountText by rememberSaveable { mutableStateOf(initial?.amount?.toString() ?: "") }
     var category by rememberSaveable { mutableStateOf(initial?.category ?: categories.first()) }
@@ -86,8 +83,6 @@ fun TransactionEditorSheet(
     val dayLabels = listOf("امروز", "دیروز", "۲ روز پیش", "۳ روز پیش")
 
     ModalBottomSheet(
-        shape = RoundedCornerShape(Dimens.cornerSheet),
-        dragHandle = { BottomSheetDefaults.DragHandle() },
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Vsoft.colors.surface
@@ -98,7 +93,7 @@ fun TransactionEditorSheet(
                 .navigationBarsPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Dimens.xl)
+                .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -137,27 +132,48 @@ fun TransactionEditorSheet(
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     (listOf<AccountEntity?>(null) + accounts).forEach { account ->
                         val selected = accountId == account?.id
-                        VChip(text = account?.name ?: "بدون حساب", selected = selected, onClick = { accountId = account?.id })
+                        FilterChip(
+                            selected = selected,
+                            onClick = { accountId = account?.id },
+                            label = { Text(account?.name ?: "بدون حساب") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Vsoft.colors.surfaceHigh,
+                                labelColor = Vsoft.colors.textPrimary,
+                                selectedContainerColor = BrandBlue,
+                                selectedLabelColor = Color.White
+                            )
+                        )
                     }
                 }
             }
             Text("دسته‌بندی", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.sm)) {
-                categories.forEach { c -> VChip(text = c, selected = c == category, onClick = { category = c }) }
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                categories.forEach { c ->
+                    FilterChip(selected = c == category, onClick = { category = c }, label = { Text(c) })
+                }
             }
             Text(
                 text = if (initial == null) "تاریخ" else "تاریخ فعلی: " + formatJalali(initial.dateMillis),
                 color = Vsoft.colors.textSecondary,
                 fontSize = 13.sp
             )
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.sm)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 dayLabels.forEachIndexed { index, label ->
-                    VChip(text = label, selected = dayOffset == index, onClick = { dayOffset = index })
+                    FilterChip(
+                        selected = dayOffset == index,
+                        onClick = { dayOffset = index },
+                        label = { Text(label) }
+                    )
                 }
             }
             Button(
                 onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     val off = dayOffset
                     val now = System.currentTimeMillis()
                     val date = if (off != null) now - off * DAY_MS else (initial?.dateMillis ?: now)

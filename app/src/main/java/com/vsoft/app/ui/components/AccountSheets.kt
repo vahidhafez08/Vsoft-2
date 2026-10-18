@@ -1,16 +1,13 @@
 package com.vsoft.app.ui.components
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -26,6 +23,7 @@ import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -40,8 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -53,11 +49,10 @@ import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AccountEditorSheet(
     initial: AccountEntity?,
@@ -65,7 +60,6 @@ fun AccountEditorSheet(
     onSave: (AccountEntity) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
-    val haptics = LocalHapticFeedback.current
     var name by rememberSaveable { mutableStateOf(initial?.name ?: "") }
     var last4 by rememberSaveable { mutableStateOf(initial?.last4 ?: "") }
     var balanceText by rememberSaveable { mutableStateOf(initial?.balance?.toString() ?: "") }
@@ -75,8 +69,6 @@ fun AccountEditorSheet(
     val balance = balanceText.toLongOrNull() ?: 0L
 
     ModalBottomSheet(
-        shape = RoundedCornerShape(Dimens.cornerSheet),
-        dragHandle = { BottomSheetDefaults.DragHandle() },
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Vsoft.colors.surface
@@ -87,7 +79,7 @@ fun AccountEditorSheet(
                 .navigationBarsPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Dimens.xl)
+                .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -124,9 +116,9 @@ fun AccountEditorSheet(
             )
             Text("موجودی اولیه‌ی حساب (تراکنش‌ها جداگانه حساب می‌شن)", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
             Text("رنگ کارت", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            Row(
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 AccountColorKeys.forEach { key ->
                     val selected = key == colorKey
@@ -151,7 +143,6 @@ fun AccountEditorSheet(
             }
             Button(
                 onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onSave(
                         AccountEntity(
                             id = initial?.id ?: 0L,
@@ -177,7 +168,6 @@ fun AccountEditorSheet(
 
     if (confirmDelete && onDelete != null) {
         AlertDialog(
-        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { confirmDelete = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف حساب؟", color = Vsoft.colors.textPrimary) },

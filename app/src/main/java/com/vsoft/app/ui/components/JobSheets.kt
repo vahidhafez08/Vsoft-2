@@ -1,7 +1,5 @@
 package com.vsoft.app.ui.components
 
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -37,7 +35,6 @@ private fun JobNumberField(value: String, label: String, onChange: (String) -> U
 @Composable
 fun JobConfirmDialog(title: String, text: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
-        shape = RoundedCornerShape(20.dp),
         onDismissRequest = onDismiss,
         containerColor = Vsoft.colors.surface,
         title = { Text(title, color = Vsoft.colors.textPrimary) },

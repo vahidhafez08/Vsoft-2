@@ -69,14 +69,10 @@ class AccountsViewModel @Inject constructor(
         }
     }
 
-    fun deleteTransfer(transfer: TransferEntity, onUndo: () -> Unit) {
+    fun deleteTransfer(transfer: TransferEntity) {
         safeLaunch {
             repository.deleteTransfer(transfer)
-            UiEvents.showWithAction("انتقال حذف شد", "واگرد", onUndo)
+            UiEvents.show("انتقال حذف شد")
         }
-    }
-
-    fun restoreTransfer(transfer: TransferEntity) {
-        safeLaunch { repository.restoreTransfer(transfer) }
     }
 }

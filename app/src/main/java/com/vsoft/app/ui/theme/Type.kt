@@ -5,7 +5,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.vsoft.app.R
 
@@ -16,23 +15,21 @@ val VazirFamily = FontFamily(
 )
 
 private val DefaultTypography = Typography()
-private fun textStyle(size: TextUnit, weight: FontWeight = FontWeight.Normal) =
-    TextStyle(fontFamily = VazirFamily, fontWeight = weight, fontSize = size, lineHeight = size * 1.5f)
 
 val VsoftTypography = DefaultTypography.copy(
-    displayLarge = textStyle(32.sp, FontWeight.Bold),
-    displayMedium = textStyle(28.sp, FontWeight.Bold),
-    displaySmall = textStyle(24.sp, FontWeight.Bold),
-    headlineLarge = textStyle(24.sp, FontWeight.Bold),
-    headlineMedium = textStyle(22.sp, FontWeight.Bold),
-    headlineSmall = textStyle(20.sp, FontWeight.Bold),
-    titleLarge = textStyle(18.sp, FontWeight.Bold),
-    titleMedium = textStyle(15.sp, FontWeight.Medium),
-    titleSmall = textStyle(14.sp, FontWeight.Medium),
-    bodyLarge = textStyle(16.sp),
-    bodyMedium = textStyle(14.sp),
-    bodySmall = textStyle(12.sp),
-    labelLarge = textStyle(14.sp, FontWeight.Bold),
-    labelMedium = textStyle(13.sp, FontWeight.Medium),
-    labelSmall = textStyle(12.sp)
+    displayLarge = DefaultTypography.displayLarge.copy(fontFamily = VazirFamily),
+    displayMedium = DefaultTypography.displayMedium.copy(fontFamily = VazirFamily),
+    displaySmall = DefaultTypography.displaySmall.copy(fontFamily = VazirFamily),
+    headlineLarge = DefaultTypography.headlineLarge.copy(fontFamily = VazirFamily),
+    headlineMedium = TextStyle(fontFamily = VazirFamily, fontWeight = FontWeight.Bold, fontSize = 24.sp),
+    headlineSmall = DefaultTypography.headlineSmall.copy(fontFamily = VazirFamily),
+    titleLarge = TextStyle(fontFamily = VazirFamily, fontWeight = FontWeight.Bold, fontSize = 20.sp),
+    titleMedium = TextStyle(fontFamily = VazirFamily, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
+    titleSmall = DefaultTypography.titleSmall.copy(fontFamily = VazirFamily),
+    bodyLarge = TextStyle(fontFamily = VazirFamily, fontSize = 15.sp),
+    bodyMedium = TextStyle(fontFamily = VazirFamily, fontSize = 13.sp),
+    bodySmall = DefaultTypography.bodySmall.copy(fontFamily = VazirFamily),
+    labelLarge = DefaultTypography.labelLarge.copy(fontFamily = VazirFamily),
+    labelMedium = DefaultTypography.labelMedium.copy(fontFamily = VazirFamily),
+    labelSmall = TextStyle(fontFamily = VazirFamily, fontSize = 11.sp)
 )

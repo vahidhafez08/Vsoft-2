@@ -1,6 +1,4 @@
 package com.vsoft.app.ui.screens
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,13 +9,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -30,9 +25,8 @@ import kotlinx.coroutines.delay
 fun SplashScreen(onFinished: () -> Unit) {
     val finished = rememberUpdatedState(onFinished)
     LaunchedEffect(Unit) { delay(1800); finished.value() }
-    val logoProgress by animateFloatAsState(targetValue = 1f, animationSpec = tween(420), label = "splashLogo")
     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF05070F), Color(0xFF0B1020)))), contentAlignment = Alignment.Center) {
-        Column(modifier = Modifier.scale(0.82f + 0.18f * logoProgress).graphicsLayer { alpha = logoProgress }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text("V", fontSize = 84.sp, fontWeight = FontWeight.Black, color = BrandBlue)
             Spacer(Modifier.height(8.dp))
             Text("VSOFT", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White, letterSpacing = 6.sp)

@@ -13,8 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -31,7 +29,6 @@ import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.WarningOrange
 import com.vsoft.app.util.JCal
 import com.vsoft.app.util.toMoney
@@ -46,7 +43,6 @@ private fun signedMoney(v: Long): String = (if (v < 0L) "−" else "") + abs(v).
 
 @Composable
 fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
-    val haptics = LocalHapticFeedback.current
     val s by viewModel.state.collectAsStateWithLifecycle()
     val includeJobIncome by viewModel.includeJobIncome.collectAsStateWithLifecycle()
     var period by rememberSaveable { mutableIntStateOf(1) }
@@ -59,7 +55,7 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
             .fillMaxSize()
             .background(Vsoft.colors.bg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = Dimens.screenHorizontal)
+            .padding(horizontal = 16.dp)
             .padding(top = 16.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -80,7 +76,7 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
                 )
                 Switch(
                     checked = includeJobIncome,
-                    onCheckedChange = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); viewModel.setIncludeJobs(it) }
+                    onCheckedChange = { viewModel.setIncludeJobs(it) }
                 )
             }
         }

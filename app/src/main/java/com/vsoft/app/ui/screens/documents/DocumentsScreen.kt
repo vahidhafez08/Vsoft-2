@@ -39,6 +39,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -71,11 +73,9 @@ import com.vsoft.app.data.model.DocumentEntity
 import com.vsoft.app.ui.components.EmptyState
 import com.vsoft.app.ui.components.ScreenHeader
 import com.vsoft.app.ui.components.VCard
-import com.vsoft.app.ui.components.VChip
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.JCal
 import com.vsoft.app.util.UiEvents
 import com.vsoft.app.util.formatSize
@@ -155,7 +155,7 @@ fun DocumentsScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 104.dp),
-            verticalArrangement = Arrangement.spacedBy(Dimens.listItemSpacing)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item(key = "documents_header") {
                 ScreenHeader(
@@ -187,9 +187,19 @@ fun DocumentsScreen(
                     Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    VChip(text = "همه", selected = categoryFilter == null, onClick = { viewModel.categoryFilter.value = null })
+                    FilterChip(
+                        selected = categoryFilter == null,
+                        onClick = { viewModel.categoryFilter.value = null },
+                        label = { Text("همه") },
+                        colors = categoryChipColors()
+                    )
                     DocumentCategories.all.forEachIndexed { index, category ->
-                        VChip(text = category.title, selected = categoryFilter == index, onClick = { viewModel.categoryFilter.value = index })
+                        FilterChip(
+                            selected = categoryFilter == index,
+                            onClick = { viewModel.categoryFilter.value = index },
+                            label = { Text(category.title) },
+                            colors = categoryChipColors()
+                        )
                     }
                 }
             }
@@ -219,7 +229,7 @@ fun DocumentsScreen(
 
         ExtendedFloatingActionButton(
             onClick = { picker.launch(arrayOf("*/*")) },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(Dimens.lg),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
             containerColor = BrandBlue,
             contentColor = Color.White,
             icon = { Icon(Icons.Filled.Add, contentDescription = null) },
@@ -258,7 +268,6 @@ fun DocumentsScreen(
 
     pendingDelete?.let { document ->
         AlertDialog(
-        shape = RoundedCornerShape(20.dp),
             onDismissRequest = { pendingDelete = null },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف سند", color = Vsoft.colors.textPrimary) },
@@ -278,6 +287,14 @@ fun DocumentsScreen(
         )
     }
 }
+
+@Composable
+private fun categoryChipColors() = FilterChipDefaults.filterChipColors(
+    containerColor = Vsoft.colors.surfaceHigh,
+    labelColor = Vsoft.colors.textPrimary,
+    selectedContainerColor = BrandBlue,
+    selectedLabelColor = Color.White
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -337,7 +354,7 @@ private fun DocumentRow(
         modifier = modifier,
         backgroundContent = {
             Row(
-                Modifier.fillMaxSize().clip(shape).background(ExpenseRed.copy(alpha = 0.16f)).padding(horizontal = Dimens.xl),
+                Modifier.fillMaxSize().clip(shape).background(ExpenseRed.copy(alpha = 0.16f)).padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {

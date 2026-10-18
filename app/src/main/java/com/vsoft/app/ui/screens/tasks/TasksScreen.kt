@@ -1,8 +1,6 @@
 package com.vsoft.app.ui.screens.tasks
 
 import androidx.compose.animation.*
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,10 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -40,7 +35,6 @@ import com.vsoft.app.ui.theme.BrandPurple
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.isOverdue
 import com.vsoft.app.util.toPersianText
@@ -49,7 +43,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalendar: () -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
-    val haptics = LocalHapticFeedback.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -66,11 +59,10 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
     }
 
     fun deleteWithUndo(task: TaskEntity) {
-        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         viewModel.deleteTask(task)
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()
-            val result = snackbar.showSnackbar("کار حذف شد", actionLabel = "واگرد", duration = SnackbarDuration.Long)
+            val result = snackbar.showSnackbar("کار حذف شد", actionLabel = "بازگردانی", duration = SnackbarDuration.Short)
             if (result == SnackbarResult.ActionPerformed) viewModel.restoreLastDeleted()
         }
     }
@@ -218,7 +210,7 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
         TasksFab(
             onNewTask = { addingTask = true },
             onNewProject = { addingProject = true },
-            modifier = Modifier.align(Alignment.BottomStart).padding(Dimens.lg)
+            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
         )
     }
 
@@ -264,7 +256,7 @@ private fun StatCell(label: String, value: Int, color: Color, modifier: Modifier
 
 @Composable
 private fun ProjectCard(item: ProjectItem, selected: Boolean, onClick: () -> Unit, onEdit: () -> Unit) {
-    val shape = RoundedCornerShape(Dimens.cornerCard)
+    val shape = RoundedCornerShape(20.dp)
     val accent = if (item.progress >= 100) IncomeGreen else BrandBlue
     Column(
         Modifier
@@ -283,7 +275,7 @@ private fun ProjectCard(item: ProjectItem, selected: Boolean, onClick: () -> Uni
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
             )
             Box(
-                Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).clickable(role = Role.Button, onClick = onEdit),
+                Modifier.size(30.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onEdit),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -309,7 +301,7 @@ private fun ProjectCard(item: ProjectItem, selected: Boolean, onClick: () -> Uni
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit) {
     val task = item.task
@@ -374,7 +366,7 @@ private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onT
                     textDecoration = if (task.isDone) TextDecoration.LineThrough else TextDecoration.None
                 )
                 item.projectTitle?.let { Text(it, color = Vsoft.colors.textSecondary, fontSize = 11.sp, maxLines = 1) }
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.xs)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     MiniChip(priorityLabel(task.priority), priorityColor(task.priority))
                     task.dueDateMillis?.let { due ->
                         MiniChip(

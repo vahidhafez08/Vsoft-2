@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,19 +20,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vsoft.app.ui.theme.BrandBlue
-import com.vsoft.app.ui.theme.Dimens
 import com.vsoft.app.ui.theme.Vsoft
 
 @Composable
 fun VCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    val shape = RoundedCornerShape(Dimens.cornerCard)
+    val shape = RoundedCornerShape(20.dp)
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .background(Vsoft.colors.surface)
             .border(1.dp, Vsoft.colors.outline, shape)
-            .padding(Dimens.lg),
+            .padding(16.dp),
         content = content
     )
 }
@@ -45,7 +43,7 @@ fun SegmentedTabs(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(Dimens.cornerSmall)
+    val shape = RoundedCornerShape(14.dp)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -61,9 +59,8 @@ fun SegmentedTabs(
                     .weight(1f)
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (isSelected) BrandBlue else Color.Transparent)
-                    .defaultMinSize(minHeight = Dimens.minTouchTarget)
-                    .bounceClick { onSelect(index) }
-                    .padding(vertical = Dimens.md),
+                    .clickable { onSelect(index) }
+                    .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

@@ -1,12 +1,12 @@
 package com.vsoft.app.ui.components
 
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -31,8 +33,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,12 +41,10 @@ import androidx.compose.ui.unit.sp
 import com.vsoft.app.data.model.ExpenseCategories
 import com.vsoft.app.data.model.IncomeCategories
 import com.vsoft.app.ui.theme.Vsoft
-import com.vsoft.app.ui.theme.Dimens
-import com.vsoft.app.ui.components.VChip
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddTransactionSheet(
     isIncome: Boolean,
@@ -55,7 +53,6 @@ fun AddTransactionSheet(
     onSave: (title: String, amount: Long, category: String, accountId: Long?) -> Unit
 ) {
     val categories = if (isIncome) IncomeCategories else ExpenseCategories
-    val haptics = LocalHapticFeedback.current
     var title by rememberSaveable { mutableStateOf("") }
     var amountText by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf(categories.first()) }
@@ -73,8 +70,6 @@ fun AddTransactionSheet(
     val amount = amountText.toLongOrNull() ?: 0L
 
     ModalBottomSheet(
-        shape = RoundedCornerShape(Dimens.cornerSheet),
-        dragHandle = { BottomSheetDefaults.DragHandle() },
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Vsoft.colors.surface
@@ -82,7 +77,7 @@ fun AddTransactionSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.xl)
+                .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp)
                 .navigationBarsPadding()
                 .imePadding(),
@@ -112,24 +107,38 @@ fun AddTransactionSheet(
             )
             if (accounts.isNotEmpty()) {
                 Text("حساب", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.sm)) {
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     (listOf<AccountEntity?>(null) + accounts).forEach { account ->
-                        VChip(text = account?.name ?: "بدون حساب", selected = accountId == account?.id, onClick = { accountId = account?.id })
+                        FilterChip(
+                            selected = accountId == account?.id,
+                            onClick = { accountId = account?.id },
+                            label = { Text(account?.name ?: "بدون حساب") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Vsoft.colors.surfaceHigh,
+                                labelColor = Vsoft.colors.textPrimary,
+                                selectedContainerColor = BrandBlue,
+                                selectedLabelColor = Color.White
+                            )
+                        )
                     }
                 }
             }
             Text("دسته‌بندی", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            Row(
-                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.sm)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 categories.forEach { c ->
-                    VChip(text = c, selected = c == category, onClick = { category = c })
+                    FilterChip(
+                        selected = c == category,
+                        onClick = { category = c },
+                        label = { Text(c) }
+                    )
                 }
             }
             Spacer(Modifier.height(4.dp))
             Button(
-                onClick = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); onSave(title.trim().ifBlank { category }, amount, category, accountId?.takeIf { id -> accounts.any { it.id == id } }) },
+                onClick = { onSave(title.trim().ifBlank { category }, amount, category, accountId?.takeIf { id -> accounts.any { it.id == id } }) },
                 enabled = amount > 0L,
                 modifier = Modifier.fillMaxWidth()
             ) {
