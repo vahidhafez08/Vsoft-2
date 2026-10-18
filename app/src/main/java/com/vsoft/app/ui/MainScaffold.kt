@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+
 package com.vsoft.app.ui
 
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -150,7 +152,7 @@ fun MainScaffold(navController: NavHostController) {
                                         try {
                                             val distance = index - pagerState.currentPage
                                             if (abs(distance) > 1) {
-                                                pagerState.scrollToPage(index - sign(distance).toInt())
+                                                pagerState.scrollToPage(index - sign(distance.toDouble()).toInt())
                                             }
                                             pagerState.animateScrollToPage(
                                                 index,
