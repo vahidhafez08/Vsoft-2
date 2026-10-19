@@ -36,7 +36,7 @@ import com.vsoft.app.util.toPersianText
 private val floorSuggestions = listOf("پارکینگ", "همکف", "طبقه ۱", "طبقه ۲", "طبقه ۳", "طبقه ۴", "پشت‌بام")
 
 @Composable
-fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor: (Long) -> Unit, onEditFloor: (Long, Long) -> Unit, onAddItem: (Long, Long) -> Unit, onEditItem: (Long, Long) -> Unit, onAddLog: (Long, Long) -> Unit, onEditLog: (Long, Long) -> Unit, onAddPayment: (Long) -> Unit, viewModel: SiteDetailViewModel = hiltViewModel()) {
+fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor: (Long) -> Unit, onEditFloor: (Long, Long) -> Unit, onAddItem: (Long, Long) -> Unit, onEditItem: (Long, Long) -> Unit, onAddLog: (Long, Long) -> Unit, onEditLog: (Long, Long) -> Unit, onAddPayment: (Long, Long) -> Unit, viewModel: SiteDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val site = state.site
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -121,8 +121,8 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
                     site = site,
                     received = state.received,
                     payments = state.payments,
-                    onAddPayment = { onAddPayment(site.id) },
-                    onEdit = { p -> onAddPayment(site.id) },
+                    onAddPayment = { onAddPayment(site.id, -1L) },
+                    onEdit = { p -> onAddPayment(site.id, p.id) },
                     onDelete = { p -> ask("این دریافتی حذف شود؟") { viewModel.deletePayment(p.id) } }
                 )
             }
