@@ -9,11 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.vsoft.app.data.model.ProjectEntity
+import com.vsoft.app.ui.components.priorityColor
+import com.vsoft.app.ui.components.priorityLabel
 import com.vsoft.app.ui.components.form.*
-import com.vsoft.app.ui.theme.BrandBlue
-import com.vsoft.app.ui.theme.BrandPurple
-import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.formatJalali
 import kotlinx.coroutines.flow.collect
@@ -25,7 +23,6 @@ fun TaskFormScreen(onBack: () -> Unit, onOpenProjectForm: () -> Unit, viewModel:
     var dateSheet by remember { mutableStateOf(false) }
     var timeSheet by remember { mutableStateOf(false) }
     LaunchedEffect(viewModel) { viewModel.done.collect { onBack() } }
-    val editing = remember(viewModel) { false }
     FormScaffold(
         title = if (viewModel.isEditing) "ویرایش کار" else "افزودن کار",
         subtitle = "برنامه‌ریزی و پیگیری",
@@ -40,9 +37,9 @@ fun TaskFormScreen(onBack: () -> Unit, onOpenProjectForm: () -> Unit, viewModel:
         }
         FormCard(Icons.Filled.Flag, "اولویت") {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                FormTile("کم", Icons.Filled.Flag, IncomeGreen, viewModel.priority == 0) { viewModel.priority = 0 }
-                FormTile("متوسط", Icons.Filled.Flag, BrandBlue, viewModel.priority == 1) { viewModel.priority = 1 }
-                FormTile("زیاد", Icons.Filled.PriorityHigh, BrandPurple, viewModel.priority == 2) { viewModel.priority = 2 }
+                FormTile(priorityLabel(0).removePrefix("اولویت "), Icons.Filled.Flag, priorityColor(0), viewModel.priority == 0) { viewModel.priority = 0 }
+                FormTile(priorityLabel(1).removePrefix("اولویت "), Icons.Filled.Flag, priorityColor(1), viewModel.priority == 1) { viewModel.priority = 1 }
+                FormTile(priorityLabel(2).removePrefix("اولویت "), Icons.Filled.PriorityHigh, priorityColor(2), viewModel.priority == 2) { viewModel.priority = 2 }
             }
         }
         FormCard(Icons.Filled.Folder, "پروژه") {
