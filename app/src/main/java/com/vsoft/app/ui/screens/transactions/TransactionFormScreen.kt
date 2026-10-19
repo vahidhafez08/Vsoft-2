@@ -69,10 +69,10 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
                 selectedAccount?.let { "موجودی: ${it.balanceText} تومان" }, { showAccounts = true })
         }
         FormCard(Icons.Default.MonetizationOn, "مبلغ") {
-            FormTextField(
-                value = if (vm.amountRaw.isEmpty()) "" else FormFormat.groupDigits(vm.amountRaw),
-                onValueChange = { s -> vm.amountRaw = s.toLatinDigits().filter { it.isDigit() }.trimStart('0').take(15) },
-                placeholder = "مبلغ را وارد کنید", keyboardType = KeyboardType.Number,
+            FormAmountField(
+                value = vm.amountRaw,
+                onValueChange = { s -> vm.amountRaw = s.toLatinDigits().filter { it.isDigit() }.take(15) },
+                placeholder = "مبلغ را وارد کنید",
                 trailing = { Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("تومان", color = c.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
                     Spacer(Modifier.width(8.dp))
