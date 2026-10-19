@@ -42,6 +42,7 @@ import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.JCal
+import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toPersianDigits
 
 object FormStyle {
@@ -143,7 +144,7 @@ fun FormAmountField(
             BasicTextField(
                 value = field,
                 onValueChange = { incoming ->
-                    val filtered = incoming.text.filter { it.isDigit() }.take(15)
+                    val filtered = incoming.text.toLatinDigits().filter { it.isDigit() }.take(15)
                     val selection = incoming.selection.end.coerceAtMost(filtered.length)
                     val updated = incoming.copy(text = filtered, selection = TextRange(selection))
                     field = updated
