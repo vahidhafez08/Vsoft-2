@@ -40,7 +40,17 @@ class ProjectFormViewModel @Inject constructor(savedStateHandle: SavedStateHandl
             finally { loading = false }
         }
     }
-    fun delete() {\n        val project = original ?: return\n        if (saving) return\n        saving = true\n        safeLaunch {\n            try { repository.deleteProject(project); UiEvents.show("پروژه حذف شد"); _done.tryEmit(Unit) }\n            catch (cancelled: CancellationException) { throw cancelled }\n            finally { saving = false }\n        }\n    }\n    fun save() {
+    fun delete() {
+        val project = original ?: return
+        if (saving) return
+        saving = true
+        safeLaunch {
+            try { repository.deleteProject(project); UiEvents.show("پروژه حذف شد"); _done.tryEmit(Unit) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            finally { saving = false }
+        }
+    }
+    fun save() {
         if (saving || title.trim().isBlank()) return
         saving = true
         safeLaunch {
