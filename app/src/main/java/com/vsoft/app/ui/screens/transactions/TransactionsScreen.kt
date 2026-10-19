@@ -91,6 +91,7 @@ import kotlin.math.abs
 @Composable
 fun TransactionsScreen(
     onBack: () -> Unit,
+    onOpenTransactionForm: (Long, String) -> Unit = { _, _ -> },
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -98,8 +99,6 @@ fun TransactionsScreen(
     var type by rememberSaveable { mutableIntStateOf(0) }
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var accountFilter by rememberSaveable { mutableStateOf<Long?>(null) }
-    var newMode by rememberSaveable { mutableIntStateOf(0) } // 0 none, 1 income, 2 expense
-    var editing by remember { mutableStateOf<TransactionEntity?>(null) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val focus: FocusManager = LocalFocusManager.current
@@ -229,7 +228,7 @@ fun TransactionsScreen(
                         tx = tx,
                         accountName = tx.accountId?.let { state.accountNames[it] },
                         modifier = Modifier.animateItemPlacement(),
-                        onClick = { editing = tx },
+                        onClick = { onOpenTransactionForm(tx.id, if (tx.isIncome) "income" else "expense") },
                         onDelete = { deleteWithUndo(tx) }
                     )
                 }
@@ -242,41 +241,13 @@ fun TransactionsScreen(
         )
 
         SpeedDialFab(
-            onIncome = { newMode = 1 },
-            onExpense = { newMode = 2 },
+            onIncome = { onOpenTransactionForm(-1L, "income") },
+            onExpense = { onOpenTransactionForm(-1L, "expense") },
             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
         )
     }
 
-    editing?.let { tx ->
-        TransactionEditorSheet(
-            initial = tx,
-            defaultIncome = tx.isIncome,
-            accounts = state.accounts,
-            onDismiss = { editing = null },
-            onSave = {
-                viewModel.save(it)
-                editing = null
-            },
-            onDelete = {
-                deleteWithUndo(tx)
-                editing = null
-            }
-        )
-    }
 
-    if (newMode != 0) {
-        TransactionEditorSheet(
-            initial = null,
-            defaultIncome = newMode == 1,
-            accounts = state.accounts,
-            onDismiss = { newMode = 0 },
-            onSave = {
-                viewModel.save(it)
-                newMode = 0
-            }
-        )
-    }
 }
 
 @Composable
