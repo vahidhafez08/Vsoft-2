@@ -258,7 +258,7 @@ fun MainScaffold(navController: NavHostController) {
                     onEditItem = { siteId, id -> openRoute(Routes.itemForm(siteId, id)) },
                     onAddLog = { siteId, itemId -> openRoute(Routes.logForm(siteId, itemId = itemId)) },
                     onEditLog = { siteId, id -> openRoute(Routes.logForm(siteId, id)) },
-                    onAddPayment = { siteId -> openRoute(Routes.paymentForm(siteId)) }
+                    onAddPayment = { siteId, id -> openRoute(Routes.paymentForm(siteId, id)) }
                 ) }
                 composable(Routes.CALENDAR) {
                     CalendarScreen(
