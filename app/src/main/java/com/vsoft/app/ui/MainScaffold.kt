@@ -47,10 +47,17 @@ import com.vsoft.app.ui.screens.finance.FinanceScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
 import com.vsoft.app.ui.screens.jobs.JobsScreen
 import com.vsoft.app.ui.screens.jobs.SiteDetailScreen
+import com.vsoft.app.ui.screens.jobs.SiteFormScreen
+import com.vsoft.app.ui.screens.jobs.FloorFormScreen
+import com.vsoft.app.ui.screens.jobs.ItemFormScreen
+import com.vsoft.app.ui.screens.jobs.LogFormScreen
+import com.vsoft.app.ui.screens.jobs.PaymentFormScreen
 import com.vsoft.app.ui.screens.more.MoreScreen
 import com.vsoft.app.ui.screens.reports.ReportsScreen
 import com.vsoft.app.ui.screens.tasks.TaskDetailScreen
 import com.vsoft.app.ui.screens.tasks.TasksScreen
+import com.vsoft.app.ui.screens.tasks.TaskFormScreen
+import com.vsoft.app.ui.screens.tasks.ProjectFormScreen
 import com.vsoft.app.ui.screens.transactions.TransactionsScreen
 import com.vsoft.app.ui.screens.transactions.TransactionFormScreen
 import com.vsoft.app.ui.theme.BrandBlue
@@ -70,8 +77,9 @@ fun MainScaffold(navController: NavHostController) {
     val currentRoute = backStack?.destination?.route
     val snackbarHostState = remember { SnackbarHostState() }
     val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM)
-    val isTransactionFormRoute = currentRoute?.startsWith("transaction_form") == true
-    val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.JOBS, Routes.SITE_DETAIL, Routes.CALENDAR)
+    val formPrefixes = listOf("transaction_form", "task_form", "project_form", "site_form", "floor_form", "item_form", "log_form", "payment_form")
+    val isFormRoute = formPrefixes.any { currentRoute?.startsWith(it) == true }
+    val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.TASK_FORM, Routes.PROJECT_FORM, Routes.JOBS, Routes.SITE_DETAIL, Routes.SITE_FORM, Routes.FLOOR_FORM, Routes.ITEM_FORM, Routes.LOG_FORM, Routes.PAYMENT_FORM, Routes.CALENDAR)
     val currentTabIndex = tabDestinations.indexOfFirst { it.route == currentRoute }
     val isTabRoute = currentTabIndex >= 0
     val pagerState = rememberPagerState(initialPage = currentTabIndex.coerceAtLeast(0)) { tabDestinations.size }
@@ -133,7 +141,7 @@ fun MainScaffold(navController: NavHostController) {
             }
         },
         bottomBar = {
-            if (!isTransactionFormRoute) {
+            if (!isFormRoute) {
             NavigationBar(containerColor = Vsoft.colors.surface) {
                 tabDestinations.forEachIndexed { index, dest ->
                     val selected = if (isTabRoute) {
@@ -216,6 +224,15 @@ fun MainScaffold(navController: NavHostController) {
                 }
                 composable(Routes.TRANSACTIONS) { TransactionsScreen(onBack = { navController.popBackStack() }, onOpenTransactionForm = { id, type -> openRoute(Routes.transactionForm(id, type)) }) }
                 composable(route = Routes.TRANSACTION_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("type") { type = NavType.StringType; defaultValue = "expense" })) { TransactionFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.TASK_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("projectId") { type = NavType.LongType; defaultValue = -1L }, navArgument("due") { type = NavType.LongType; defaultValue = -1L })) {
+                    TaskFormScreen(onBack = { navController.popBackStack() }, onOpenProjectForm = { openRoute(Routes.projectForm()) })
+                }
+                composable(route = Routes.PROJECT_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { ProjectFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.SITE_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { SiteFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.FLOOR_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { FloorFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.ITEM_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { ItemFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.LOG_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { LogFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.PAYMENT_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { PaymentFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
                 composable(
