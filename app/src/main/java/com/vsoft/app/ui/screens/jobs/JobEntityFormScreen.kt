@@ -85,7 +85,7 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                     val item = vm.items.firstOrNull { it.id == vm.itemId }
                     FormPickerRow(Icons.Filled.Build, item?.title ?: "انتخاب آیتم", item?.let { "واحد: ${it.unit} · هدف: ${it.targetQty}" }, { itemSheet = true })
                     FormNumberField(vm.quantity, { vm.quantity = it }, "مقدار انجام‌شده *", item?.unit, maxDigits = 9, allowDecimal = false)
-                    if (item != null) Text("پیشرفت فعلی بر اساس گزارش‌های ثبت‌شده نمایش داده می‌شود.", color = Vsoft.colors.textSecondary, fontSize = MaterialTheme.typography.bodySmall.fontSize)
+                    if (item != null) Text("انجام‌شده: ${vm.logs.filter { it.itemId == item.id }.sumOf { it.qty }} از ${item.targetQty} ${item.unit}", color = Vsoft.colors.textSecondary, fontSize = MaterialTheme.typography.bodySmall.fontSize)
                 }
                 FormCard(Icons.Filled.CalendarMonth, "تاریخ گزارش") {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -129,14 +129,14 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
             timeSheet = false
         }, { timeSheet = false })
     }
-    if (floorSheet) FormOptionSheet("انتخاب طبقه", vm.floors.map { FormOption(it.id, it.name) }, vm.floorId, {
+    if (floorSheet) FormOptionSheet("انتخاب طبقه", (if (isLog) vm.floors.filter { floor -> vm.items.any { it.floorId == floor.id } } else vm.floors).map { FormOption(it.id, it.name) }, vm.floorId, {
         vm.floorId = it
         if (isLog) vm.itemId = vm.items.firstOrNull { item -> item.floorId == it }?.id
         floorSheet = false
     }, { floorSheet = false })
     if (itemSheet) {
         val filtered = vm.items.filter { vm.floorId == null || it.floorId == vm.floorId }
-        FormOptionSheet("انتخاب آیتم کار", filtered.map { FormOption(it.id, it.title, "واحد: ${it.unit} · هدف: ${it.targetQty}") }, vm.itemId, {
+        FormOptionSheet("انتخاب آیتم کار", filtered.map { FormOption(it.id, it.title, "واحد: ${it.unit} · انجام‌شده: ${vm.logs.filter { log -> log.itemId == it.id }.sumOf { log -> log.qty }} از ${it.targetQty}") }, vm.itemId, {
             vm.itemId = it
             val selected = filtered.firstOrNull { item -> item.id == it }
             if (selected != null) vm.floorId = selected.floorId
