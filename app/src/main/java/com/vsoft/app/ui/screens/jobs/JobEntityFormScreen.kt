@@ -40,7 +40,7 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
         icon = when(kind) { "site" -> Icons.Filled.Construction; "floor" -> Icons.Filled.Layers; "item" -> Icons.Filled.Build; "log" -> Icons.Filled.EditNote; else -> Icons.Filled.Payments },
         onBack = onBack,
         bottomBar = {
-            val valid = when(kind) { "site", "floor" -> vm.name.trim().isNotBlank(); "item" -> vm.title.trim().isNotBlank() && vm.floorId != null; "log" -> vm.itemId != null && (vm.quantity.toIntOrNull() ?: 0) > 0; else -> (vm.amount.toLatinDigits().filter(Char::isDigit).toLongOrNull() ?: 0L) > 0L }
+            val valid = when(kind) { "site", "floor" -> vm.name.trim().isNotBlank(); "item" -> vm.title.trim().isNotBlank() && vm.floorId != null && (vm.quantity.toIntOrNull() ?: 0) > 0; "log" -> vm.itemId != null && (vm.quantity.toIntOrNull() ?: 0) > 0; else -> (vm.amount.toLatinDigits().filter(Char::isDigit).toLongOrNull() ?: 0L) > 0L }
             FormPrimaryButton("ذخیره", valid && !vm.saving && !vm.loading, vm.saving) { vm.save(kind) }
         }) {
         when {
