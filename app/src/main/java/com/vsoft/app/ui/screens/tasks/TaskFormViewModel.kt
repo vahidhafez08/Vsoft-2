@@ -120,6 +120,7 @@ class TaskFormViewModel @Inject constructor(
                         }
                     }
                 }
+                if (current != null) repository.saveTask(current.copy(isDone = current.isDone))
                 UiEvents.show("کار ذخیره شد ✅")
                 _done.tryEmit(Unit)
             } catch (cancelled: CancellationException) { throw cancelled }
