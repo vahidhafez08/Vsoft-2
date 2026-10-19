@@ -28,6 +28,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -88,6 +94,73 @@ fun FormTextField(value:String,onValueChange:(String)->Unit,placeholder:String,m
         if(trailing!=null){Spacer(Modifier.width(10.dp));trailing()}
     }
 }
+
+private class GroupedAmountTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val raw = text.text
+        val grouped = raw.reversed().chunked(3).joinToString(",").reversed().toPersianDigits()
+        val mapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                val safe = offset.coerceIn(0, raw.length)
+                var commas = 0
+                for (i in 1 until safe) {
+                    if ((raw.length - i) % 3 == 0) commas++
+                }
+                return (safe + commas).coerceIn(0, grouped.length)
+            }
+            override fun transformedToOriginal(offset: Int): Int {
+                val safe = offset.coerceIn(0, grouped.length)
+                return grouped.take(safe).count { it != ',' }.coerceIn(0, raw.length)
+            }
+        }
+        return TransformedText(AnnotatedString(grouped), mapping)
+    }
+}
+
+@Composable
+fun FormAmountField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null
+) {
+    val c = Vsoft.colors
+    var field by remember { mutableStateOf(TextFieldValue(value, selection = TextRange(value.length))) }
+    LaunchedEffect(value) {
+        if (value != field.text) {
+            field = TextFieldValue(value, selection = TextRange(value.length))
+        }
+    }
+    Row(
+        modifier.fillMaxWidth().heightIn(min = 52.dp).clip(FormStyle.fieldShape)
+            .background(c.surfaceHigh).border(1.dp, c.outline.copy(alpha = .7f), FormStyle.fieldShape)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(Modifier.weight(1f)) {
+            if (field.text.isEmpty()) Text(placeholder, color = c.textSecondary.copy(alpha = .8f), fontSize = 15.sp)
+            BasicTextField(
+                value = field,
+                onValueChange = { incoming ->
+                    val filtered = incoming.text.filter { it.isDigit() }.take(15)
+                    val selection = incoming.selection.end.coerceAtMost(filtered.length)
+                    val updated = incoming.copy(text = filtered, selection = TextRange(selection))
+                    field = updated
+                    onValueChange(filtered)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = GroupedAmountTransformation(),
+                textStyle = TextStyle(color = c.textPrimary, fontSize = 15.sp, textAlign = TextAlign.Start),
+                cursorBrush = SolidColor(FormStyle.Blue2),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        if (trailing != null) { Spacer(Modifier.width(10.dp)); trailing() }
+    }
+}
+
 @Composable
 private fun TypePill(text:String,selected:Boolean,tint:Color,icon:ImageVector,onClick:()->Unit,modifier:Modifier) {
     val c=Vsoft.colors
