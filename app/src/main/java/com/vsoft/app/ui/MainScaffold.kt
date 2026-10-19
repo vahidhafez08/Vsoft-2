@@ -238,21 +238,33 @@ fun MainScaffold(navController: NavHostController) {
                 composable(
                     route = Routes.TASK_DETAIL,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
-                ) { TaskDetailScreen(onBack = { navController.popBackStack() }) }
+                ) { TaskDetailScreen(onBack = { navController.popBackStack() }, onEditTask = { id -> openRoute(Routes.taskForm(id)) }) }
                 composable(Routes.JOBS) {
                     JobsScreen(
                         onBack = { navController.popBackStack() },
-                        onOpenSite = { id -> openRoute(Routes.siteDetail(id)) }
+                        onOpenSite = { id -> openRoute(Routes.siteDetail(id)) },
+                        onAddSite = { openRoute(Routes.siteForm()) }
                     )
                 }
                 composable(
                     route = Routes.SITE_DETAIL,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
-                ) { SiteDetailScreen(onBack = { navController.popBackStack() }) }
+                ) { SiteDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onEditSite = { id -> openRoute(Routes.siteForm(id)) },
+                    onAddFloor = { siteId -> openRoute(Routes.floorForm(siteId)) },
+                    onEditFloor = { siteId, id -> openRoute(Routes.floorForm(siteId, id)) },
+                    onAddItem = { siteId, floorId -> openRoute(Routes.itemForm(siteId)) },
+                    onEditItem = { siteId, id -> openRoute(Routes.itemForm(siteId, id)) },
+                    onAddLog = { siteId, itemId -> openRoute(Routes.logForm(siteId)) },
+                    onEditLog = { siteId, id -> openRoute(Routes.logForm(siteId, id)) },
+                    onAddPayment = { siteId -> openRoute(Routes.paymentForm(siteId)) }
+                ) }
                 composable(Routes.CALENDAR) {
                     CalendarScreen(
                         onBack = { navController.popBackStack() },
-                        onOpenTask = { id -> openRoute(Routes.taskDetail(id)) }
+                        onOpenTask = { id -> openRoute(Routes.taskDetail(id)) },
+                        onAddTaskForDay = { day -> openRoute(Routes.taskForm(due = day)) }
                     )
                 }
             }
@@ -305,6 +317,8 @@ private fun TabsHost(
                 )
                 Destination.Tasks -> TasksScreen(
                     onOpenTask = { id -> onOpenRoute(Routes.taskDetail(id)) },
+                    onOpenTaskForm = { id, projectId, due -> onOpenRoute(Routes.taskForm(id, projectId, due)) },
+                    onOpenProjectForm = { id -> onOpenRoute(Routes.projectForm(id)) },
                     onOpenJobs = { onOpenRoute(Routes.JOBS) },
                     onOpenCalendar = { onOpenRoute(Routes.CALENDAR) }
                 )
