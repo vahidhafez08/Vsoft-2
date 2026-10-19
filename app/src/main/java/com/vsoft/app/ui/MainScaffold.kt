@@ -230,8 +230,8 @@ fun MainScaffold(navController: NavHostController) {
                 composable(route = Routes.PROJECT_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { ProjectFormScreen(onBack = { navController.popBackStack() }) }
                 composable(route = Routes.SITE_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { SiteFormScreen(onBack = { navController.popBackStack() }) }
                 composable(route = Routes.FLOOR_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { FloorFormScreen(onBack = { navController.popBackStack() }) }
-                composable(route = Routes.ITEM_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { ItemFormScreen(onBack = { navController.popBackStack() }) }
-                composable(route = Routes.LOG_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { LogFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.ITEM_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("floorId") { type = NavType.LongType; defaultValue = -1L })) { ItemFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.LOG_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("itemId") { type = NavType.LongType; defaultValue = -1L })) { LogFormScreen(onBack = { navController.popBackStack() }) }
                 composable(route = Routes.PAYMENT_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { PaymentFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
@@ -254,9 +254,9 @@ fun MainScaffold(navController: NavHostController) {
                     onEditSite = { id -> openRoute(Routes.siteForm(id)) },
                     onAddFloor = { siteId -> openRoute(Routes.floorForm(siteId)) },
                     onEditFloor = { siteId, id -> openRoute(Routes.floorForm(siteId, id)) },
-                    onAddItem = { siteId, floorId -> openRoute(Routes.itemForm(siteId)) },
+                    onAddItem = { siteId, floorId -> openRoute(Routes.itemForm(siteId, floorId = floorId)) },
                     onEditItem = { siteId, id -> openRoute(Routes.itemForm(siteId, id)) },
-                    onAddLog = { siteId, itemId -> openRoute(Routes.logForm(siteId)) },
+                    onAddLog = { siteId, itemId -> openRoute(Routes.logForm(siteId, itemId = itemId)) },
                     onEditLog = { siteId, id -> openRoute(Routes.logForm(siteId, id)) },
                     onAddPayment = { siteId -> openRoute(Routes.paymentForm(siteId)) }
                 ) }
