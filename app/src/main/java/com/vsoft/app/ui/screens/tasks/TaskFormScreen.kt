@@ -67,11 +67,11 @@ fun TaskFormScreen(onBack: () -> Unit, onOpenProjectForm: () -> Unit, viewModel:
                     Icon(Icons.Filled.AddCircle, contentDescription = "افزودن زیرکار", tint = BrandBlue)
                 }
             }
-            viewModel.draftSubtasks.forEach { (key, title) ->
-                key(key) {
+            viewModel.draftSubtasks.forEach { (subKey, title) ->
+                key(subKey) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(title, color = Vsoft.colors.textPrimary, modifier = Modifier.weight(1f))
-                        IconButton(onClick = { viewModel.removeSubtask(key) }, modifier = Modifier.size(48.dp)) {
+                        IconButton(onClick = { viewModel.removeSubtask(subKey) }, modifier = Modifier.size(48.dp)) {
                             Icon(Icons.Filled.Close, contentDescription = "حذف زیرکار", tint = Vsoft.colors.textSecondary)
                         }
                     }
