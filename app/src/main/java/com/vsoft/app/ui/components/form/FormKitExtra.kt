@@ -83,10 +83,12 @@ fun FormOptionSheet(title: String, options: List<FormOption>, selectedId: Long?,
 
 @Composable
 fun FormAmountField(rawDigits: String, onChange: (String) -> Unit, placeholder: String, unit: String = "تومان", maxDigits: Int = 15) {
-    FormTextField(value = FormFormat.groupDigits(rawDigits.toLatinDigits().filter(Char::isDigit).take(maxDigits)).replace(",", "٬"),
-        onValueChange = { incoming -> onChange(incoming.toLatinDigits().filter(Char::isDigit).take(maxDigits)) },
-        placeholder = placeholder, keyboardType = KeyboardType.Number,
-        trailing = { Text(unit, color = Vsoft.colors.textSecondary, fontSize = 12.sp) })
+    FormAmountField(
+        value = rawDigits,
+        onValueChange = { incoming -> onChange(incoming.toLatinDigits().filter { it.isDigit() }.take(maxDigits)) },
+        placeholder = placeholder,
+        trailing = { Text(unit, color = Vsoft.colors.textSecondary, fontSize = 12.sp) }
+    )
 }
 
 @Composable
