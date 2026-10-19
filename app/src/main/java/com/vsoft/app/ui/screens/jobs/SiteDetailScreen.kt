@@ -72,10 +72,16 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
             onBack = onBack
         ) {
             if (site != null) {
-                Box(
-                    Modifier.size(40.dp).bounceClick { onEditSite(site.id) }.clip(CircleShape).background(BrandBlue.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Filled.Edit, contentDescription = "ویرایش کارگاه", tint = BrandBlue) }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(
+                        Modifier.size(44.dp).bounceClick { onEditSite(site.id) }.clip(CircleShape).background(BrandBlue.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) { Icon(Icons.Filled.Edit, contentDescription = "ویرایش کارگاه", tint = BrandBlue) }
+                    Box(
+                        Modifier.size(44.dp).bounceClick { ask("کارگاه و همه گزارش‌ها و آیتم‌های آن حذف شوند؟") { viewModel.deleteSite() } }.clip(CircleShape).background(ExpenseRed.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) { Icon(Icons.Filled.DeleteOutline, contentDescription = "حذف کارگاه", tint = ExpenseRed) }
+                }
             }
         }
 
