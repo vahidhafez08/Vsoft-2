@@ -27,6 +27,7 @@ class TaskFormViewModel @Inject constructor(
     private val repository: TaskRepository
 ) : ViewModel() {
     private val taskId = savedStateHandle.get<Long>("id") ?: -1L
+    val isEditing: Boolean get() = taskId >= 0L
     private val requestedProjectId = savedStateHandle.get<Long>("projectId") ?: -1L
     private val requestedDue = savedStateHandle.get<Long>("due") ?: -1L
     var title by mutableStateOf("")
