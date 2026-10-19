@@ -114,6 +114,7 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
                 1 -> LogsTab(
                     logs = state.logs,
                     onNewLog = { onAddLog(site.id, -1L) },
+                    onEdit = { l -> onEditLog(site.id, l.id) },
                     onDelete = { l -> ask("این گزارش حذف شود؟") { viewModel.deleteLog(l.id) } }
                 )
                 else -> FinanceTab(
@@ -121,6 +122,7 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
                     received = state.received,
                     payments = state.payments,
                     onAddPayment = { onAddPayment(site.id) },
+                    onEdit = { p -> onAddPayment(site.id) },
                     onDelete = { p -> ask("این دریافتی حذف شود؟") { viewModel.deletePayment(p.id) } }
                 )
             }
@@ -271,7 +273,7 @@ private fun FloorsTab(
 }
 
 @Composable
-private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onDelete: (WorkLogEntity) -> Unit) {
+private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onEdit: (WorkLogEntity) -> Unit, onDelete: (WorkLogEntity) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Button(onClick = onNewLog, modifier = Modifier.fillMaxWidth()) { Text("ثبت گزارش کار") }
 
@@ -305,6 +307,7 @@ private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onDelete: (WorkLogE
                                         Text(l.log.note, color = Vsoft.colors.textSecondary, fontSize = 12.sp)
                                     }
                                 }
+                                SmallIconButton(Icons.Filled.Edit, "ویرایش گزارش") { onEdit(l.log) }
                                 SmallIconButton(Icons.Filled.DeleteOutline, "حذف گزارش") { onDelete(l.log) }
                             }
                         }
@@ -329,6 +332,7 @@ private fun FinanceTab(
     received: Long,
     payments: List<SitePaymentEntity>,
     onAddPayment: () -> Unit,
+    onEdit: (SitePaymentEntity) -> Unit,
     onDelete: (SitePaymentEntity) -> Unit
 ) {
     val contract = site.contractAmount
@@ -373,6 +377,7 @@ private fun FinanceTab(
                                     color = Vsoft.colors.textSecondary, fontSize = 12.sp
                                 )
                             }
+                            SmallIconButton(Icons.Filled.Edit, "ویرایش دریافتی") { onEdit(p) }
                             SmallIconButton(Icons.Filled.DeleteOutline, "حذف دریافتی") { onDelete(p) }
                         }
                     }
