@@ -196,6 +196,7 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenTaskForm: (Long, Long, Long) -
                     item = item,
                     modifier = Modifier.animateItemPlacement(),
                     onClick = { onOpenTask(item.task.id) },
+                    onEdit = { onOpenTaskForm(item.task.id, item.task.projectId ?: -1L, -1L) },
                     onToggle = { viewModel.toggle(item.task) },
                     onDelete = { deleteWithUndo(item.task) }
                 )
@@ -271,7 +272,7 @@ private fun ProjectCard(item: ProjectItem, selected: Boolean, onClick: () -> Uni
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit) {
+private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onEdit: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit) {
     val task = item.task
     val currentToggle by rememberUpdatedState(onToggle)
     val currentDelete by rememberUpdatedState(onDelete)
@@ -350,6 +351,9 @@ private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onT
                         )
                     }
                 }
+            }
+            IconButton(onClick = onEdit, modifier = Modifier.size(44.dp)) {
+                Icon(Icons.Filled.Edit, contentDescription = "ویرایش کار", tint = Vsoft.colors.textSecondary)
             }
         }
     }
