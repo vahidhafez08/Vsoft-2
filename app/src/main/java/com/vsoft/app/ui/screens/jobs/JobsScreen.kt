@@ -30,9 +30,8 @@ import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianText
 
 @Composable
-fun JobsScreen(onBack: () -> Unit, onOpenSite: (Long) -> Unit, viewModel: JobsViewModel = hiltViewModel()) {
+fun JobsScreen(onBack: () -> Unit, onOpenSite: (Long) -> Unit, onAddSite: () -> Unit, viewModel: JobsViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var adding by rememberSaveable { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(Vsoft.colors.bg)) {
         LazyColumn(
@@ -58,7 +57,7 @@ fun JobsScreen(onBack: () -> Unit, onOpenSite: (Long) -> Unit, viewModel: JobsVi
         }
 
         FloatingActionButton(
-            onClick = { adding = true },
+            onClick = onAddSite,
             containerColor = BrandBlue,
             contentColor = Color.White,
             shape = CircleShape,
@@ -66,13 +65,7 @@ fun JobsScreen(onBack: () -> Unit, onOpenSite: (Long) -> Unit, viewModel: JobsVi
         ) { Icon(Icons.Filled.Add, contentDescription = "کارگاه جدید") }
     }
 
-    if (adding) {
-        JobSiteSheet(
-            initial = null,
-            onDismiss = { adding = false },
-            onSave = { viewModel.saveSite(it); adding = false }
-        )
-    }
+
 }
 
 @Composable
