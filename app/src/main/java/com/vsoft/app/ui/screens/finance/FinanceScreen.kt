@@ -112,6 +112,7 @@ private fun buildContent(tab: Int, s: FinanceUiState): TabContent = when (tab) {
 fun FinanceScreen(
     onOpenTransactions: () -> Unit = {},
     onOpenAccounts: () -> Unit = {},
+    onOpenTransactionForm: (String) -> Unit = {},
     viewModel: FinanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -136,7 +137,7 @@ fun FinanceScreen(
             fontWeight = FontWeight.Bold
         )
 
-        FinanceShortcuts(onOpenTransactions = onOpenTransactions, onOpenAccounts = onOpenAccounts)
+        FinanceShortcuts(onOpenTransactions = onOpenTransactions, onOpenAccounts = onOpenAccounts, onOpenTransactionForm = onOpenTransactionForm)
 
         SegmentedTabs(
             items = listOf("کلیات", "درآمد", "هزینه", "حساب‌ها"),
