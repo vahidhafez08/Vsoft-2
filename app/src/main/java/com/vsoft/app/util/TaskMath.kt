@@ -11,4 +11,4 @@ fun taskFraction(task: TaskEntity, subs: List<SubtaskEntity>): Float = when {
 }
 
 fun isOverdue(due: Long?, done: Boolean): Boolean =
-    due != null && !done && due < startOfDay(System.currentTimeMillis())
+    due != null && !done && due < System.currentTimeMillis()
