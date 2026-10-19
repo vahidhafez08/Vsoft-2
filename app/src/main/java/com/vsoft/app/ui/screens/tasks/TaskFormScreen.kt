@@ -27,7 +27,7 @@ fun TaskFormScreen(onBack: () -> Unit, onOpenProjectForm: () -> Unit, viewModel:
     LaunchedEffect(viewModel) { viewModel.done.collect { onBack() } }
     val editing = remember(viewModel) { false }
     FormScaffold(
-        title = if (viewModel.title.isBlank()) "افزودن کار" else "ویرایش کار",
+        title = if (viewModel.isEditing) "ویرایش کار" else "افزودن کار",
         subtitle = "برنامه‌ریزی و پیگیری",
         icon = Icons.Filled.TaskAlt,
         onBack = onBack,
