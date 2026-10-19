@@ -11,6 +11,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vsoft.app.ui.components.form.*
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.formatJalali
+import com.vsoft.app.util.toLatinDigits
 import kotlinx.coroutines.flow.collect
 
 @Composable
@@ -53,7 +54,7 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                     FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(vm.dateMillis), "تاریخ شروع کارگاه", { dateSheet = true })
                 }
                 FormCard(Icons.Filled.Payments, "مبلغ قرارداد") {
-                    FormAmountField(vm.amount, { vm.amount = it }, "مبلغ قرارداد (اختیاری)", maxDigits = 15)
+                    FormAmountField(rawDigits = vm.amount, onChange = { vm.amount = it }, placeholder = "مبلغ قرارداد (اختیاری)", maxDigits = 15)
                 }
             }
             isFloor -> FormCard(Icons.Filled.Layers, "مشخصات طبقه") {
@@ -100,7 +101,7 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
             }
             isPayment -> {
                 FormCard(Icons.Filled.Payments, "مبلغ دریافتی") {
-                    FormAmountField(vm.amount, { vm.amount = it }, "مبلغ به تومان *", maxDigits = 15)
+                    FormAmountField(rawDigits = vm.amount, onChange = { vm.amount = it }, placeholder = "مبلغ به تومان *", maxDigits = 15)
                 }
                 FormCard(Icons.Filled.CalendarMonth, "تاریخ دریافتی") {
                     FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(vm.dateMillis), "تاریخ", { dateSheet = true })
