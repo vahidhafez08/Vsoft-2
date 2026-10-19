@@ -82,7 +82,7 @@ fun EmptyState(icon: ImageVector, title: String, subtitle: String) {
 }
 
 @Composable
-fun FinanceShortcuts(onOpenTransactions: () -> Unit, onOpenAccounts: () -> Unit) {
+fun FinanceShortcuts(onOpenTransactions: () -> Unit, onOpenAccounts: () -> Unit, onOpenTransactionForm: (String) -> Unit = {}) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         ShortcutTile(
             title = "تراکنش‌ها",
