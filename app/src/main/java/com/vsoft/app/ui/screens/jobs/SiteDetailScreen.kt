@@ -36,7 +36,7 @@ import com.vsoft.app.util.toPersianText
 private val floorSuggestions = listOf("پارکینگ", "همکف", "طبقه ۱", "طبقه ۲", "طبقه ۳", "طبقه ۴", "پشت‌بام")
 
 @Composable
-fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor: () -> Unit, onEditFloor: (Long) -> Unit, onAddItem: (Long) -> Unit, onEditItem: (Long) -> Unit, onAddLog: (Long) -> Unit, onEditLog: (Long) -> Unit, onAddPayment: () -> Unit, viewModel: SiteDetailViewModel = hiltViewModel()) {
+fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor: (Long) -> Unit, onEditFloor: (Long, Long) -> Unit, onAddItem: (Long, Long) -> Unit, onEditItem: (Long, Long) -> Unit, onAddLog: (Long, Long) -> Unit, onEditLog: (Long, Long) -> Unit, onAddPayment: (Long) -> Unit, viewModel: SiteDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val site = state.site
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -103,24 +103,24 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
             when (tab) {
                 0 -> FloorsTab(
                     floors = state.floors,
-                    onAddFloor = onAddFloor,
-                    onAddItem = { onAddItem(it.id) },
-                    onRename = { onEditFloor(it.id) },
+                    onAddFloor = { onAddFloor(site.id) },
+                    onAddItem = { onAddItem(site.id, it.id) },
+                    onRename = { onEditFloor(site.id, it.id) },
                     onDeleteFloor = { f -> ask("طبقه «" + f.name + "» با همه‌ی کارها و گزارش‌هایش حذف شود؟") { viewModel.deleteFloor(f.id) } },
-                    onLog = { onAddLog(it.id) },
-                    onEditItem = { onEditItem(it.id) },
+                    onLog = { onAddLog(site.id, it.id) },
+                    onEditItem = { onEditItem(site.id, it.id) },
                     onDeleteItem = { i -> ask("کار «" + i.title + "» با گزارش‌هایش حذف شود؟") { viewModel.deleteItem(i.id) } }
                 )
                 1 -> LogsTab(
                     logs = state.logs,
-                    onNewLog = { onAddLog(-1L) },
+                    onNewLog = { onAddLog(site.id, -1L) },
                     onDelete = { l -> ask("این گزارش حذف شود؟") { viewModel.deleteLog(l.id) } }
                 )
                 else -> FinanceTab(
                     site = site,
                     received = state.received,
                     payments = state.payments,
-                    onAddPayment = onAddPayment,
+                    onAddPayment = { onAddPayment(site.id) },
                     onDelete = { p -> ask("این دریافتی حذف شود؟") { viewModel.deletePayment(p.id) } }
                 )
             }
