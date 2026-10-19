@@ -39,6 +39,7 @@ open class JobFormViewModelBase(
     var dateMillis by mutableStateOf(startOfDay(System.currentTimeMillis()))
     var floors by mutableStateOf<List<FloorEntity>>(emptyList())
     var items by mutableStateOf<List<WorkItemEntity>>(emptyList())
+    var logs by mutableStateOf<List<WorkLogEntity>>(emptyList())
     var siteName by mutableStateOf("")
     var loading by mutableStateOf(true)
     var saving by mutableStateOf(false)
@@ -63,6 +64,7 @@ open class JobFormViewModelBase(
                 val effectiveSiteId = if (kind == "site") id else siteId
                 floors = if (effectiveSiteId >= 0L) repository.floors(effectiveSiteId).first() else emptyList()
                 items = if (effectiveSiteId >= 0L) repository.items(effectiveSiteId).first() else emptyList()
+                logs = if (effectiveSiteId >= 0L) repository.logs(effectiveSiteId).first() else emptyList()
                 when (kind) {
                     "site" -> site?.let { name = it.name; address = it.address; client = it.client; amount = if (it.contractAmount > 0L) it.contractAmount.toString() else ""; dateMillis = it.startDateMillis }
                     "floor" -> if (id >= 0L) repository.floors(siteId).first().firstOrNull { it.id == id }?.let { originalFloor = it; name = it.name }
