@@ -52,6 +52,7 @@ import com.vsoft.app.ui.screens.reports.ReportsScreen
 import com.vsoft.app.ui.screens.tasks.TaskDetailScreen
 import com.vsoft.app.ui.screens.tasks.TasksScreen
 import com.vsoft.app.ui.screens.transactions.TransactionsScreen
+import com.vsoft.app.ui.screens.transactions.TransactionFormScreen
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.UiEvents
@@ -68,7 +69,8 @@ fun MainScaffold(navController: NavHostController) {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val snackbarHostState = remember { SnackbarHostState() }
-    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS)
+    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM)
+    val isTransactionFormRoute = currentRoute?.startsWith("transaction_form") == true
     val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.JOBS, Routes.SITE_DETAIL, Routes.CALENDAR)
     val currentTabIndex = tabDestinations.indexOfFirst { it.route == currentRoute }
     val isTabRoute = currentTabIndex >= 0
@@ -131,6 +133,7 @@ fun MainScaffold(navController: NavHostController) {
             }
         },
         bottomBar = {
+            if (!isTransactionFormRoute) {
             NavigationBar(containerColor = Vsoft.colors.surface) {
                 tabDestinations.forEachIndexed { index, dest ->
                     val selected = if (isTabRoute) {
@@ -187,6 +190,7 @@ fun MainScaffold(navController: NavHostController) {
                     )
                 }
             }
+            }
         }
     ) { padding ->
         Box(
@@ -210,7 +214,8 @@ fun MainScaffold(navController: NavHostController) {
                         Box(Modifier.fillMaxSize().background(Vsoft.colors.bg))
                     }
                 }
-                composable(Routes.TRANSACTIONS) { TransactionsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.TRANSACTIONS) { TransactionsScreen(onBack = { navController.popBackStack() }, onOpenTransactionForm = { id, type -> openRoute(Routes.transactionForm(id, type)) }) }
+                composable(route = Routes.TRANSACTION_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("type") { type = NavType.StringType; defaultValue = "expense" })) { TransactionFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
                 composable(
@@ -273,11 +278,13 @@ private fun TabsHost(
                 Destination.Home -> HomeScreen(
                     onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
                     onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) },
-                    onOpenDocuments = { onOpenRoute(Routes.DOCUMENTS) }
+                    onOpenDocuments = { onOpenRoute(Routes.DOCUMENTS) },
+                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) }
                 )
                 Destination.Finance -> FinanceScreen(
                     onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
-                    onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) }
+                    onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) },
+                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) }
                 )
                 Destination.Tasks -> TasksScreen(
                     onOpenTask = { id -> onOpenRoute(Routes.taskDetail(id)) },
