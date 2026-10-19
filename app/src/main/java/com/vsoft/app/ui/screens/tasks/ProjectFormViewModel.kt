@@ -19,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProjectFormViewModel @Inject constructor(savedStateHandle: SavedStateHandle, private val repository: TaskRepository) : ViewModel() {
     private val id = savedStateHandle.get<Long>("id") ?: -1L
+    val isEditing: Boolean get() = id >= 0L
     var title by mutableStateOf("")
     var dueEnabled by mutableStateOf(false)
     var dueMillis by mutableStateOf(System.currentTimeMillis())
@@ -39,7 +40,7 @@ class ProjectFormViewModel @Inject constructor(savedStateHandle: SavedStateHandl
             finally { loading = false }
         }
     }
-    fun save() {
+    fun delete() {\n        val project = original ?: return\n        if (saving) return\n        saving = true\n        safeLaunch {\n            try { repository.deleteProject(project); UiEvents.show("پروژه حذف شد"); _done.tryEmit(Unit) }\n            catch (cancelled: CancellationException) { throw cancelled }\n            finally { saving = false }\n        }\n    }\n    fun save() {
         if (saving || title.trim().isBlank()) return
         saving = true
         safeLaunch {
