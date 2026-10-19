@@ -24,6 +24,8 @@ open class JobFormViewModelBase(
 ) : ViewModel() {
     val id: Long = handle.get<Long>("id") ?: -1L
     val siteId: Long = handle.get<Long>("siteId") ?: -1L
+    private val requestedFloorId: Long = handle.get<Long>("floorId") ?: -1L
+    private val requestedItemId: Long = handle.get<Long>("itemId") ?: -1L
     var title by mutableStateOf("")
     var name by mutableStateOf("")
     var address by mutableStateOf("")
@@ -68,11 +70,11 @@ open class JobFormViewModelBase(
                     "log" -> if (id >= 0L) repository.logs(siteId).first().firstOrNull { it.id == id }?.let { originalLog = it; floorId = it.floorId; itemId = it.itemId; quantity = it.qty.toString(); note = it.note; dateMillis = it.dateMillis }
                     "payment" -> if (id >= 0L) repository.payments(siteId).first().firstOrNull { it.id == id }?.let { originalPayment = it; amount = it.amount.toString(); note = it.note; dateMillis = it.dateMillis }
                 }
+                if (kind == "item" && id < 0L && requestedFloorId >= 0L) floorId = requestedFloorId
                 if (kind == "item" && floorId == null) floorId = floors.firstOrNull()?.id
-                if (kind == "log" && itemId == null) {
-                    itemId = items.firstOrNull()?.id
-                    floorId = items.firstOrNull()?.floorId ?: floors.firstOrNull()?.id
-                }
+                if (kind == "log" && id < 0L && requestedItemId >= 0L) itemId = requestedItemId
+                if (kind == "log" && itemId == null) itemId = items.firstOrNull()?.id
+                if (kind == "log") floorId = items.firstOrNull { it.id == itemId }?.floorId ?: originalLog?.floorId ?: floors.firstOrNull()?.id
             } catch (cancelled: CancellationException) { throw cancelled }
             finally { loading = false }
         }
