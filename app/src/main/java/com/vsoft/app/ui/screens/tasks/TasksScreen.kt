@@ -42,14 +42,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalendar: () -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
+fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenTaskForm: (Long, Long, Long) -> Unit, onOpenProjectForm: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalendar: () -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var selectedProject by rememberSaveable { mutableStateOf<Long?>(null) }
-    var addingTask by rememberSaveable { mutableStateOf(false) }
-    var addingProject by rememberSaveable { mutableStateOf(false) }
-    var editingProject by remember { mutableStateOf<ProjectEntity?>(null) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val focus = LocalFocusManager.current
@@ -169,7 +166,7 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
                                 item = item,
                                 selected = selectedProject == item.project.id,
                                 onClick = { selectedProject = if (selectedProject == item.project.id) null else item.project.id },
-                                onEdit = { editingProject = item.project }
+                                onEdit = { onOpenProjectForm(item.project.id) }
                             )
                         }
                     }
@@ -208,42 +205,13 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp))
 
         TasksFab(
-            onNewTask = { addingTask = true },
-            onNewProject = { addingProject = true },
+            onNewTask = { onOpenTaskForm(-1L, selectedProject ?: -1L, -1L) },
+            onNewProject = { onOpenProjectForm(-1L) },
             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
         )
     }
 
-    if (addingTask) {
-        TaskEditorSheet(
-            initial = null,
-            projects = state.projects.map { it.project },
-            defaultProjectId = selectedProject,
-            onDismiss = { addingTask = false },
-            onSave = { viewModel.saveTask(it); addingTask = false }
-        )
-    }
 
-    if (addingProject) {
-        ProjectEditorSheet(
-            initial = null,
-            onDismiss = { addingProject = false },
-            onSave = { viewModel.saveProject(it); addingProject = false }
-        )
-    }
-
-    editingProject?.let { project ->
-        ProjectEditorSheet(
-            initial = project,
-            onDismiss = { editingProject = null },
-            onSave = { viewModel.saveProject(it); editingProject = null },
-            onDelete = {
-                if (selectedProject == project.id) selectedProject = null
-                viewModel.deleteProject(project)
-                editingProject = null
-            }
-        )
-    }
 }
 
 @Composable
