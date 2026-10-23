@@ -32,6 +32,10 @@ android {
         }
     }
     buildTypes {
+        debug {
+            // CI debug variants, if built, must use the same private release certificate.
+            signingConfig = signingConfigs.getByName("release")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
