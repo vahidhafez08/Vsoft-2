@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:drawable="@drawable/vesta_icon"
-        android:insetLeft="20dp"
-        android:insetTop="20dp"
-        android:insetRight="20dp"
-        android:insetBottom="20dp" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00BFA5"
+        android:pathData="M14,29 C13,27 15,25 18,25 L28,25 C31,25 33,27 35,31 L51,66 L69,31 C71,27 73,25 77,25 L87,25 C90,25 92,28 90,31 L62,79 C59,84 55,87 51,87 C47,87 43,84 40,79 Z" />
+    <path
+        android:fillColor="#43D6A0"
+        android:pathData="M68,29 C67,17 74,10 91,7 C91,21 84,29 68,36 C67,34 67,31 68,29 Z" />
+    <path
+        android:fillColor="#8BEA7A"
+        android:pathData="M76,39 C81,31 88,29 96,29 C94,38 87,42 76,42 Z" />
+</vector>
