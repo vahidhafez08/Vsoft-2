@@ -47,6 +47,7 @@ import com.vsoft.app.util.startOfDay
 fun CalendarScreen(
     onBack: () -> Unit,
     onOpenTask: (Long) -> Unit,
+    onAddTaskForDay: (Long) -> Unit,
     viewModel: CalendarViewModel = hiltViewModel()
 ) {
     val data by viewModel.data.collectAsStateWithLifecycle()
@@ -55,7 +56,6 @@ fun CalendarScreen(
     val jy = displayed.first
     val jm = displayed.second
     val selected by viewModel.selectedDay.collectAsStateWithLifecycle()
-    var adding by rememberSaveable { mutableStateOf(false) }
     var showPicker by rememberSaveable { mutableStateOf(false) }
 
     val tasksByDay = remember(data) {
@@ -185,7 +185,7 @@ fun CalendarScreen(
             }
 
             Spacer(Modifier.height(14.dp))
-            Button(onClick = { adding = true }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { onAddTaskForDay(selected) }, modifier = Modifier.fillMaxWidth()) {
                 Text("کار جدید برای این روز")
             }
         }
@@ -218,18 +218,7 @@ fun CalendarScreen(
         )
     }
 
-    if (adding) {
-        SingleInputSheet(
-            title = "کار جدید",
-            label = "عنوان کار",
-            confirmLabel = "افزودن",
-            onDismiss = { adding = false },
-            onConfirm = {
-                viewModel.addTask(it, selected)
-                adding = false
-            }
-        )
-    }
+
 }
 
 @Composable

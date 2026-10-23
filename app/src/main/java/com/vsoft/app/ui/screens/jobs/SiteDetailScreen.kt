@@ -36,19 +36,11 @@ import com.vsoft.app.util.toPersianText
 private val floorSuggestions = listOf("پارکینگ", "همکف", "طبقه ۱", "طبقه ۲", "طبقه ۳", "طبقه ۴", "پشت‌بام")
 
 @Composable
-fun SiteDetailScreen(onBack: () -> Unit, viewModel: SiteDetailViewModel = hiltViewModel()) {
+fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor: (Long) -> Unit, onEditFloor: (Long, Long) -> Unit, onAddItem: (Long, Long) -> Unit, onEditItem: (Long, Long) -> Unit, onAddLog: (Long, Long) -> Unit, onEditLog: (Long, Long) -> Unit, onAddPayment: (Long, Long) -> Unit, viewModel: SiteDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val site = state.site
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var handledMissing by rememberSaveable { mutableStateOf(false) }
-    var editingSite by rememberSaveable { mutableStateOf(false) }
-    var addingFloor by rememberSaveable { mutableStateOf(false) }
-    var renamingFloor by remember { mutableStateOf<FloorEntity?>(null) }
-    var itemFloorId by rememberSaveable { mutableStateOf<Long?>(null) }
-    var editingItem by remember { mutableStateOf<WorkItemEntity?>(null) }
-    var logOpen by rememberSaveable { mutableStateOf(false) }
-    var logPreselect by rememberSaveable { mutableStateOf<Long?>(null) }
-    var addingPayment by rememberSaveable { mutableStateOf(false) }
     var confirmText by remember { mutableStateOf<String?>(null) }
     var confirmAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
@@ -80,10 +72,16 @@ fun SiteDetailScreen(onBack: () -> Unit, viewModel: SiteDetailViewModel = hiltVi
             onBack = onBack
         ) {
             if (site != null) {
-                Box(
-                    Modifier.size(40.dp).bounceClick { editingSite = true }.clip(CircleShape).background(BrandBlue.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Filled.Edit, contentDescription = "ویرایش کارگاه", tint = BrandBlue) }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(
+                        Modifier.size(44.dp).bounceClick { onEditSite(site.id) }.clip(CircleShape).background(BrandBlue.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) { Icon(Icons.Filled.Edit, contentDescription = "ویرایش کارگاه", tint = BrandBlue) }
+                    Box(
+                        Modifier.size(44.dp).bounceClick { ask("کارگاه و همه گزارش‌ها و آیتم‌های آن حذف شوند؟") { viewModel.deleteSite() } }.clip(CircleShape).background(ExpenseRed.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) { Icon(Icons.Filled.DeleteOutline, contentDescription = "حذف کارگاه", tint = ExpenseRed) }
+                }
             }
         }
 
@@ -111,97 +109,30 @@ fun SiteDetailScreen(onBack: () -> Unit, viewModel: SiteDetailViewModel = hiltVi
             when (tab) {
                 0 -> FloorsTab(
                     floors = state.floors,
-                    onAddFloor = { addingFloor = true },
-                    onAddItem = { itemFloorId = it.id },
-                    onRename = { renamingFloor = it },
+                    onAddFloor = { onAddFloor(site.id) },
+                    onAddItem = { onAddItem(site.id, it.id) },
+                    onRename = { onEditFloor(site.id, it.id) },
                     onDeleteFloor = { f -> ask("طبقه «" + f.name + "» با همه‌ی کارها و گزارش‌هایش حذف شود؟") { viewModel.deleteFloor(f.id) } },
-                    onLog = { logPreselect = it.id; logOpen = true },
-                    onEditItem = { editingItem = it },
+                    onLog = { onAddLog(site.id, it.id) },
+                    onEditItem = { onEditItem(site.id, it.id) },
                     onDeleteItem = { i -> ask("کار «" + i.title + "» با گزارش‌هایش حذف شود؟") { viewModel.deleteItem(i.id) } }
                 )
                 1 -> LogsTab(
                     logs = state.logs,
-                    onNewLog = { logPreselect = null; logOpen = true },
+                    onNewLog = { onAddLog(site.id, -1L) },
+                    onEdit = { l -> onEditLog(site.id, l.id) },
                     onDelete = { l -> ask("این گزارش حذف شود؟") { viewModel.deleteLog(l.id) } }
                 )
                 else -> FinanceTab(
                     site = site,
                     received = state.received,
                     payments = state.payments,
-                    onAddPayment = { addingPayment = true },
+                    onAddPayment = { onAddPayment(site.id, -1L) },
+                    onEdit = { p -> onAddPayment(site.id, p.id) },
                     onDelete = { p -> ask("این دریافتی حذف شود؟") { viewModel.deletePayment(p.id) } }
                 )
             }
         }
-    }
-
-    if (editingSite && site != null) {
-        JobSiteSheet(
-            initial = site,
-            onDismiss = { editingSite = false },
-            onSave = { viewModel.saveSite(it); editingSite = false },
-            onDelete = { editingSite = false; viewModel.deleteSite() }
-        )
-    }
-
-    if (addingFloor) {
-        JobNameSheet(
-            title = "طبقه جدید", label = "نام طبقه", initial = "", suggestions = floorSuggestions, confirmLabel = "افزودن",
-            onDismiss = { addingFloor = false },
-            onConfirm = { viewModel.saveFloor(null, it); addingFloor = false }
-        )
-    }
-
-    renamingFloor?.let { floor ->
-        JobNameSheet(
-            title = "ویرایش طبقه", label = "نام طبقه", initial = floor.name, suggestions = floorSuggestions, confirmLabel = "ذخیره",
-            onDismiss = { renamingFloor = null },
-            onConfirm = { viewModel.saveFloor(floor, it); renamingFloor = null }
-        )
-    }
-
-    itemFloorId?.let { floorId ->
-        JobItemSheet(
-            initial = null,
-            onDismiss = { itemFloorId = null },
-            onSave = { title, unit, target ->
-                viewModel.saveItem(null, floorId, title, unit, target)
-                itemFloorId = null
-            }
-        )
-    }
-
-    editingItem?.let { item ->
-        JobItemSheet(
-            initial = item,
-            onDismiss = { editingItem = null },
-            onSave = { title, unit, target ->
-                viewModel.saveItem(item, item.floorId, title, unit, target)
-                editingItem = null
-            }
-        )
-    }
-
-    if (logOpen) {
-        JobLogSheet(
-            floors = state.floors,
-            preselectItemId = logPreselect,
-            onDismiss = { logOpen = false },
-            onSave = { itemUi, qty, note, date ->
-                viewModel.addLog(itemUi.item, qty, note, date)
-                logOpen = false
-            }
-        )
-    }
-
-    if (addingPayment) {
-        JobPaymentSheet(
-            onDismiss = { addingPayment = false },
-            onSave = { amount, note, date ->
-                viewModel.savePayment(amount, note, date)
-                addingPayment = false
-            }
-        )
     }
 
     val text = confirmText
@@ -348,7 +279,7 @@ private fun FloorsTab(
 }
 
 @Composable
-private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onDelete: (WorkLogEntity) -> Unit) {
+private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onEdit: (WorkLogEntity) -> Unit, onDelete: (WorkLogEntity) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Button(onClick = onNewLog, modifier = Modifier.fillMaxWidth()) { Text("ثبت گزارش کار") }
 
@@ -382,6 +313,7 @@ private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onDelete: (WorkLogE
                                         Text(l.log.note, color = Vsoft.colors.textSecondary, fontSize = 12.sp)
                                     }
                                 }
+                                SmallIconButton(Icons.Filled.Edit, "ویرایش گزارش") { onEdit(l.log) }
                                 SmallIconButton(Icons.Filled.DeleteOutline, "حذف گزارش") { onDelete(l.log) }
                             }
                         }
@@ -406,6 +338,7 @@ private fun FinanceTab(
     received: Long,
     payments: List<SitePaymentEntity>,
     onAddPayment: () -> Unit,
+    onEdit: (SitePaymentEntity) -> Unit,
     onDelete: (SitePaymentEntity) -> Unit
 ) {
     val contract = site.contractAmount
@@ -450,6 +383,7 @@ private fun FinanceTab(
                                     color = Vsoft.colors.textSecondary, fontSize = 12.sp
                                 )
                             }
+                            SmallIconButton(Icons.Filled.Edit, "ویرایش دریافتی") { onEdit(p) }
                             SmallIconButton(Icons.Filled.DeleteOutline, "حذف دریافتی") { onDelete(p) }
                         }
                     }

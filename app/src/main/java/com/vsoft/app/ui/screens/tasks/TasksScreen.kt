@@ -42,14 +42,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalendar: () -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
+fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenTaskForm: (Long, Long, Long) -> Unit, onOpenProjectForm: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalendar: () -> Unit, viewModel: TasksViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var selectedProject by rememberSaveable { mutableStateOf<Long?>(null) }
-    var addingTask by rememberSaveable { mutableStateOf(false) }
-    var addingProject by rememberSaveable { mutableStateOf(false) }
-    var editingProject by remember { mutableStateOf<ProjectEntity?>(null) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val focus = LocalFocusManager.current
@@ -169,7 +166,7 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
                                 item = item,
                                 selected = selectedProject == item.project.id,
                                 onClick = { selectedProject = if (selectedProject == item.project.id) null else item.project.id },
-                                onEdit = { editingProject = item.project }
+                                onEdit = { onOpenProjectForm(item.project.id) }
                             )
                         }
                     }
@@ -199,6 +196,7 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
                     item = item,
                     modifier = Modifier.animateItemPlacement(),
                     onClick = { onOpenTask(item.task.id) },
+                    onEdit = { onOpenTaskForm(item.task.id, item.task.projectId ?: -1L, -1L) },
                     onToggle = { viewModel.toggle(item.task) },
                     onDelete = { deleteWithUndo(item.task) }
                 )
@@ -208,42 +206,13 @@ fun TasksScreen(onOpenTask: (Long) -> Unit, onOpenJobs: () -> Unit, onOpenCalend
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp))
 
         TasksFab(
-            onNewTask = { addingTask = true },
-            onNewProject = { addingProject = true },
+            onNewTask = { onOpenTaskForm(-1L, selectedProject ?: -1L, -1L) },
+            onNewProject = { onOpenProjectForm(-1L) },
             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
         )
     }
 
-    if (addingTask) {
-        TaskEditorSheet(
-            initial = null,
-            projects = state.projects.map { it.project },
-            defaultProjectId = selectedProject,
-            onDismiss = { addingTask = false },
-            onSave = { viewModel.saveTask(it); addingTask = false }
-        )
-    }
 
-    if (addingProject) {
-        ProjectEditorSheet(
-            initial = null,
-            onDismiss = { addingProject = false },
-            onSave = { viewModel.saveProject(it); addingProject = false }
-        )
-    }
-
-    editingProject?.let { project ->
-        ProjectEditorSheet(
-            initial = project,
-            onDismiss = { editingProject = null },
-            onSave = { viewModel.saveProject(it); editingProject = null },
-            onDelete = {
-                if (selectedProject == project.id) selectedProject = null
-                viewModel.deleteProject(project)
-                editingProject = null
-            }
-        )
-    }
 }
 
 @Composable
@@ -303,7 +272,7 @@ private fun ProjectCard(item: ProjectItem, selected: Boolean, onClick: () -> Uni
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit) {
+private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onEdit: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit) {
     val task = item.task
     val currentToggle by rememberUpdatedState(onToggle)
     val currentDelete by rememberUpdatedState(onDelete)
@@ -382,6 +351,9 @@ private fun TaskRow(item: TaskItem, modifier: Modifier, onClick: () -> Unit, onT
                         )
                     }
                 }
+            }
+            IconButton(onClick = onEdit, modifier = Modifier.size(44.dp)) {
+                Icon(Icons.Filled.Edit, contentDescription = "ویرایش کار", tint = Vsoft.colors.textSecondary)
             }
         }
     }

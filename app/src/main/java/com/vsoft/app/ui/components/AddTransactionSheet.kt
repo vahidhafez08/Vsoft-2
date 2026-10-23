@@ -98,7 +98,7 @@ fun AddTransactionSheet(
             )
             OutlinedTextField(
                 value = amountText,
-                onValueChange = { v -> amountText = v.toLatinDigits().filter { it.isDigit() }.take(12) },
+                onValueChange = { v -> amountText = v.toLatinDigits().filter { it.isDigit() }.take(15) },
                 label = { Text("مبلغ (تومان)") },
                 supportingText = { if (amount > 0) Text(amount.toMoney()) },
                 singleLine = true,

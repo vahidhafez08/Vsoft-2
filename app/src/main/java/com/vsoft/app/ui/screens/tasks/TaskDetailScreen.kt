@@ -34,11 +34,10 @@ import com.vsoft.app.util.toPersianText
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltViewModel()) {
+fun TaskDetailScreen(onBack: () -> Unit, onEditTask: (Long) -> Unit, viewModel: TaskDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val task = state.task
     var handledMissing by rememberSaveable { mutableStateOf(false) }
-    var editing by rememberSaveable { mutableStateOf(false) }
     var addingSub by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
@@ -183,7 +182,7 @@ fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltVi
 
             Appear(4) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = { editing = true }, modifier = Modifier.fillMaxWidth()) { Text("ویرایش کار") }
+                    Button(onClick = { task?.let { onEditTask(it.id) } }, modifier = Modifier.fillMaxWidth()) { Text("ویرایش کار") }
                     OutlinedButton(onClick = { viewModel.toggleTask(task) }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (task.isDone) "بازگرداندن به در حال انجام" else "علامت‌گذاری به‌عنوان انجام‌شده")
                     }
@@ -192,15 +191,6 @@ fun TaskDetailScreen(onBack: () -> Unit, viewModel: TaskDetailViewModel = hiltVi
         }
     }
 
-    if (editing && task != null) {
-        TaskEditorSheet(
-            initial = task,
-            projects = state.projects,
-            defaultProjectId = task.projectId,
-            onDismiss = { editing = false },
-            onSave = { viewModel.saveTask(it); editing = false }
-        )
-    }
 
     if (addingSub) {
         SingleInputSheet(

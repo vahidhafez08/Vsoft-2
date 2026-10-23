@@ -1,51 +1,90 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+
 package com.vsoft.app.ui
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.vsoft.app.ui.navigation.Destination
 import com.vsoft.app.ui.navigation.Routes
-import com.vsoft.app.ui.screens.PlaceholderScreen
 import com.vsoft.app.ui.screens.accounts.AccountsScreen
 import com.vsoft.app.ui.screens.calendar.CalendarScreen
-import com.vsoft.app.ui.screens.reports.ReportsScreen
+import com.vsoft.app.ui.screens.documents.DocumentsScreen
 import com.vsoft.app.ui.screens.finance.FinanceScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
-import com.vsoft.app.ui.screens.more.MoreScreen
 import com.vsoft.app.ui.screens.jobs.JobsScreen
 import com.vsoft.app.ui.screens.jobs.SiteDetailScreen
+import com.vsoft.app.ui.screens.jobs.SiteFormScreen
+import com.vsoft.app.ui.screens.jobs.FloorFormScreen
+import com.vsoft.app.ui.screens.jobs.ItemFormScreen
+import com.vsoft.app.ui.screens.jobs.LogFormScreen
+import com.vsoft.app.ui.screens.jobs.PaymentFormScreen
+import com.vsoft.app.ui.screens.more.MoreScreen
+import com.vsoft.app.ui.screens.reports.ReportsScreen
 import com.vsoft.app.ui.screens.tasks.TaskDetailScreen
 import com.vsoft.app.ui.screens.tasks.TasksScreen
+import com.vsoft.app.ui.screens.tasks.TaskFormScreen
+import com.vsoft.app.ui.screens.tasks.ProjectFormScreen
 import com.vsoft.app.ui.screens.transactions.TransactionsScreen
-import com.vsoft.app.ui.screens.documents.DocumentsScreen
+import com.vsoft.app.ui.screens.transactions.TransactionFormScreen
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.UiEvents
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.sign
+
+private val tabDestinations = Destination.values().toList()
 
 @Composable
-fun MainScaffold() {
-    val navController = rememberNavController()
+fun MainScaffold(navController: NavHostController) {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val snackbarHostState = remember { SnackbarHostState() }
-    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS)
-    val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.JOBS, Routes.SITE_DETAIL, Routes.CALENDAR)
+    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM)
+    val formPrefixes = listOf("transaction_form", "task_form", "project_form", "site_form", "floor_form", "item_form", "log_form", "payment_form")
+    val isFormRoute = formPrefixes.any { currentRoute?.startsWith(it) == true }
+    val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.TASK_FORM, Routes.PROJECT_FORM, Routes.JOBS, Routes.SITE_DETAIL, Routes.SITE_FORM, Routes.FLOOR_FORM, Routes.ITEM_FORM, Routes.LOG_FORM, Routes.PAYMENT_FORM, Routes.CALENDAR)
+    val currentTabIndex = tabDestinations.indexOfFirst { it.route == currentRoute }
+    val isTabRoute = currentTabIndex >= 0
+    val pagerState = rememberPagerState(initialPage = currentTabIndex.coerceAtLeast(0)) { tabDestinations.size }
+    val scope = rememberCoroutineScope()
+    var isProgrammaticPageChange by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         UiEvents.messages.collect { msg ->
@@ -58,6 +97,42 @@ fun MainScaffold() {
         navController.navigate(route) { launchSingleTop = true }
     }
 
+    fun navigateToTab(dest: Destination) {
+        if (navController.currentBackStackEntry?.destination?.route == dest.route) return
+        navController.navigate(dest.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    // A route change from a deep screen (including system Back/deep links) restores the
+    // pager to that tab without adding a second animated transition.
+    LaunchedEffect(currentRoute) {
+        val index = tabDestinations.indexOfFirst { it.route == currentRoute }
+        if (index >= 0 && pagerState.currentPage != index) {
+            pagerState.scrollToPage(index)
+        }
+    }
+
+    // A completed swipe updates the Navigation back stack, which remains the source of truth.
+    LaunchedEffect(pagerState, navController) {
+        snapshotFlow { pagerState.settledPage }
+            .distinctUntilChanged()
+            .collect { page ->
+                val destination = tabDestinations.getOrNull(page) ?: return@collect
+                if (!isProgrammaticPageChange && navController.currentBackStackEntry?.destination?.route != destination.route) {
+                    navigateToTab(destination)
+                }
+            }
+    }
+
+    val highlightedPage by remember {
+        derivedStateOf {
+            if (pagerState.isScrollInProgress) pagerState.targetPage else pagerState.currentPage
+        }
+    }
+
     Scaffold(
         containerColor = Vsoft.colors.bg,
         snackbarHost = {
@@ -66,30 +141,49 @@ fun MainScaffold() {
             }
         },
         bottomBar = {
+            if (!isFormRoute) {
             NavigationBar(containerColor = Vsoft.colors.surface) {
-                Destination.values().forEach { dest ->
-                    val selected = when (dest) {
-                        Destination.Finance -> currentRoute in financeGroup
-                        Destination.Tasks -> currentRoute in tasksGroup
-                        else -> currentRoute == dest.route
+                tabDestinations.forEachIndexed { index, dest ->
+                    val selected = if (isTabRoute) {
+                        highlightedPage == index
+                    } else {
+                        when (dest) {
+                            Destination.Finance -> currentRoute in financeGroup
+                            Destination.Tasks -> currentRoute in tasksGroup
+                            else -> currentRoute == dest.route
+                        }
                     }
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
-                            if (selected) {
-                                // Already inside this tab: go back to its root screen if we are deeper.
-                                if (currentRoute != dest.route && !navController.popBackStack(dest.route, false)) {
-                                    navController.navigate(dest.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                        launchSingleTop = true
+                            if (isTabRoute) {
+                                if (index != pagerState.currentPage && !pagerState.isScrollInProgress) {
+                                    scope.launch {
+                                        isProgrammaticPageChange = true
+                                        try {
+                                            val distance = index - pagerState.currentPage
+                                            if (abs(distance) > 1) {
+                                                pagerState.scrollToPage(index - sign(distance.toDouble()).toInt())
+                                            }
+                                            pagerState.animateScrollToPage(
+                                                index,
+                                                animationSpec = tween(280, easing = FastOutSlowInEasing)
+                                            )
+                                            tabDestinations.getOrNull(index)?.let(::navigateToTab)
+                                        } catch (cancelled: CancellationException) {
+                                            throw cancelled
+                                        } finally {
+                                            isProgrammaticPageChange = false
+                                        }
                                     }
                                 }
-                            } else {
-                                navController.navigate(dest.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                            } else if (selected) {
+                                // Preserve existing behavior: tapping the active group returns to its root.
+                                if (currentRoute != dest.route && !navController.popBackStack(dest.route, false)) {
+                                    navigateToTab(dest)
                                 }
+                            } else {
+                                navigateToTab(dest)
                             }
                         },
                         icon = { Icon(dest.icon, contentDescription = dest.label) },
@@ -104,62 +198,134 @@ fun MainScaffold() {
                     )
                 }
             }
+            }
         }
     ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = Destination.Home.route,
-            modifier = Modifier.padding(padding),
-            enterTransition = { fadeIn(tween(260)) + slideInHorizontally(tween(260), initialOffsetX = { -it / 14 }) },
-            exitTransition = { fadeOut(tween(160)) },
-            popEnterTransition = { fadeIn(tween(260)) },
-            popExitTransition = { fadeOut(tween(160)) + slideOutHorizontally(tween(260), targetOffsetX = { -it / 14 }) }
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Vsoft.colors.bg)
         ) {
-            composable(Destination.Home.route) {
-                HomeScreen(
-                    onOpenTransactions = { openRoute(Routes.TRANSACTIONS) },
-                    onOpenAccounts = { openRoute(Routes.ACCOUNTS) },
-                    onOpenDocuments = { openRoute(Routes.DOCUMENTS) }
-                )
-            }
-            composable(Destination.Finance.route) {
-                FinanceScreen(
-                    onOpenTransactions = { openRoute(Routes.TRANSACTIONS) },
-                    onOpenAccounts = { openRoute(Routes.ACCOUNTS) }
-                )
-            }
-            composable(Routes.TRANSACTIONS) { TransactionsScreen(onBack = { navController.popBackStack() }) }
-            composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
-            composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
-            composable(Destination.Tasks.route) {
-                TasksScreen(
-                    onOpenTask = { id -> openRoute(Routes.taskDetail(id)) },
-                    onOpenJobs = { openRoute(Routes.JOBS) },
-                    onOpenCalendar = { openRoute(Routes.CALENDAR) }
-                )
-            }
-            composable(
-                route = Routes.TASK_DETAIL,
-                arguments = listOf(navArgument("id") { type = NavType.LongType })
-            ) { TaskDetailScreen(onBack = { navController.popBackStack() }) }
-            composable(Routes.JOBS) {
-                JobsScreen(
+            NavHost(
+                navController = navController,
+                startDestination = Destination.Home.route,
+                modifier = Modifier.fillMaxSize(),
+                enterTransition = { fadeIn(tween(260)) + slideInHorizontally(tween(260), initialOffsetX = { -it / 14 }) },
+                exitTransition = { fadeOut(tween(160)) },
+                popEnterTransition = { fadeIn(tween(260)) },
+                popExitTransition = { fadeOut(tween(160)) + slideOutHorizontally(tween(260), targetOffsetX = { -it / 14 }) }
+            ) {
+                tabDestinations.forEach { dest ->
+                    composable(dest.route) {
+                        // The pager is hosted outside the NavHost so its state/content survives tab route changes.
+                        Box(Modifier.fillMaxSize().background(Vsoft.colors.bg))
+                    }
+                }
+                composable(Routes.TRANSACTIONS) { TransactionsScreen(onBack = { navController.popBackStack() }, onOpenTransactionForm = { id, type -> openRoute(Routes.transactionForm(id, type)) }) }
+                composable(route = Routes.TRANSACTION_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("type") { type = NavType.StringType; defaultValue = "expense" })) { TransactionFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.TASK_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("projectId") { type = NavType.LongType; defaultValue = -1L }, navArgument("due") { type = NavType.LongType; defaultValue = -1L })) {
+                    TaskFormScreen(onBack = { navController.popBackStack() }, onOpenProjectForm = { openRoute(Routes.projectForm()) })
+                }
+                composable(route = Routes.PROJECT_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { ProjectFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.SITE_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { SiteFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.FLOOR_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { FloorFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.ITEM_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("floorId") { type = NavType.LongType; defaultValue = -1L })) { ItemFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.LOG_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("itemId") { type = NavType.LongType; defaultValue = -1L })) { LogFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.PAYMENT_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { PaymentFormScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
+                composable(
+                    route = Routes.TASK_DETAIL,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { TaskDetailScreen(onBack = { navController.popBackStack() }, onEditTask = { id -> openRoute(Routes.taskForm(id)) }) }
+                composable(Routes.JOBS) {
+                    JobsScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpenSite = { id -> openRoute(Routes.siteDetail(id)) },
+                        onAddSite = { openRoute(Routes.siteForm()) }
+                    )
+                }
+                composable(
+                    route = Routes.SITE_DETAIL,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { SiteDetailScreen(
                     onBack = { navController.popBackStack() },
-                    onOpenSite = { id -> openRoute(Routes.siteDetail(id)) }
+                    onEditSite = { id -> openRoute(Routes.siteForm(id)) },
+                    onAddFloor = { siteId -> openRoute(Routes.floorForm(siteId)) },
+                    onEditFloor = { siteId, id -> openRoute(Routes.floorForm(siteId, id)) },
+                    onAddItem = { siteId, floorId -> openRoute(Routes.itemForm(siteId, floorId = floorId)) },
+                    onEditItem = { siteId, id -> openRoute(Routes.itemForm(siteId, id)) },
+                    onAddLog = { siteId, itemId -> openRoute(Routes.logForm(siteId, itemId = itemId)) },
+                    onEditLog = { siteId, id -> openRoute(Routes.logForm(siteId, id)) },
+                    onAddPayment = { siteId, id -> openRoute(Routes.paymentForm(siteId, id)) }
+                ) }
+                composable(Routes.CALENDAR) {
+                    CalendarScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpenTask = { id -> openRoute(Routes.taskDetail(id)) },
+                        onAddTaskForDay = { day -> openRoute(Routes.taskForm(due = day)) }
+                    )
+                }
+            }
+
+            if (isTabRoute) {
+                TabsHost(
+                    pagerState = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    onOpenRoute = ::openRoute
                 )
             }
-            composable(
-                route = Routes.SITE_DETAIL,
-                arguments = listOf(navArgument("id") { type = NavType.LongType })
-            ) { SiteDetailScreen(onBack = { navController.popBackStack() }) }
-            composable(Routes.CALENDAR) {
-                CalendarScreen(
-                    onBack = { navController.popBackStack() },
-                    onOpenTask = { id -> openRoute(Routes.taskDetail(id)) }
+        }
+    }
+}
+
+@Composable
+private fun TabsHost(
+    pagerState: PagerState,
+    modifier: Modifier = Modifier,
+    onOpenRoute: (String) -> Unit
+) {
+    HorizontalPager(
+        state = pagerState,
+        modifier = modifier.background(Vsoft.colors.bg),
+        beyondBoundsPageCount = 1,
+        key = { index -> tabDestinations.getOrNull(index)?.route ?: index },
+        userScrollEnabled = true,
+        pageSpacing = 0.dp,
+        flingBehavior = PagerDefaults.flingBehavior(
+            state = pagerState,
+            snapAnimationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+        )
+    ) { page ->
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Vsoft.colors.bg)
+        ) {
+            when (tabDestinations.getOrNull(page)) {
+                Destination.Home -> HomeScreen(
+                    onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
+                    onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) },
+                    onOpenDocuments = { onOpenRoute(Routes.DOCUMENTS) },
+                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) }
                 )
+                Destination.Finance -> FinanceScreen(
+                    onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
+                    onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) },
+                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) }
+                )
+                Destination.Tasks -> TasksScreen(
+                    onOpenTask = { id -> onOpenRoute(Routes.taskDetail(id)) },
+                    onOpenTaskForm = { id, projectId, due -> onOpenRoute(Routes.taskForm(id, projectId, due)) },
+                    onOpenProjectForm = { id -> onOpenRoute(Routes.projectForm(id)) },
+                    onOpenJobs = { onOpenRoute(Routes.JOBS) },
+                    onOpenCalendar = { onOpenRoute(Routes.CALENDAR) }
+                )
+                Destination.Reports -> ReportsScreen()
+                Destination.More -> MoreScreen()
+                null -> Unit
             }
-            composable(Destination.Reports.route) { ReportsScreen() }
-            composable(Destination.More.route) { MoreScreen() }
         }
     }
 }

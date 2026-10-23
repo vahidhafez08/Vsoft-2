@@ -62,13 +62,12 @@ fun HomeScreen(
     onOpenTransactions: () -> Unit = {},
     onOpenAccounts: () -> Unit = {},
     onOpenDocuments: () -> Unit = {},
+    onOpenTransactionForm: (String) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val userName by settingsViewModel.userName.collectAsStateWithLifecycle()
-    // 0 = hidden, 1 = add income, 2 = add expense
-    var sheetMode by rememberSaveable { mutableIntStateOf(0) }
     val isDark = Vsoft.colors.isDark
 
     val balanceBrush = if (isDark)
@@ -166,8 +165,8 @@ fun HomeScreen(
 
         // Quick actions
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickAction("ثبت هزینه", Icons.Filled.Remove, ExpenseRed, Modifier.weight(1f)) { sheetMode = 2 }
-            QuickAction("ثبت درآمد", Icons.Filled.Add, IncomeGreen, Modifier.weight(1f)) { sheetMode = 1 }
+            QuickAction("ثبت هزینه", Icons.Filled.Remove, ExpenseRed, Modifier.weight(1f)) { onOpenTransactionForm("expense") }
+            QuickAction("ثبت درآمد", Icons.Filled.Add, IncomeGreen, Modifier.weight(1f)) { onOpenTransactionForm("income") }
             QuickAction("انتقال وجه", Icons.Filled.SwapHoriz, BrandBlue, Modifier.weight(1f)) {
                 onOpenAccounts()
             }
@@ -175,18 +174,6 @@ fun HomeScreen(
         }
     }
 
-    if (sheetMode != 0) {
-        val isIncome = sheetMode == 1
-        AddTransactionSheet(
-            isIncome = isIncome,
-            accounts = state.accounts,
-            onDismiss = { sheetMode = 0 },
-            onSave = { title, amount, category, accountId ->
-                viewModel.addTransaction(title, amount, isIncome, category, accountId)
-                sheetMode = 0
-            }
-        )
-    }
 }
 
 @Composable

@@ -42,10 +42,10 @@ class FinanceViewModel @Inject constructor(
         val now = System.currentTimeMillis()
         val curFrom = JRange.monthStart(now)
         val prevFrom = JRange.prevMonthStart(now)
-        val prevTo = minOf(curFrom, prevFrom + (now - curFrom))
+        val prevEnd = minOf(prevFrom + (now - curFrom), curFrom - 1L)
 
         val current = tx.filter { it.dateMillis >= curFrom && it.dateMillis <= now }
-        val previous = tx.filter { it.dateMillis >= prevFrom && it.dateMillis < prevTo }
+        val previous = tx.filter { it.dateMillis >= prevFrom && it.dateMillis <= prevEnd }
         val incomes = current.filter { it.isIncome }
         val expenses = current.filter { !it.isIncome }
 

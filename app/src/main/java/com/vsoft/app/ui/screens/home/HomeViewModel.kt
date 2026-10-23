@@ -7,6 +7,7 @@ import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.data.repository.FinanceRepository
 import com.vsoft.app.util.DAY_MS
 import com.vsoft.app.util.JCal
+import com.vsoft.app.util.JRange
 import com.vsoft.app.util.percentChange
 import com.vsoft.app.util.startOfDay
 import com.vsoft.app.util.weekdayShort
@@ -55,13 +56,12 @@ class HomeViewModel @Inject constructor(
     private fun buildState(tx: List<TransactionEntity>, acc: List<AccountEntity>, balances: Map<Long, Long>): HomeUiState {
         val now = System.currentTimeMillis()
         val todayStart = startOfDay(now)
-        val j = JCal.toJalali(todayStart)
-        val curFrom = JCal.fromJalali(j[0], j[1], 1)
-        val prevFrom = if (j[1] == 1) JCal.fromJalali(j[0] - 1, 12, 1) else JCal.fromJalali(j[0], j[1] - 1, 1)
-        val prevTo = minOf(curFrom, prevFrom + (now - curFrom))
+        val curFrom = JRange.monthStart(now)
+        val prevFrom = JRange.prevMonthStart(now)
+        val prevEnd = minOf(prevFrom + (now - curFrom), curFrom - 1L)
 
-        val cur = tx.filter { it.dateMillis >= curFrom }
-        val prev = tx.filter { it.dateMillis >= prevFrom && it.dateMillis < prevTo }
+        val cur = tx.filter { it.dateMillis >= curFrom && it.dateMillis <= now }
+        val prev = tx.filter { it.dateMillis >= prevFrom && it.dateMillis <= prevEnd }
 
         val income = cur.filter { it.isIncome }.sumOf { it.amount }
         val expense = cur.filter { !it.isIncome }.sumOf { it.amount }
