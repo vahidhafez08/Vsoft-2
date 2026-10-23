@@ -70,7 +70,7 @@ fun FormScaffold(title: String, subtitle: String, icon: ImageVector, onBack: () 
             Box(Modifier.size(48.dp).clip(RoundedCornerShape(16.dp)).background(FormStyle.Blue1.copy(alpha=.18f)).border(1.dp, FormStyle.Blue1.copy(alpha=.5f), RoundedCornerShape(16.dp)), contentAlignment=Alignment.Center) { Icon(icon, null, tint=FormStyle.IconBlue) }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) { Text(title, color=c.textPrimary, fontSize=20.sp, fontWeight=FontWeight.Bold); Text(subtitle, color=c.textSecondary, fontSize=13.sp) }
-            Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(c.surface).border(1.dp,c.outline.copy(alpha=.7f),RoundedCornerShape(14.dp)).clickable(onClick=onBack), contentAlignment=Alignment.Center) { Icon(Icons.Default.ChevronLeft,"بازگشت",tint=c.textPrimary) }
+            Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(c.surface).border(1.dp,c.outline.copy(alpha=.7f),RoundedCornerShape(14.dp)).clickable(onClick=onBack), contentAlignment=Alignment.Center) { Icon(Icons.Default.ArrowForward,"بازگشت",tint=c.textPrimary) }
         }
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal=16.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) { content(); Spacer(Modifier.height(4.dp)) }
         Box(Modifier.fillMaxWidth().padding(16.dp).navigationBarsPadding()) { bottomBar() }
