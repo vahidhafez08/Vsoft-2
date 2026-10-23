@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.*
 import com.vsoft.app.data.repository.JobRepository
 import com.vsoft.app.util.jobProgress
+import com.vsoft.app.util.jobDoneByItem
 import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ data class SiteDetailUiState(
     val floors: List<FloorUi> = emptyList(),
     val logs: List<LogUi> = emptyList(),
     val payments: List<SitePaymentEntity> = emptyList(),
+    val manualReports: List<ManualDailyReportEntity> = emptyList(),
     val progress: Int = 0,
     val itemsTotal: Int = 0,
     val itemsDone: Int = 0,
@@ -48,7 +50,7 @@ class SiteDetailViewModel @Inject constructor(
 
     val state: StateFlow<SiteDetailUiState> =
         combine(repo.site(siteId), repo.floors(siteId), repo.items(siteId), repo.logs(siteId), repo.payments(siteId)) { site, floors, items, logs, pays ->
-            val doneByItem = logs.groupBy { it.itemId }.mapValues { e -> e.value.sumOf { it.qty } }
+            val doneByItem = jobDoneByItem(items, logs)
             val itemsByFloor = items.groupBy { it.floorId }
             val floorUis = floors.map { f ->
                 val its = itemsByFloor[f.id].orEmpty()
@@ -71,6 +73,8 @@ class SiteDetailViewModel @Inject constructor(
                 received = pays.sumOf { it.amount },
                 loaded = true
             )
+        }.combine(repo.manualDailyReports(siteId)) { base, reports ->
+            base.copy(manualReports = reports)
         }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SiteDetailUiState())
 
     fun saveSite(site: SiteEntity) { safeLaunch { repo.saveSite(site) } }
@@ -112,4 +116,15 @@ class SiteDetailViewModel @Inject constructor(
     }
 
     fun deletePayment(id: Long) { safeLaunch { repo.deletePayment(id) } }
+
+    fun saveManualReport(existing: ManualDailyReportEntity?, content: String, dateMillis: Long) {
+        safeLaunch {
+            repo.saveManualDailyReport(
+                existing?.copy(dateMillis = dateMillis, content = content)
+                    ?: ManualDailyReportEntity(siteId = siteId, dateMillis = dateMillis, content = content)
+            )
+        }
+    }
+
+    fun deleteManualReport(id: Long) { safeLaunch { repo.deleteManualDailyReport(id) } }
 }

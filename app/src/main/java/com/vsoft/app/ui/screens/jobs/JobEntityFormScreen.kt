@@ -12,6 +12,9 @@ import com.vsoft.app.ui.components.form.*
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toLatinDigits
+import com.vsoft.app.util.toPersianText
+import com.vsoft.app.util.formatJobQuantity
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collect
 
 @Composable
@@ -40,7 +43,17 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
         icon = when(kind) { "site" -> Icons.Filled.Construction; "floor" -> Icons.Filled.Layers; "item" -> Icons.Filled.Build; "log" -> Icons.Filled.EditNote; else -> Icons.Filled.Payments },
         onBack = onBack,
         bottomBar = {
-            val valid = when(kind) { "site", "floor" -> vm.name.trim().isNotBlank(); "item" -> vm.title.trim().isNotBlank() && vm.floorId != null && (vm.quantity.toIntOrNull() ?: 0) > 0; "log" -> vm.itemId != null && (vm.quantity.toIntOrNull() ?: 0) > 0; else -> (vm.amount.toLatinDigits().filter(Char::isDigit).toLongOrNull() ?: 0L) > 0L }
+            val valid = when (kind) {
+                "site", "floor" -> vm.name.trim().isNotBlank()
+                "item" -> vm.title.trim().isNotBlank() && vm.floorId != null &&
+                    (vm.unit == "درصد" || (vm.quantity.toLatinDigits().toIntOrNull() ?: 0) > 0)
+                "log" -> {
+                    val selected = vm.items.firstOrNull { it.id == vm.itemId }
+                    val qty = vm.quantity.toLatinDigits().toIntOrNull() ?: 0
+                    vm.itemId != null && (if (selected?.unit == "درصد") qty in 0..100 else qty > 0)
+                }
+                else -> (vm.amount.toLatinDigits().filter(Char::isDigit).toLongOrNull() ?: 0L) > 0L
+            }
             FormPrimaryButton("ذخیره", valid && !vm.saving && !vm.loading, vm.saving) { vm.save(kind) }
         }) {
         when {
@@ -66,12 +79,16 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                     FormTextField(vm.title, { vm.title = it.take(100) }, "عنوان کار *")
                     Text("واحد اندازه‌گیری", color = Vsoft.colors.textSecondary)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("متر", "متر مربع", "متر مکعب").forEach { FormChip(it, vm.unit == it, { vm.unit = it }) }
+                        listOf("متر", "متر مربع", "متر مکعب", "درصد").forEach { FormChip(it, vm.unit == it, { vm.unit = it; if (it == "درصد") vm.quantity = "100" }) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("عدد", "کیلوگرم", "روز").forEach { FormChip(it, vm.unit == it, { vm.unit = it }) }
                     }
-                    FormNumberField(vm.quantity, { vm.quantity = it }, "مقدار هدف *", vm.unit, maxDigits = 9, allowDecimal = false)
+                    if (vm.unit == "درصد") {
+                        Text("هدف این کار همیشه ۱۰۰٪ است.", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                    } else {
+                        FormNumberField(vm.quantity, { vm.quantity = it }, "مقدار هدف *", vm.unit, maxDigits = 9, allowDecimal = false)
+                    }
                 }
                 FormCard(Icons.Filled.Layers, "طبقه") {
                     FormPickerRow(Icons.Filled.Layers, vm.floors.firstOrNull { it.id == vm.floorId }?.name ?: "انتخاب طبقه", "این مدل داده به طبقه نیاز دارد", { floorSheet = true })
@@ -84,8 +101,28 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                 FormCard(Icons.Filled.Build, "آیتم کار") {
                     val item = vm.items.firstOrNull { it.id == vm.itemId }
                     FormPickerRow(Icons.Filled.Build, item?.title ?: "انتخاب آیتم", item?.let { "واحد: ${it.unit} · هدف: ${it.targetQty}" }, { itemSheet = true })
-                    FormNumberField(vm.quantity, { vm.quantity = it }, "مقدار انجام‌شده *", item?.unit, maxDigits = 9, allowDecimal = false)
-                    if (item != null) Text("انجام‌شده: ${vm.logs.filter { it.itemId == item.id }.sumOf { it.qty }} از ${item.targetQty} ${item.unit}", color = Vsoft.colors.textSecondary, fontSize = MaterialTheme.typography.bodySmall.fontSize)
+                    if (item?.unit == "درصد") {
+                        val current = (vm.quantity.toLatinDigits().toIntOrNull() ?: 0).coerceIn(0, 100)
+                        Text("درصد پیشرفت", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                        Slider(
+                            value = current.toFloat(),
+                            onValueChange = { vm.quantity = it.roundToInt().coerceIn(0, 100).toString() },
+                            valueRange = 0f..100f,
+                            steps = 99
+                        )
+                        Text(formatJobQuantity(current, "درصد"), color = Vsoft.colors.textPrimary, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                    } else {
+                        FormNumberField(vm.quantity, { vm.quantity = it }, "مقدار انجام‌شده *", item?.unit, maxDigits = 9, allowDecimal = false)
+                    }
+                    if (item != null) {
+                        val logged = vm.logs.filter { it.itemId == item.id }
+                        val completed = if (item.unit == "درصد") logged.maxWithOrNull(compareBy<WorkLogEntity> { it.dateMillis }.thenBy { it.id })?.qty?.coerceIn(0, 100) ?: 0 else logged.sumOf { it.qty }
+                        Text(
+                            "پیشرفت فعلی: " + (if (item.unit == "درصد") formatJobQuantity(completed, item.unit) else completed.toPersianText() + " از " + item.targetQty.toPersianText() + " " + item.unit),
+                            color = Vsoft.colors.textSecondary,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize
+                        )
+                    }
                 }
                 FormCard(Icons.Filled.CalendarMonth, "تاریخ گزارش") {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -136,10 +173,21 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
     }, { floorSheet = false })
     if (itemSheet) {
         val filtered = vm.items.filter { vm.floorId == null || it.floorId == vm.floorId }
-        FormOptionSheet("انتخاب آیتم کار", filtered.map { FormOption(it.id, it.title, "واحد: ${it.unit} · انجام‌شده: ${vm.logs.filter { log -> log.itemId == it.id }.sumOf { log -> log.qty }} از ${it.targetQty}") }, vm.itemId, {
+        FormOptionSheet("انتخاب آیتم کار", filtered.map { item ->
+            val itemLogs = vm.logs.filter { log -> log.itemId == item.id }
+            val completed = if (item.unit == "درصد") itemLogs.maxWithOrNull(compareBy<WorkLogEntity> { it.dateMillis }.thenBy { it.id })?.qty?.coerceIn(0, 100) ?: 0 else itemLogs.sumOf { it.qty }
+            FormOption(item.id, item.title, "واحد: ${item.unit} · " + (if (item.unit == "درصد") formatJobQuantity(completed, item.unit) else "انجام‌شده: $completed از ${item.targetQty} ${item.unit}"))
+        }, vm.itemId, {
             vm.itemId = it
             val selected = filtered.firstOrNull { item -> item.id == it }
-            if (selected != null) vm.floorId = selected.floorId
+            if (selected != null) {
+                vm.floorId = selected.floorId
+                if (selected.unit == "درصد") {
+                    vm.quantity = vm.logs.filter { log -> log.itemId == selected.id }
+                        .maxWithOrNull(compareBy<WorkLogEntity> { it.dateMillis }.thenBy { it.id })
+                        ?.qty?.coerceIn(0, 100)?.toString() ?: "0"
+                }
+            }
             itemSheet = false
         }, { itemSheet = false })
     }

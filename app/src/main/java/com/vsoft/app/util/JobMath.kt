@@ -1,6 +1,7 @@
 package com.vsoft.app.util
 
 import com.vsoft.app.data.model.WorkItemEntity
+import com.vsoft.app.data.model.WorkLogEntity
 
 /** Parses Latin / Persian / Arabic digits. Returns null when empty or longer than 12 digits. */
 fun parseJobNumber(s: String): Long? {
@@ -24,3 +25,22 @@ fun jobProgress(items: List<WorkItemEntity>, doneByItem: Map<Long, Int>): Float 
     val done = items.sumOf { minOf(doneByItem[it.id] ?: 0, it.targetQty).toLong() }
     return (done.toFloat() / target).coerceIn(0f, 1f)
 }
+
+
+/** Calculates cumulative quantities for regular units and the latest saved value for percentage work. */
+fun jobDoneByItem(items: List<WorkItemEntity>, logs: List<WorkLogEntity>): Map<Long, Int> {
+    val itemsById = items.associateBy { it.id }
+    return logs.groupBy { it.itemId }.mapValues { (itemId, itemLogs) ->
+        if (itemsById[itemId]?.unit == "درصد") {
+            itemLogs.maxWithOrNull(compareBy<WorkLogEntity> { it.dateMillis }.thenBy { it.id })
+                ?.qty?.coerceIn(0, 100) ?: 0
+        } else {
+            itemLogs.sumOf { it.qty }
+        }
+    }
+}
+
+/** Formats quantities using the unit-specific Persian presentation. */
+fun formatJobQuantity(value: Int, unit: String): String =
+    if (unit == "درصد") "٪" + value.coerceIn(0, 100).toPersianText()
+    else value.toPersianText() + " " + unit

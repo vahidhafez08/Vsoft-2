@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.SiteEntity
 import com.vsoft.app.data.repository.JobRepository
 import com.vsoft.app.util.jobProgress
+import com.vsoft.app.util.jobDoneByItem
 import com.vsoft.app.util.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,7 @@ class JobsViewModel @Inject constructor(private val repo: JobRepository) : ViewM
 
     val state: StateFlow<JobsUiState> =
         combine(repo.sites(), repo.allItems(), repo.allLogs(), repo.allPayments()) { sites, items, logs, pays ->
-            val doneByItem = logs.groupBy { it.itemId }.mapValues { e -> e.value.sumOf { it.qty } }
+            val doneByItem = jobDoneByItem(items, logs)
             val itemsBySite = items.groupBy { it.siteId }
             val paidBySite = pays.groupBy { it.siteId }.mapValues { e -> e.value.sumOf { it.amount } }
             JobsUiState(

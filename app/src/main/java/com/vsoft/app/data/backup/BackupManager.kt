@@ -65,6 +65,9 @@ class BackupManager @Inject constructor(
             .put("site_payments", JSONArray().apply {
                 db.jobDao().getAllSitePaymentsOnce().forEach { put(it.toJson()) }
             })
+            .put("manual_daily_reports", JSONArray().apply {
+                db.jobDao().getAllManualDailyReportsOnce().forEach { put(it.toJson()) }
+            })
 
         JSONObject()
             .put("app", "VSOFT")
@@ -91,6 +94,7 @@ class BackupManager @Inject constructor(
                     db.subtaskDao().deleteAllRaw()
                     db.jobDao().deleteAllWorkLogsRaw()
                     db.jobDao().deleteAllSitePaymentsRaw()
+                    db.jobDao().deleteAllManualDailyReportsRaw()
                     db.jobDao().deleteAllWorkItemsRaw()
                     db.jobDao().deleteAllFloorsRaw()
                     db.transactionDao().deleteAllRaw()
@@ -114,6 +118,7 @@ class BackupManager @Inject constructor(
                     db.subtaskDao().insertAllRaw(parsed.subtasks)
                     db.jobDao().insertAllWorkLogsRaw(parsed.workLogs)
                     db.jobDao().insertAllSitePaymentsRaw(parsed.sitePayments)
+                    db.jobDao().insertAllManualDailyReportsRaw(parsed.manualDailyReports)
                 }
             }
 
@@ -295,6 +300,16 @@ class BackupManager @Inject constructor(
             dateMillis = requiredLong("dateMillis"),
             note = optionalString("note", "")
         ) }
+        val manualDailyReports = if (!tableObject.has("manual_daily_reports") || tableObject.isNull("manual_daily_reports")) {
+            emptyList()
+        } else {
+            tableObject.requiredArray("manual_daily_reports").mapObjects { ManualDailyReportEntity(
+                id = requiredLong("id"),
+                siteId = requiredLong("siteId"),
+                dateMillis = requiredLong("dateMillis"),
+                content = optionalString("content", "")
+            ) }.filter { report -> sites.any { it.id == report.siteId } }
+        }
 
         val settingsObject = if (root.has("settings") && !root.isNull("settings")) {
             root.requiredObject("settings")
@@ -309,7 +324,7 @@ class BackupManager @Inject constructor(
 
         return ParsedBackup(
             transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }) }, accounts, transfers, documents, projects, tasks, subtasks, sites, floors,
-            workItems, workLogs, sitePayments, userName, themeMode, notifications
+            workItems, workLogs, sitePayments, manualDailyReports, userName, themeMode, notifications
         )
     }
 
@@ -326,6 +341,7 @@ class BackupManager @Inject constructor(
         val workItems: List<WorkItemEntity>,
         val workLogs: List<WorkLogEntity>,
         val sitePayments: List<SitePaymentEntity>,
+        val manualDailyReports: List<ManualDailyReportEntity>,
         val userName: String?,
         val themeMode: Int?,
         val notifications: Boolean?
@@ -380,6 +396,10 @@ class BackupManager @Inject constructor(
     private fun SitePaymentEntity.toJson() = JSONObject()
         .put("id", id).put("siteId", siteId).put("amount", amount)
         .put("dateMillis", dateMillis).put("note", note)
+
+    private fun ManualDailyReportEntity.toJson() = JSONObject()
+        .put("id", id).put("siteId", siteId).put("dateMillis", dateMillis)
+        .put("content", content)
 
     private fun JSONObject.requiredObject(key: String): JSONObject {
         require(has(key) && !isNull(key)) { "Missing object: $key" }
