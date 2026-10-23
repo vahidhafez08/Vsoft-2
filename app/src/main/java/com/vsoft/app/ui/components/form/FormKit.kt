@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -78,21 +79,68 @@ fun FormScaffold(title: String, subtitle: String, icon: ImageVector, onBack: () 
 }
 @Composable
 fun FormCard(icon: ImageVector, title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    val c=Vsoft.colors
-    Column(modifier.fillMaxWidth().clip(FormStyle.cardShape).background(c.surface).border(1.dp,c.outline.copy(alpha=.55f),FormStyle.cardShape).padding(14.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment=Alignment.CenterVertically) { Icon(icon,null,tint=FormStyle.IconBlue,modifier=Modifier.size(22.dp)); Spacer(Modifier.width(8.dp)); Text(title,color=c.textPrimary,fontSize=16.sp,fontWeight=FontWeight.Bold) }
+    val c = Vsoft.colors
+    val shape = FormStyle.cardShape
+    Column(
+        modifier.fillMaxWidth()
+            .clip(shape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        if (c.isDark) Color(0xFF14233B) else c.surface,
+                        c.surface
+                    )
+                )
+            )
+            .border(1.dp, FormStyle.Blue1.copy(alpha = if (c.isDark) .22f else .12f), shape)
+            .padding(15.dp),
+        verticalArrangement = Arrangement.spacedBy(13.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier.size(36.dp).clip(RoundedCornerShape(12.dp))
+                    .background(FormStyle.Blue1.copy(alpha = if (c.isDark) .20f else .10f))
+                    .border(1.dp, FormStyle.Blue1.copy(alpha = .18f), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, null, tint = FormStyle.IconBlue, modifier = Modifier.size(20.dp))
+            }
+            Spacer(Modifier.width(10.dp))
+            Text(title, color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
         content()
     }
 }
 @Composable
 fun FormTextField(value:String,onValueChange:(String)->Unit,placeholder:String,modifier:Modifier=Modifier,singleLine:Boolean=true,minLines:Int=1,keyboardType:KeyboardType=KeyboardType.Text,trailing:(@Composable ()->Unit)?=null,minHeight:Dp=52.dp) {
-    val c=Vsoft.colors
-    Row(modifier.fillMaxWidth().heightIn(min=minHeight).clip(FormStyle.fieldShape).background(c.surfaceHigh).border(1.dp,c.outline.copy(alpha=.7f),FormStyle.fieldShape).padding(horizontal=14.dp,vertical=10.dp),verticalAlignment=if(singleLine) Alignment.CenterVertically else Alignment.Top) {
+    val c = Vsoft.colors
+    var focused by remember { mutableStateOf(false) }
+    val shape = FormStyle.fieldShape
+    Row(
+        modifier.fillMaxWidth().heightIn(min = minHeight).clip(shape)
+            .background(if (focused) FormStyle.Blue1.copy(alpha = if (c.isDark) .09f else .04f) else c.surfaceHigh)
+            .border(
+                width = if (focused) 1.5.dp else 1.dp,
+                color = if (focused) FormStyle.Blue2.copy(alpha = .9f) else c.outline.copy(alpha = .65f),
+                shape = shape
+            )
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = if (singleLine) Alignment.CenterVertically else Alignment.Top
+    ) {
         Box(Modifier.weight(1f)) {
-            if(value.isEmpty()) Text(placeholder,color=c.textSecondary.copy(alpha=.8f),fontSize=15.sp)
-            BasicTextField(value,onValueChange,singleLine=singleLine,minLines=minLines,keyboardOptions=KeyboardOptions(keyboardType=keyboardType),textStyle=TextStyle(color=c.textPrimary,fontSize=15.sp,textAlign=TextAlign.Start),cursorBrush=SolidColor(FormStyle.Blue2),modifier=Modifier.fillMaxWidth())
+            if (value.isEmpty()) Text(placeholder, color = c.textSecondary.copy(alpha = .85f), fontSize = 15.sp)
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = singleLine,
+                minLines = minLines,
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                textStyle = TextStyle(color = c.textPrimary, fontSize = 15.sp, textAlign = TextAlign.Start),
+                cursorBrush = SolidColor(FormStyle.Blue2),
+                modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused }
+            )
         }
-        if(trailing!=null){Spacer(Modifier.width(10.dp));trailing()}
+        if (trailing != null) { Spacer(Modifier.width(10.dp)); trailing() }
     }
 }
 
