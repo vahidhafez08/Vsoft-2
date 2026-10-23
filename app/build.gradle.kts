@@ -36,12 +36,8 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // CI uses the private Vesta keystore; local builds retain the existing debug-signing fallback.
-            signingConfig = if (!releaseKeystorePath.isNullOrBlank()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            // Release builds must use the configured private release keystore; never fall back to the debug key.
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
