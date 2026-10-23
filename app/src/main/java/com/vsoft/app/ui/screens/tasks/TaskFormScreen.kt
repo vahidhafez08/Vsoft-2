@@ -45,7 +45,7 @@ fun TaskFormScreen(onBack: () -> Unit, onOpenProjectForm: () -> Unit, viewModel:
         }
         FormCard(Icons.Filled.Folder, "پروژه") {
             val selected = viewModel.projects.firstOrNull { it.id == viewModel.projectId }
-            FormPickerRow(Icons.Filled.Folder, selected?.title ?: "بدون پروژه", "برای اتصال این کار به یک پروژه انتخاب کن") { projectSheet = true }
+            FormPickerRow(Icons.Filled.Folder, selected?.title ?: "بدون پروژه", "برای اتصال این کار به یک پروژه انتخاب کن", { projectSheet = true })
             OutlinedButton(onClick = onOpenProjectForm, modifier = Modifier.fillMaxWidth()) { Text("پروژه‌ی جدید") }
         }
         FormCard(Icons.Filled.CalendarMonth, "سررسید") {
