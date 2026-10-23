@@ -48,12 +48,17 @@ jobs:
       - name: Build debug APK
         if: always()
         run: ./gradlew assembleDebug --stacktrace
-      - name: Upload APKs
+      - name: Upload release APK (install/update this version)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vesta-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+      - name: Upload debug APK (development only)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vsoft-apks
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
+          name: vesta-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
