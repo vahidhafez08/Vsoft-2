@@ -9,6 +9,7 @@ val releaseKeystorePath = System.getenv("KEYSTORE_PATH")
 val releaseKeystorePassword = System.getenv("KEYSTORE_PASSWORD")
 val releaseKeyAlias = System.getenv("KEY_ALIAS")
 val releaseKeyPassword = System.getenv("KEY_PASSWORD")
+val buildNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()?.coerceAtLeast(1) ?: 1
 
 android {
     namespace = "com.vsoft.app"
@@ -17,8 +18,8 @@ android {
         applicationId = "com.vsoft.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = buildNumber
+        versionName = "1.0.$buildNumber"
     }
     signingConfigs {
         create("release") {
