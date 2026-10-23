@@ -35,6 +35,7 @@ import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianText
 import com.vsoft.app.util.formatJobQuantity
 import com.vsoft.app.util.startOfDay
+import kotlinx.coroutines.delay
 
 private val floorSuggestions = listOf("پارکینگ", "همکف", "طبقه ۱", "طبقه ۲", "طبقه ۳", "طبقه ۴", "پشت‌بام")
 
@@ -51,6 +52,8 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
     var manualReportText by remember { mutableStateOf("") }
     var manualReportDate by remember { mutableLongStateOf(startOfDay(System.currentTimeMillis())) }
     var manualReportDateSheet by remember { mutableStateOf(false) }
+    var pendingReportDatePicker by remember { mutableStateOf(false) }
+    var pendingReportSheetReopen by remember { mutableStateOf(false) }
 
     fun ask(text: String, action: () -> Unit) {
         confirmText = text
@@ -112,7 +115,7 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
                 }
             }
 
-            SegmentedTabs(items = listOf("طبقه‌ها", "گزارش روزانه", "مالی"), selected = tab, onSelect = { tab = it })
+            SegmentedTabs(items = listOf("طبقه‌ها", "گزارش روزانه", "گزارش شخصی", "مالی"), selected = tab, onSelect = { tab = it })
 
             when (tab) {
                 0 -> FloorsTab(
@@ -127,23 +130,25 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
                 )
                 1 -> LogsTab(
                     logs = state.logs,
-                    manualReports = state.manualReports,
                     onNewLog = { onAddLog(site.id, -1L) },
                     onEdit = { l -> onEditLog(site.id, l.id) },
-                    onDelete = { l -> ask("این گزارش حذف شود؟") { viewModel.deleteLog(l.id) } },
-                    onNewManualReport = {
+                    onDelete = { l -> ask("این گزارش حذف شود؟") { viewModel.deleteLog(l.id) } }
+                )
+                2 -> PersonalReportsTab(
+                    reports = state.manualReports,
+                    onNew = {
                         editingManualReport = null
                         manualReportText = ""
                         manualReportDate = startOfDay(System.currentTimeMillis())
                         manualReportDialog = true
                     },
-                    onEditManualReport = { report ->
+                    onEdit = { report ->
                         editingManualReport = report
                         manualReportText = report.content
                         manualReportDate = report.dateMillis
                         manualReportDialog = true
                     },
-                    onDeleteManualReport = { report -> ask("گزارش شخصی این تاریخ حذف شود؟") { viewModel.deleteManualReport(report.id) } }
+                    onDelete = { report -> ask("گزارش شخصی این تاریخ حذف شود؟") { viewModel.deleteManualReport(report.id) } }
                 )
                 else -> FinanceTab(
                     site = site,
@@ -168,42 +173,86 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
         )
     }
 
+    LaunchedEffect(manualReportDialog, pendingReportDatePicker) {
+        if (!manualReportDialog && pendingReportDatePicker) {
+            delay(300)
+            manualReportDateSheet = true
+            pendingReportDatePicker = false
+        }
+    }
+    LaunchedEffect(manualReportDateSheet, pendingReportSheetReopen) {
+        if (!manualReportDateSheet && pendingReportSheetReopen) {
+            delay(300)
+            manualReportDialog = true
+            pendingReportSheetReopen = false
+        }
+    }
+
     if (manualReportDialog) {
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { manualReportDialog = false },
-            title = { Text(if (editingManualReport == null) "نوشتن گزارش شخصی" else "ویرایش گزارش شخصی") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = { manualReportDateSheet = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("تاریخ گزارش: " + formatJalali(manualReportDate))
-                    }
-                    OutlinedTextField(
-                        value = manualReportText,
-                        onValueChange = { manualReportText = it.take(5000) },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("متن گزارش") },
-                        placeholder = { Text("گزارش روزانه خودت را بنویس…") },
-                        minLines = 4,
-                        maxLines = 8
-                    )
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = Vsoft.colors.surface
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = if (editingManualReport == null) "نوشتن گزارش شخصی" else "ویرایش گزارش شخصی",
+                    color = Vsoft.colors.textPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                OutlinedButton(
+                    onClick = {
+                        pendingReportDatePicker = true
+                        manualReportDialog = false
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Filled.CalendarMonth, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("تاریخ گزارش: " + formatJalali(manualReportDate))
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.saveManualReport(editingManualReport, manualReportText, manualReportDate)
-                    manualReportDialog = false
-                }) { Text("ذخیره") }
-            },
-            dismissButton = {
-                TextButton(onClick = { manualReportDialog = false }) { Text("انصراف") }
+                OutlinedTextField(
+                    value = manualReportText,
+                    onValueChange = { manualReportText = it.take(5000) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("متن گزارش") },
+                    placeholder = { Text("گزارش روزانه خودت را بنویس…") },
+                    minLines = 4,
+                    maxLines = 8
+                )
+                Button(
+                    onClick = {
+                        viewModel.saveManualReport(editingManualReport, manualReportText, manualReportDate)
+                        manualReportDialog = false
+                    },
+                    enabled = manualReportText.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("ذخیره گزارش") }
             }
-        )
+        }
     }
     if (manualReportDateSheet) {
         FormDatePickerSheet(
             manualReportDate,
-            { selected -> manualReportDate = selected; manualReportDateSheet = false },
-            { manualReportDateSheet = false }
+            { selected ->
+                manualReportDate = selected
+                manualReportDateSheet = false
+                pendingReportSheetReopen = true
+            },
+            {
+                manualReportDateSheet = false
+                pendingReportSheetReopen = true
+            }
         )
     }
 }
@@ -342,41 +391,14 @@ private fun FloorsTab(
 @Composable
 private fun LogsTab(
     logs: List<LogUi>,
-    manualReports: List<ManualDailyReportEntity>,
     onNewLog: () -> Unit,
     onEdit: (WorkLogEntity) -> Unit,
-    onDelete: (WorkLogEntity) -> Unit,
-    onNewManualReport: () -> Unit,
-    onEditManualReport: (ManualDailyReportEntity) -> Unit,
-    onDeleteManualReport: (ManualDailyReportEntity) -> Unit
+    onDelete: (WorkLogEntity) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Button(onClick = onNewLog, modifier = Modifier.fillMaxWidth()) { Text("ثبت گزارش کار") }
-        OutlinedButton(onClick = onNewManualReport, modifier = Modifier.fillMaxWidth()) { Text("نوشتن گزارش شخصی") }
 
-        if (manualReports.isNotEmpty()) {
-            Text("گزارش‌های شخصی", color = Vsoft.colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-            manualReports.forEach { report ->
-                key(report.id) {
-                    VCard {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(formatJalali(report.dateMillis), color = Vsoft.colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                            SmallIconButton(Icons.Filled.Edit, "ویرایش گزارش شخصی") { onEditManualReport(report) }
-                            SmallIconButton(Icons.Filled.DeleteOutline, "حذف گزارش شخصی") { onDeleteManualReport(report) }
-                        }
-                        if (report.content.isNotBlank()) {
-                            Spacer(Modifier.height(6.dp))
-                            Text(report.content, color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-                        } else {
-                            Spacer(Modifier.height(4.dp))
-                            Text("بدون متن", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
-                        }
-                    }
-                }
-            }
-        }
-
-        if (logs.isEmpty() && manualReports.isEmpty()) {
+        if (logs.isEmpty()) {
             EmptyState(
                 icon = Icons.Filled.Edit,
                 title = "هنوز گزارشی ثبت نشده",
@@ -411,6 +433,42 @@ private fun LogsTab(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PersonalReportsTab(
+    reports: List<ManualDailyReportEntity>,
+    onNew: () -> Unit,
+    onEdit: (ManualDailyReportEntity) -> Unit,
+    onDelete: (ManualDailyReportEntity) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Button(onClick = onNew, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Filled.Add, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("نوشتن گزارش شخصی")
+        }
+        if (reports.isEmpty()) {
+            EmptyState(
+                icon = Icons.Filled.Edit,
+                title = "هنوز گزارش شخصی ثبت نشده",
+                subtitle = "یادداشت‌های روزانه‌ات را اینجا ثبت کن"
+            )
+        }
+        reports.forEach { report ->
+            key(report.id) {
+                VCard {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(formatJalali(report.dateMillis), color = Vsoft.colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        SmallIconButton(Icons.Filled.Edit, "ویرایش گزارش شخصی") { onEdit(report) }
+                        SmallIconButton(Icons.Filled.DeleteOutline, "حذف گزارش شخصی") { onDelete(report) }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(report.content.ifBlank { "بدون متن" }, color = Vsoft.colors.textSecondary, fontSize = 13.sp)
                 }
             }
         }
