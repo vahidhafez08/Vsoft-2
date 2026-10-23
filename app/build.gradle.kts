@@ -4,6 +4,12 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
 }
+
+val releaseKeystorePath = System.getenv("KEYSTORE_PATH")
+val releaseKeystorePassword = System.getenv("KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("KEY_ALIAS")
+val releaseKeyPassword = System.getenv("KEY_PASSWORD")
+
 android {
     namespace = "com.vsoft.app"
     compileSdk = 34
@@ -14,13 +20,27 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+    signingConfigs {
+        create("release") {
+            if (!releaseKeystorePath.isNullOrBlank()) {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Debug signing is for installing on personal devices only, not for Play Store distribution.
-            signingConfig = signingConfigs.getByName("debug")
+            // CI uses the private Vesta keystore; local builds retain the existing debug-signing fallback.
+            signingConfig = if (!releaseKeystorePath.isNullOrBlank()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
     compileOptions {
