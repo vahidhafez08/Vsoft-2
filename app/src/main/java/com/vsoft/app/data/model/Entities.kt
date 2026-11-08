@@ -9,7 +9,7 @@ data class TransactionEntity(
     val title: String, val amount: Long, val isIncome: Boolean, val category: String, val dateMillis: Long,
     val accountId: Long? = null,
     val debtId: Long? = null
-
+)
 
 @Entity(tableName = "transfers")
 data class TransferEntity(
@@ -104,5 +104,4 @@ data class InvestmentEntity(
     val status: String = "ACTIVE",
     val sellPrice: Double? = null
 )
-
 enum class InvestmentStatus { ACTIVE, SOLD }
