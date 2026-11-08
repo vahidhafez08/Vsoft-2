@@ -8,14 +8,15 @@ import com.vsoft.app.data.model.*
 
 @Database(
     entities = [
-        TransactionEntity::class, AccountEntity::class, TransferEntity::class, DocumentEntity::class, ProjectEntity::class, TaskEntity::class, SubtaskEntity::class,
+        TransactionEntity::class, DebtEntity::class, AccountEntity::class, TransferEntity::class, DocumentEntity::class, ProjectEntity::class, TaskEntity::class, SubtaskEntity::class,
         SiteEntity::class, FloorEntity::class, WorkItemEntity::class, WorkLogEntity::class, SitePaymentEntity::class, ManualDailyReportEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
+    abstract fun debtDao(): DebtDao
     abstract fun accountDao(): AccountDao
     abstract fun transferDao(): TransferDao
     abstract fun documentDao(): DocumentDao
@@ -92,5 +93,12 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
                 "`dateMillis` INTEGER NOT NULL, " +
                 "`content` TEXT NOT NULL)"
         )
+    }
+}
+
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `transactions` ADD COLUMN `debtId` INTEGER")
+        db.execSQL("CREATE TABLE IF NOT EXISTS `debts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `personName` TEXT NOT NULL, `type` TEXT NOT NULL, `totalAmount` INTEGER NOT NULL, `dateMillis` INTEGER NOT NULL, `dueDateMillis` INTEGER, `note` TEXT NOT NULL, `isSettled` INTEGER NOT NULL, `isManuallySettled` INTEGER NOT NULL)")
     }
 }

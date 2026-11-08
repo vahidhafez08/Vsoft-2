@@ -101,3 +101,18 @@ interface DocumentDao {
     @Query("DELETE FROM documents")
     suspend fun deleteAllRaw()
 }
+
+
+@Dao
+interface DebtDao {
+    @Query("SELECT * FROM debts ORDER BY isSettled ASC, dateMillis DESC") fun observeAll(): Flow<List<DebtEntity>>
+    @Query("SELECT * FROM debts WHERE id = :id") suspend fun getById(id: Long): DebtEntity?
+    @Query("SELECT * FROM debts") suspend fun getAllOnce(): List<DebtEntity>
+    @Insert suspend fun insert(debt: DebtEntity): Long
+    @Update suspend fun update(debt: DebtEntity)
+    @Delete suspend fun delete(debt: DebtEntity)
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE debtId = :debtId") suspend fun getPaidAmount(debtId: Long): Long
+    @Query("UPDATE transactions SET debtId = NULL WHERE debtId = :debtId") suspend fun detachTransactions(debtId: Long)
+    @Query("DELETE FROM debts") suspend fun deleteAllRaw()
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllRaw(items: List<DebtEntity>)
+}

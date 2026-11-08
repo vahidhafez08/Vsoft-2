@@ -113,6 +113,8 @@ fun FinanceScreen(
     onOpenTransactions: () -> Unit = {},
     onOpenAccounts: () -> Unit = {},
     onOpenTransactionForm: (String) -> Unit = {},
+    onOpenDebts: () -> Unit = {},
+    onOpenInvestments: () -> Unit = {},
     viewModel: FinanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -138,6 +140,10 @@ fun FinanceScreen(
         )
 
         FinanceShortcuts(onOpenTransactions = onOpenTransactions, onOpenAccounts = onOpenAccounts, onOpenTransactionForm = onOpenTransactionForm)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            androidx.compose.material3.OutlinedButton(onClick = onOpenDebts, modifier = Modifier.weight(1f)) { Text("بدهی‌ها و طلب‌ها") }
+            androidx.compose.material3.OutlinedButton(onClick = onOpenInvestments, modifier = Modifier.weight(1f)) { Text("سرمایه‌گذاری") }
+        }
 
         SegmentedTabs(
             items = listOf("کلیات", "درآمد", "هزینه", "حساب‌ها"),

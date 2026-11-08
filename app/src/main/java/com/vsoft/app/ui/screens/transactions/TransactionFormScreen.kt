@@ -47,6 +47,8 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
     val accounts by vm.accounts.collectAsState()
     val selectedAccount = accounts.firstOrNull { it.id == vm.accountId }
     val categoryNames = vm.categoryNames()
+    val debts by vm.debts.collectAsState()
+    var debtExpanded by remember { mutableStateOf(false) }
 
     FormScaffold(
         title = if (vm.isEdit) "ویرایش تراکنش" else "افزودن تراکنش",
@@ -61,6 +63,19 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
                 categoryNames.forEach { name ->
                     val style = CategoryStyles.of(name)
                     FormTile(name, style.icon, style.color, vm.category == name) { vm.category = name }
+                }
+            }
+        }
+        FormCard(Icons.Default.Handshake, "مربوط به بدهی/طلب") {
+            FormSwitchRow("این تراکنش مربوط به بدهکار یا طلبکار است", null, vm.debtEnabled) { vm.debtEnabled = it; if (!it) vm.debtId = null }
+            if (vm.debtEnabled) {
+                FormPickerRow(Icons.Default.People, debts.firstOrNull { it.id == vm.debtId }?.personName ?: "انتخاب بدهی یا طلب", null, { debtExpanded = true })
+                debts.forEach { debt ->
+                    FormChip("${debt.personName} · ${if (debt.type == "I_OWE") "بدهکارم" else "طلبکارم"}", vm.debtId == debt.id) { vm.debtId = debt.id }
+                }
+                val selectedDebt = debts.firstOrNull { it.id == vm.debtId }
+                if (selectedDebt != null && ((selectedDebt.type == "I_OWE" && vm.isIncome) || (selectedDebt.type == "OWED_TO_ME" && !vm.isIncome))) {
+                    Text("نوع این تراکنش با نوع بدهی انتخاب‌شده متفاوت است.", color = com.vsoft.app.ui.theme.WarningOrange, fontSize = 12.sp)
                 }
             }
         }

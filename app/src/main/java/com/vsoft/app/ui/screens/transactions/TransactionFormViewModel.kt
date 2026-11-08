@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.ExpenseCategories
 import com.vsoft.app.data.model.IncomeCategories
 import com.vsoft.app.data.model.TransactionEntity
+import com.vsoft.app.data.model.DebtEntity
 import com.vsoft.app.data.repository.DocumentRepository
 import com.vsoft.app.data.repository.FinanceRepository
 import com.vsoft.app.ui.components.form.FormAccountOption
@@ -44,6 +45,9 @@ class TransactionFormViewModel @Inject constructor(
     var category by mutableStateOf<String?>(null)
     var amountRaw by mutableStateOf("")
     var accountId by mutableStateOf<Long?>(null)
+    var debtId by mutableStateOf<Long?>(null)
+    var debtEnabled by mutableStateOf(false)
+    val debts = finance.observeDebts().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     var dayMillis by mutableStateOf(startOfDay(System.currentTimeMillis()))
     var hour by mutableStateOf(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
     var minute by mutableStateOf(Calendar.getInstance().get(Calendar.MINUTE))
@@ -78,6 +82,8 @@ class TransactionFormViewModel @Inject constructor(
                 category = tx.category
                 amountRaw = tx.amount.toString()
                 accountId = tx.accountId
+                debtId = tx.debtId
+                debtEnabled = tx.debtId != null
                 dayMillis = startOfDay(tx.dateMillis)
                 val cal = Calendar.getInstance().apply { timeInMillis = tx.dateMillis }
                 hour = cal.get(Calendar.HOUR_OF_DAY)
@@ -110,7 +116,7 @@ class TransactionFormViewModel @Inject constructor(
                 val title = if (cleanNote.isNotBlank()) cleanNote else (originalTitle ?: cat)
                 finance.saveTransaction(TransactionEntity(
                     id = if (isEdit) editId else 0L, title = title, amount = amount,
-                    isIncome = isIncome, category = cat, dateMillis = millis, accountId = accountId
+                    isIncome = isIncome, category = cat, dateMillis = millis, accountId = accountId, debtId = if (debtEnabled) debtId else null
                 ))
                 context.getSharedPreferences("vsoft_prefs", Context.MODE_PRIVATE).edit()
                     .putLong("last_account_id", accountId ?: -1L).apply()

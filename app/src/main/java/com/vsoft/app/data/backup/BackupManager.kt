@@ -65,6 +65,7 @@ class BackupManager @Inject constructor(
             .put("site_payments", JSONArray().apply {
                 db.jobDao().getAllSitePaymentsOnce().forEach { put(it.toJson()) }
             })
+            .put("debts", JSONArray().apply { db.debtDao().getAllOnce().forEach { put(it.toJson()) } })
             .put("manual_daily_reports", JSONArray().apply {
                 db.jobDao().getAllManualDailyReportsOnce().forEach { put(it.toJson()) }
             })
@@ -92,6 +93,7 @@ class BackupManager @Inject constructor(
                 db.withTransaction {
                     // Delete children before their logical parents.
                     db.subtaskDao().deleteAllRaw()
+                    db.debtDao().deleteAllRaw()
                     db.jobDao().deleteAllWorkLogsRaw()
                     db.jobDao().deleteAllSitePaymentsRaw()
                     db.jobDao().deleteAllManualDailyReportsRaw()
@@ -112,6 +114,7 @@ class BackupManager @Inject constructor(
                     db.projectDao().insertAllRaw(parsed.projects)
                     db.jobDao().insertAllSitesRaw(parsed.sites)
                     db.transactionDao().insertAllRaw(parsed.transactions)
+                    db.debtDao().insertAllRaw(parsed.debts)
                     db.taskDao().insertAllRaw(parsed.tasks)
                     db.jobDao().insertAllFloorsRaw(parsed.floors)
                     db.jobDao().insertAllWorkItemsRaw(parsed.workItems)
@@ -203,7 +206,13 @@ class BackupManager @Inject constructor(
             isIncome = requiredBoolean("isIncome"),
             category = requiredString("category"),
             dateMillis = requiredLong("dateMillis"),
-            accountId = optionalNullableLong("accountId")
+            accountId = optionalNullableLong("accountId"), debtId = optionalNullableLong("debtId")
+        ) }
+        val debts = if (!tableObject.has("debts") || tableObject.isNull("debts")) emptyList() else tableObject.requiredArray("debts").mapObjects { DebtEntity(
+            id = requiredLong("id"), personName = requiredString("personName"), type = requiredString("type"),
+            totalAmount = requiredLong("totalAmount"), dateMillis = requiredLong("dateMillis"),
+            dueDateMillis = optionalNullableLong("dueDateMillis"), note = optionalString("note", ""),
+            isSettled = optionalBoolean("isSettled", false), isManuallySettled = optionalBoolean("isManuallySettled", false)
         ) }
         val accounts = tableObject.requiredArray("accounts").mapObjects { AccountEntity(
             id = requiredLong("id"),
@@ -323,13 +332,14 @@ class BackupManager @Inject constructor(
         val notifications = settingsObject.optionalBooleanOrNull("notifications")
 
         return ParsedBackup(
-            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }) }, accounts, transfers, documents, projects, tasks, subtasks, sites, floors,
+            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }, debtId = tx.debtId?.takeIf { id -> debts.any { it.id == id } }) }, debts, accounts, transfers, documents, projects, tasks, subtasks, sites, floors,
             workItems, workLogs, sitePayments, manualDailyReports, userName, themeMode, notifications
         )
     }
 
     private data class ParsedBackup(
         val transactions: List<TransactionEntity>,
+        val debts: List<DebtEntity>,
         val accounts: List<AccountEntity>,
         val transfers: List<TransferEntity>,
         val documents: List<DocumentEntity>,
@@ -351,6 +361,12 @@ class BackupManager @Inject constructor(
         .put("id", id).put("title", title).put("amount", amount)
         .put("isIncome", isIncome).put("category", category).put("dateMillis", dateMillis)
         .put("accountId", accountId ?: JSONObject.NULL)
+
+    private fun DebtEntity.toJson() = JSONObject()
+        .put("id", id).put("personName", personName).put("type", type)
+        .put("totalAmount", totalAmount).put("dateMillis", dateMillis)
+        .put("dueDateMillis", dueDateMillis ?: JSONObject.NULL).put("note", note)
+        .put("isSettled", isSettled).put("isManuallySettled", isManuallySettled)
 
     private fun AccountEntity.toJson() = JSONObject()
         .put("id", id).put("name", name).put("last4", last4)

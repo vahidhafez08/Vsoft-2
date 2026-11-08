@@ -9,6 +9,7 @@ import com.vsoft.app.data.db.MIGRATION_3_4
 import com.vsoft.app.data.db.MIGRATION_4_5
 import com.vsoft.app.data.db.MIGRATION_5_6
 import com.vsoft.app.data.db.MIGRATION_6_7
+import com.vsoft.app.data.db.MIGRATION_7_8
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,10 +23,11 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideDb(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "vsoft.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8
             .fallbackToDestructiveMigration()
             .build()
 
+    @Provides fun provideDebtDao(db: AppDatabase) = db.debtDao()
     @Provides fun provideTransactionDao(db: AppDatabase) = db.transactionDao()
     @Provides fun provideAccountDao(db: AppDatabase) = db.accountDao()
     @Provides fun provideTransferDao(db: AppDatabase) = db.transferDao()

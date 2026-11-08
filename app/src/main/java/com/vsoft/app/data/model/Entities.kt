@@ -7,8 +7,9 @@ import androidx.room.PrimaryKey
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String, val amount: Long, val isIncome: Boolean, val category: String, val dateMillis: Long,
-    val accountId: Long? = null
-)
+    val accountId: Long? = null,
+    val debtId: Long? = null
+
 
 @Entity(tableName = "transfers")
 data class TransferEntity(
@@ -59,4 +60,20 @@ data class DocumentEntity(
     val storedName: String,
     val note: String = "",
     val createdAt: Long
+)
+
+
+enum class DebtType { I_OWE, OWED_TO_ME }
+
+@Entity(tableName = "debts")
+data class DebtEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val personName: String,
+    val type: String,
+    val totalAmount: Long,
+    val dateMillis: Long,
+    val dueDateMillis: Long? = null,
+    val note: String = "",
+    val isSettled: Boolean = false,
+    val isManuallySettled: Boolean = false
 )

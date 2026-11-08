@@ -7,6 +7,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import com.vsoft.app.data.db.AccountDao
 import com.vsoft.app.data.db.TransactionDao
 import com.vsoft.app.data.db.TransferDao
+import com.vsoft.app.data.db.DebtDao
+import com.vsoft.app.data.model.DebtEntity
 import com.vsoft.app.data.model.AccountEntity
 import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.data.model.TransferEntity
@@ -21,6 +23,7 @@ class FinanceRepository @Inject constructor(
     private val transactionDao: TransactionDao,
     private val accountDao: AccountDao,
     private val transferDao: TransferDao,
+    private val debtDao: DebtDao,
     private val db: com.vsoft.app.data.db.AppDatabase,
     @ApplicationContext private val context: Context
 ) {
@@ -50,8 +53,30 @@ class FinanceRepository @Inject constructor(
 
     /** Insert or update (also used to restore a deleted item with its old id). */
     suspend fun saveTransaction(tx: TransactionEntity) {
+        val previous = if (tx.id > 0L) transactionDao.getAllOnce().firstOrNull { it.id == tx.id } else null
         transactionDao.upsert(tx)
+        (setOfNotNull(previous?.debtId, tx.debtId)).forEach { recalculateDebt(it) }
         rememberLastAccount(tx.accountId)
+    }
+    fun observeDebts(): Flow<List<DebtEntity>> = debtDao.observeAll()
+    suspend fun saveDebt(debt: DebtEntity): Long {
+        val id = if (debt.id == 0L) debtDao.insert(debt) else { debtDao.update(debt); debt.id }
+        recalculateDebt(id)
+        return id
+    }
+    suspend fun deleteDebt(debt: DebtEntity) {
+        db.withTransaction { debtDao.detachTransactions(debt.id); debtDao.delete(debt) }
+    }
+    suspend fun setDebtManualSettlement(debt: DebtEntity, settled: Boolean) {
+        debtDao.update(debt.copy(isSettled = settled, isManuallySettled = settled))
+    }
+    suspend fun debtPaid(id: Long): Long = debtDao.getPaidAmount(id)
+    suspend fun recalculateDebt(id: Long) {
+        val debt = debtDao.getById(id) ?: return
+        if (!debt.isManuallySettled) {
+            val paid = debtDao.getPaidAmount(id)
+            debtDao.update(debt.copy(isSettled = debt.totalAmount > 0L && paid >= debt.totalAmount))
+        }
     }
 
     private fun rememberLastAccount(accountId: Long?) {
@@ -60,6 +85,7 @@ class FinanceRepository @Inject constructor(
 
     suspend fun deleteTransaction(tx: TransactionEntity) {
         transactionDao.delete(tx)
+        tx.debtId?.let { recalculateDebt(it) }
     }
 
     suspend fun saveAccount(account: AccountEntity) {

@@ -44,6 +44,8 @@ import com.vsoft.app.ui.screens.accounts.AccountsScreen
 import com.vsoft.app.ui.screens.calendar.CalendarScreen
 import com.vsoft.app.ui.screens.documents.DocumentsScreen
 import com.vsoft.app.ui.screens.finance.FinanceScreen
+import com.vsoft.app.ui.screens.finance.DebtsScreen
+import com.vsoft.app.ui.screens.finance.InvestmentsScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
 import com.vsoft.app.ui.screens.jobs.JobsScreen
 import com.vsoft.app.ui.screens.jobs.SiteDetailScreen
@@ -76,7 +78,7 @@ fun MainScaffold(navController: NavHostController) {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val snackbarHostState = remember { SnackbarHostState() }
-    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM)
+    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM, Routes.DEBTS, Routes.INVESTMENTS)
     val formPrefixes = listOf("transaction_form", "task_form", "project_form", "site_form", "floor_form", "item_form", "log_form", "payment_form")
     val isFormRoute = formPrefixes.any { currentRoute?.startsWith(it) == true }
     val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.TASK_FORM, Routes.PROJECT_FORM, Routes.JOBS, Routes.SITE_DETAIL, Routes.SITE_FORM, Routes.FLOOR_FORM, Routes.ITEM_FORM, Routes.LOG_FORM, Routes.PAYMENT_FORM, Routes.CALENDAR)
@@ -234,6 +236,8 @@ fun MainScaffold(navController: NavHostController) {
                 composable(route = Routes.LOG_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("itemId") { type = NavType.LongType; defaultValue = -1L })) { LogFormScreen(onBack = { navController.popBackStack() }) }
                 composable(route = Routes.PAYMENT_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { PaymentFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.DEBTS) { DebtsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.INVESTMENTS) { InvestmentsScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
                 composable(
                     route = Routes.TASK_DETAIL,
@@ -308,7 +312,9 @@ private fun TabsHost(
                     onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
                     onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) },
                     onOpenDocuments = { onOpenRoute(Routes.DOCUMENTS) },
-                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) }
+                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) },
+                    onOpenDebts = { onOpenRoute(Routes.DEBTS) },
+                    onOpenInvestments = { onOpenRoute(Routes.INVESTMENTS) }
                 )
                 Destination.Finance -> FinanceScreen(
                     onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
