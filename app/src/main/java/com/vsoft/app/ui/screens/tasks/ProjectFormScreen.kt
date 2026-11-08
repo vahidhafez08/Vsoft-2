@@ -28,7 +28,7 @@ fun ProjectFormScreen(onBack: () -> Unit, viewModel: ProjectFormViewModel = hilt
         FormCard(Icons.Filled.Folder, "مشخصات پروژه") {
             FormTextField(viewModel.title, { viewModel.title = it.take(60) }, "نام پروژه *")
             FormSwitchRow("تعیین موعد پروژه", "موعد اختیاری", viewModel.dueEnabled) { viewModel.dueEnabled = it }
-            if (viewModel.dueEnabled) FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(viewModel.dueMillis), "تاریخ موعد", { dateSheet = true })
+            if (viewModel.dueEnabled) FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(viewModel.dueMillis), "تاریخ موعد", onClick = { dateSheet = true })
             if (viewModel.isEditing) OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth(), enabled = !viewModel.saving) { Text("حذف پروژه") }
         }
     }

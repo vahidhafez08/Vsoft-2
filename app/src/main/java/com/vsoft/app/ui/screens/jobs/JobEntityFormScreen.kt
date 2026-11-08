@@ -66,7 +66,7 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                 }
                 FormCard(Icons.Filled.Person, "کارفرما") { FormTextField(vm.client, { vm.client = it.take(80) }, "نام کارفرما (اختیاری)") }
                 FormCard(Icons.Filled.CalendarMonth, "تاریخ شروع") {
-                    FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(vm.dateMillis), "تاریخ شروع کارگاه", { dateSheet = true })
+                    FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(vm.dateMillis), "تاریخ شروع کارگاه", onClick = { dateSheet = true })
                 }
                 FormCard(Icons.Filled.Payments, "مبلغ قرارداد") {
                     FormAmountField(rawDigits = vm.amount, onChange = { vm.amount = it }, placeholder = "مبلغ قرارداد (اختیاری)", maxDigits = 15)
@@ -81,10 +81,10 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                     FormTextField(vm.title, { vm.title = it.take(100) }, "عنوان کار *")
                     Text("واحد اندازه‌گیری", color = Vsoft.colors.textSecondary)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("متر", "متر مربع", "متر مکعب", "درصد").forEach { FormChip(it, vm.unit == it, { vm.unit = it; if (it == "درصد") vm.quantity = "100" }) }
+                        listOf("متر", "متر مربع", "متر مکعب", "درصد").forEach { FormChip(it, vm.unit == it, onClick = { vm.unit = it; if (it == "درصد") vm.quantity = "100" }) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("عدد", "کیلوگرم", "روز").forEach { FormChip(it, vm.unit == it, { vm.unit = it }) }
+                        listOf("عدد", "کیلوگرم", "روز").forEach { FormChip(it, vm.unit == it, onClick = { vm.unit = it }) }
                     }
                     if (vm.unit == "درصد") {
                         Text("هدف این کار همیشه ۱۰۰٪ است.", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
@@ -93,7 +93,7 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                     }
                 }
                 FormCard(Icons.Filled.Layers, "طبقه") {
-                    FormPickerRow(Icons.Filled.Layers, vm.floors.firstOrNull { it.id == vm.floorId }?.name ?: "انتخاب طبقه", "این مدل داده به طبقه نیاز دارد", { floorSheet = true })
+                    FormPickerRow(Icons.Filled.Layers, vm.floors.firstOrNull { it.id == vm.floorId }?.name ?: "انتخاب طبقه", "این مدل داده به طبقه نیاز دارد", onClick = { floorSheet = true })
                 }
             }
             isLog -> {
@@ -102,7 +102,7 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                 }
                 FormCard(Icons.Filled.Build, "آیتم کار") {
                     val item = vm.items.firstOrNull { it.id == vm.itemId }
-                    FormPickerRow(Icons.Filled.Build, item?.title ?: "انتخاب آیتم", item?.let { "واحد: ${it.unit} · هدف: ${it.targetQty}" }, { itemSheet = true })
+                    FormPickerRow(Icons.Filled.Build, item?.title ?: "انتخاب آیتم", item?.let { "واحد: ${it.unit} · هدف: ${it.targetQty}" }, onClick = { itemSheet = true })
                     if (item?.unit == "درصد") {
                         val current = (vm.quantity.toLatinDigits().toIntOrNull() ?: 0).coerceIn(0, 100)
                         Text("درصد پیشرفت", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
@@ -128,9 +128,9 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                 }
                 FormCard(Icons.Filled.CalendarMonth, "تاریخ گزارش") {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(vm.dateMillis), "تاریخ", { dateSheet = true }, Modifier.weight(1f))
+                        FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(vm.dateMillis), "تاریخ", onClick = { dateSheet = true }, modifier = Modifier.weight(1f))
                         val cal = java.util.Calendar.getInstance().apply { timeInMillis = vm.dateMillis }
-                        FormPickerRow(Icons.Filled.Schedule, FormFormat.time(cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE)), "ساعت", { timeSheet = true }, Modifier.weight(1f))
+                        FormPickerRow(Icons.Filled.Schedule, FormFormat.time(cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE)), "ساعت", onClick = { timeSheet = true }, modifier = Modifier.weight(1f))
                     }
                 }
                 FormCard(Icons.Filled.Notes, "توضیحات") {
@@ -143,7 +143,7 @@ fun JobEntityFormScreen(kind: String, onBack: () -> Unit, vm: JobFormViewModelBa
                     FormAmountField(rawDigits = vm.amount, onChange = { vm.amount = it }, placeholder = "مبلغ به تومان *", maxDigits = 15)
                 }
                 FormCard(Icons.Filled.CalendarMonth, "تاریخ دریافتی") {
-                    FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(vm.dateMillis), "تاریخ", { dateSheet = true })
+                    FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(vm.dateMillis), "تاریخ", onClick = { dateSheet = true })
                 }
                 FormCard(Icons.Filled.Notes, "توضیحات") {
                     FormTextField(vm.note, { vm.note = it.take(200) }, "توضیحات (اختیاری)", singleLine = false, minLines = 2)

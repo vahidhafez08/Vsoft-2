@@ -258,8 +258,8 @@ fun FormAccountSheet(accounts:List<FormAccountOption>,selectedId:Long?,onPick:(L
     ModalBottomSheet(onDismissRequest=onDismiss,sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true),containerColor=c.surface) {
         Column(Modifier.padding(16.dp).navigationBarsPadding(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("انتخاب حساب",color=c.textPrimary,fontSize=17.sp,fontWeight=FontWeight.Bold)
-            FormPickerRow(Icons.Default.Remove,"بدون حساب",null,{onPick(null)},Modifier.then(if(selectedId==null)Modifier.border(1.5.dp,FormStyle.Blue2,FormStyle.fieldShape) else Modifier))
-            accounts.forEach { a->FormPickerRow(Icons.Default.Check,a.name,"موجودی: ${a.balanceText} تومان",{onPick(a.id)},Modifier.then(if(a.id==selectedId)Modifier.border(1.5.dp,FormStyle.Blue2,FormStyle.fieldShape) else Modifier)) }
+            FormPickerRow(Icons.Default.Remove,"بدون حساب",null,onClick = { onPick(null) },modifier = Modifier.then(if(selectedId==null)Modifier.border(1.5.dp,FormStyle.Blue2,FormStyle.fieldShape) else Modifier))
+            accounts.forEach { a->FormPickerRow(Icons.Default.Check,a.name,"موجودی: ${a.balanceText} تومان",onClick = { onPick(a.id) },modifier = Modifier.then(if(a.id==selectedId)Modifier.border(1.5.dp,FormStyle.Blue2,FormStyle.fieldShape) else Modifier)) }
         }
     }
 }

@@ -69,11 +69,11 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
         FormCard(Icons.Default.AccountBalanceWallet, "مربوط به بدهی/طلب") {
             FormSwitchRow("این تراکنش مربوط به بدهکار یا طلبکار است", null, vm.debtEnabled) { vm.debtEnabled = it; if (!it) vm.debtId = null }
             if (vm.debtEnabled) {
-                FormPickerRow(Icons.Default.People, debts.firstOrNull { it.id == vm.debtId }?.personName ?: "انتخاب بدهی یا طلب", null, { debtExpanded = true })
+                FormPickerRow(Icons.Default.People, debts.firstOrNull { it.id == vm.debtId }?.personName ?: "انتخاب بدهی یا طلب", null, onClick = { debtExpanded = true })
                 debts.forEach { debt ->
-                    FormChip("${debt.personName} · ${if (debt.type == "I_OWE") "بدهکارم" else "طلبکارم"}", vm.debtId == debt.id) { vm.debtId = debt.id }
+                    FormChip("${debt.personName} · ${if (debt.type == "I_OWE") "بدهکارم" else "طلبکارم"}", vm.debtId == debt.id, onClick = { vm.debtId = debt.id })
                 }
-                FormChip("+ بدهی/طلب جدید", false) { UiEvents.show("ابتدا بدهی یا طلب را از بخش مالی ثبت کنید") }
+                FormChip("+ بدهی/طلب جدید", false, onClick = { UiEvents.show("ابتدا بدهی یا طلب را از بخش مالی ثبت کنید") })
                 val selectedDebt = debts.firstOrNull { it.id == vm.debtId }
                 if (selectedDebt != null && ((selectedDebt.type == "I_OWE" && vm.isIncome) || (selectedDebt.type == "OWED_TO_ME" && !vm.isIncome))) {
                     Text("نوع این تراکنش با نوع بدهی انتخاب‌شده متفاوت است.", color = com.vsoft.app.ui.theme.WarningOrange, fontSize = 12.sp)
@@ -82,7 +82,7 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
         }
         if (accounts.isNotEmpty()) FormCard(Icons.Default.AccountBalanceWallet, "حساب") {
             FormPickerRow(Icons.Default.AccountBalance, selectedAccount?.name ?: "بدون حساب",
-                selectedAccount?.let { "موجودی: ${it.balanceText} تومان" }, { showAccounts = true })
+                selectedAccount?.let { "موجودی: ${it.balanceText} تومان" }, onClick = { showAccounts = true })
         }
         FormCard(Icons.Default.MonetizationOn, "مبلغ") {
             FormAmountField(
@@ -98,8 +98,8 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
         }
         FormCard(Icons.Default.CalendarMonth, "تاریخ و زمان") {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                FormPickerRow(Icons.Default.Schedule, FormFormat.time(vm.hour, vm.minute), null, { showTime = true }, Modifier.weight(1f))
-                FormPickerRow(Icons.Default.CalendarMonth, FormFormat.date(vm.dayMillis), FormFormat.weekday(vm.dayMillis), { showDate = true }, Modifier.weight(1.2f))
+                FormPickerRow(Icons.Default.Schedule, FormFormat.time(vm.hour, vm.minute), null, onClick = { showTime = true }, modifier = Modifier.weight(1f))
+                FormPickerRow(Icons.Default.CalendarMonth, FormFormat.date(vm.dayMillis), FormFormat.weekday(vm.dayMillis), onClick = { showDate = true }, modifier = Modifier.weight(1.2f))
             }
         }
         FormCard(Icons.Default.Description, "توضیحات (اختیاری)") {

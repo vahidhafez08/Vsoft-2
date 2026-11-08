@@ -111,7 +111,7 @@ fun InvestmentsScreen(onBack:()->Unit,vm:InvestmentsViewModel=hiltViewModel()) {
         Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             Text(if(editing==null)"ثبت سرمایه" else "ویرایش سرمایه",color=Vsoft.colors.textPrimary,fontSize=20.sp)
             Text("نوع سرمایه",color=Vsoft.colors.textSecondary)
-            Row { state.types.forEach { FormChip(it.name,typeId==it.id){typeId=it.id} } }
+            Row { state.types.forEach { FormChip(text = it.name, selected = typeId == it.id, onClick = { typeId = it.id }) } }
             FormCard(Icons.Default.TrendingUp,"مشخصات سرمایه") {
                 FormTextField(title,{title=it},"عنوان (اختیاری)")
                 FormAmountField(value=amount,onValueChange={amount=it; val q=it.toLongOrNull();val p=buyPrice.toDoubleOrNull();if(q!=null&&p!=null&&p>0)quantity=com.vsoft.app.domain.InvestmentCalculator.quantityFrom(q,p)?.toString().orEmpty()},placeholder="مبلغ سرمایه‌گذاری")

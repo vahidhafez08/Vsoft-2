@@ -312,14 +312,14 @@ private fun TabsHost(
                     onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
                     onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) },
                     onOpenDocuments = { onOpenRoute(Routes.DOCUMENTS) },
-                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) },
-                    onOpenDebts = { onOpenRoute(Routes.DEBTS) },
-                    onOpenInvestments = { onOpenRoute(Routes.INVESTMENTS) }
+                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) }
                 )
                 Destination.Finance -> FinanceScreen(
                     onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
                     onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) },
-                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) }
+                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) },
+                    onOpenDebts = { onOpenRoute(Routes.DEBTS) },
+                    onOpenInvestments = { onOpenRoute(Routes.INVESTMENTS) }
                 )
                 Destination.Tasks -> TasksScreen(
                     onOpenTask = { id -> onOpenRoute(Routes.taskDetail(id)) },
