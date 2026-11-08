@@ -69,6 +69,7 @@ class FinanceRepository @Inject constructor(
     }
     suspend fun setDebtManualSettlement(debt: DebtEntity, settled: Boolean) {
         debtDao.update(debt.copy(isSettled = settled, isManuallySettled = settled))
+        if (!settled) recalculateDebt(debt.id)
     }
     suspend fun debtPaid(id: Long): Long = debtDao.getPaidAmount(id)
     suspend fun recalculateDebt(id: Long) {

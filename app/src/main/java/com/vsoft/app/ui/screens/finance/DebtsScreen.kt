@@ -83,7 +83,7 @@ fun DebtsScreen(onBack:()->Unit, vm:DebtsViewModel = hiltViewModel()) {
                             Text(if(debt.isSettled)"تسویه‌شده" else "باز",color=Vsoft.colors.textSecondary)
                         }
                         Text("کل: ${debt.totalAmount.toMoney()} · پرداخت/دریافت: ${p.toMoney()} · مانده: ${remaining.toMoney()} تومان",color=Vsoft.colors.textSecondary,fontSize=12.sp)
-                        LinearProgressIndicator(progress={if(debt.totalAmount>0)(p.toFloat()/debt.totalAmount).coerceIn(0f,1f) else 0f},modifier=Modifier.fillMaxWidth().padding(vertical=8.dp))
+                        LinearProgressIndicator(progress=if(debt.totalAmount>0)(p.toFloat()/debt.totalAmount).coerceIn(0f,1f) else 0f,modifier=Modifier.fillMaxWidth().padding(vertical=8.dp))
                         if(debt.note.isNotBlank()) Text(debt.note,color=Vsoft.colors.textSecondary,fontSize=12.sp)
                         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                             TextButton(onClick={vm.settle(debt,!debt.isSettled)}) { Text(if(debt.isSettled)"لغو تسویه" else "تسویه دستی") }

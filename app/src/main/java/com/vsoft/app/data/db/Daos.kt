@@ -116,3 +116,25 @@ interface DebtDao {
     @Query("DELETE FROM debts") suspend fun deleteAllRaw()
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllRaw(items: List<DebtEntity>)
 }
+
+
+@Dao
+interface InvestmentDao {
+    @Query("SELECT * FROM investment_types ORDER BY isDefault DESC, name ASC") fun observeTypes(): Flow<List<InvestmentTypeEntity>>
+    @Query("SELECT * FROM investment_types") suspend fun getTypesOnce(): List<InvestmentTypeEntity>
+    @Insert suspend fun insertType(type: InvestmentTypeEntity): Long
+    @Update suspend fun updateType(type: InvestmentTypeEntity)
+    @Delete suspend fun deleteType(type: InvestmentTypeEntity)
+    @Query("SELECT COUNT(*) FROM investments WHERE typeId = :typeId") suspend fun countByType(typeId: Long): Int
+    @Query("SELECT * FROM investments ORDER BY buyDateMillis DESC, id DESC") fun observeInvestments(): Flow<List<InvestmentEntity>>
+    @Query("SELECT * FROM investments") suspend fun getInvestmentsOnce(): List<InvestmentEntity>
+    @Insert suspend fun insert(item: InvestmentEntity): Long
+    @Update suspend fun update(item: InvestmentEntity)
+    @Delete suspend fun delete(item: InvestmentEntity)
+    @Query("UPDATE investments SET currentPrice = :price, priceUpdatedAtMillis = :now WHERE id = :id AND status = 'ACTIVE'") suspend fun updatePrice(id: Long, price: Double, now: Long)
+    @Query("UPDATE investments SET currentPrice = :price, priceUpdatedAtMillis = :now WHERE typeId = :typeId AND status = 'ACTIVE'") suspend fun updatePriceForType(typeId: Long, price: Double, now: Long)
+    @Query("DELETE FROM investment_types") suspend fun deleteAllTypesRaw()
+    @Query("DELETE FROM investments") suspend fun deleteAllRaw()
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertTypesRaw(items: List<InvestmentTypeEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllRaw(items: List<InvestmentEntity>)
+}

@@ -8,15 +8,16 @@ import com.vsoft.app.data.model.*
 
 @Database(
     entities = [
-        TransactionEntity::class, DebtEntity::class, AccountEntity::class, TransferEntity::class, DocumentEntity::class, ProjectEntity::class, TaskEntity::class, SubtaskEntity::class,
+        TransactionEntity::class, DebtEntity::class, InvestmentTypeEntity::class, InvestmentEntity::class, AccountEntity::class, TransferEntity::class, DocumentEntity::class, ProjectEntity::class, TaskEntity::class, SubtaskEntity::class,
         SiteEntity::class, FloorEntity::class, WorkItemEntity::class, WorkLogEntity::class, SitePaymentEntity::class, ManualDailyReportEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun debtDao(): DebtDao
+    abstract fun investmentDao(): InvestmentDao
     abstract fun accountDao(): AccountDao
     abstract fun transferDao(): TransferDao
     abstract fun documentDao(): DocumentDao
@@ -100,5 +101,29 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `transactions` ADD COLUMN `debtId` INTEGER")
         db.execSQL("CREATE TABLE IF NOT EXISTS `debts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `personName` TEXT NOT NULL, `type` TEXT NOT NULL, `totalAmount` INTEGER NOT NULL, `dateMillis` INTEGER NOT NULL, `dueDateMillis` INTEGER, `note` TEXT NOT NULL, `isSettled` INTEGER NOT NULL, `isManuallySettled` INTEGER NOT NULL)")
+    }
+}
+
+fun seedDefaultInvestmentTypes(db: SupportSQLiteDatabase) {
+    val rows = listOf(
+        arrayOf<Any>("طلا","gold","#F5B301","گرم"),
+        arrayOf<Any>("سکه","coin","#E0A100","عدد"),
+        arrayOf<Any>("دلار","dollar","#2E9E5B","دلار"),
+        arrayOf<Any>("یورو","euro","#2F6FDE","یورو"),
+        arrayOf<Any>("ارز دیجیتال","crypto","#F7931A","واحد"),
+        arrayOf<Any>("سهام","stock","#7B4FE0","سهم"),
+        arrayOf<Any>("صندوق سرمایه‌گذاری","fund","#00A3A3","واحد"),
+        arrayOf<Any>("ملک","home","#8D6E63","متر"),
+        arrayOf<Any>("خودرو","car","#546E7A","دستگاه")
+    )
+    rows.forEach { row ->
+        db.execSQL("INSERT INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES (?,?,?,?,1)", row)
+    }
+}
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS `investment_types` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `iconKey` TEXT NOT NULL, `colorHex` TEXT NOT NULL, `unitLabel` TEXT NOT NULL, `isDefault` INTEGER NOT NULL)")
+        db.execSQL("CREATE TABLE IF NOT EXISTS `investments` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `typeId` INTEGER NOT NULL, `title` TEXT NOT NULL, `investedAmount` INTEGER NOT NULL, `buyPrice` REAL NOT NULL, `quantity` REAL NOT NULL, `currentPrice` REAL, `priceUpdatedAtMillis` INTEGER, `buyDateMillis` INTEGER NOT NULL, `note` TEXT NOT NULL, `status` TEXT NOT NULL, `sellPrice` REAL)")
+        seedDefaultInvestmentTypes(db)
     }
 }

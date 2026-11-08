@@ -77,3 +77,32 @@ data class DebtEntity(
     val isSettled: Boolean = false,
     val isManuallySettled: Boolean = false
 )
+
+
+@Entity(tableName = "investment_types")
+data class InvestmentTypeEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val iconKey: String,
+    val colorHex: String,
+    val unitLabel: String,
+    val isDefault: Boolean = false
+)
+
+@Entity(tableName = "investments")
+data class InvestmentEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val typeId: Long,
+    val title: String = "",
+    val investedAmount: Long,
+    val buyPrice: Double,
+    val quantity: Double,
+    val currentPrice: Double? = null,
+    val priceUpdatedAtMillis: Long? = null,
+    val buyDateMillis: Long,
+    val note: String = "",
+    val status: String = "ACTIVE",
+    val sellPrice: Double? = null
+)
+
+enum class InvestmentStatus { ACTIVE, SOLD }
