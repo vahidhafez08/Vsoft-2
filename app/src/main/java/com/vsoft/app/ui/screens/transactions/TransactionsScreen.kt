@@ -10,6 +10,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
+import com.vsoft.app.util.formatJalali
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -102,6 +115,31 @@ fun TransactionsScreen(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val focus: FocusManager = LocalFocusManager.current
+    val context = LocalContext.current
+    val selectedIds = remember { androidx.compose.runtime.mutableStateListOf<Long>() }
+    var invoiceFile by remember { mutableStateOf<File?>(null) }
+    var showInvoiceActions by remember { mutableStateOf(false) }
+    val saveInvoiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri: Uri? ->
+        val source = invoiceFile
+        if (uri != null && source != null) {
+            runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { output -> source.inputStream().use { input -> input.copyTo(output) } }
+                    ?: error("فایل مقصد باز نشد")
+            }.onSuccess { com.vsoft.app.util.UiEvents.show("فاکتور ذخیره شد") }
+                .onFailure { com.vsoft.app.util.UiEvents.show("ذخیره فاکتور ناموفق بود") }
+        }
+    }
+    val visibleTransactions = state.groups.flatMap { it.items }
+    val selectedTransactions = visibleTransactions.filter { it.id in selectedIds }
+    fun toggleSelection(tx: TransactionEntity) {
+        if (tx.id in selectedIds) selectedIds.remove(tx.id) else selectedIds.add(tx.id)
+    }
+    fun createInvoice() {
+        if (selectedTransactions.isEmpty()) return
+        runCatching { InvoicePdfGenerator.create(context, selectedTransactions) }
+            .onSuccess { invoiceFile = it; showInvoiceActions = true; selectedIds.clear() }
+            .onFailure { com.vsoft.app.util.UiEvents.show("ساخت فاکتور ناموفق بود") }
+    }
 
     LaunchedEffect(query, type, category, accountFilter) {
         viewModel.setFilters(TxFilters(query, type, category, accountFilter))
@@ -129,11 +167,28 @@ fun TransactionsScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item(key = "header") {
-                ScreenHeader(
-                    title = "تراکنش‌ها",
-                    subtitle = state.count.toPersianText() + " تراکنش",
-                    onBack = onBack
-                )
+                if (selectedIds.isEmpty()) {
+                    ScreenHeader(
+                        title = "تراکنش‌ها",
+                        subtitle = state.count.toPersianText() + " تراکنش",
+                        onBack = onBack
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { selectedIds.clear() }) { Icon(Icons.Filled.Close, contentDescription = "لغو انتخاب") }
+                            Text(selectedIds.size.toPersianText() + " تراکنش انتخاب‌شده", Modifier.weight(1f), color = Vsoft.colors.textPrimary, fontWeight = FontWeight.Bold)
+                            TextButton(onClick = {
+                                selectedIds.clear()
+                                selectedIds.addAll(visibleTransactions.map { it.id })
+                            }) { Text("انتخاب همه") }
+                            TextButton(onClick = { selectedIds.clear() }) { Text("لغو انتخاب") }
+                        }
+                        Button(onClick = { createInvoice() }, enabled = selectedIds.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+                            Text("ساخت فاکتور")
+                        }
+                    }
+                }
             }
             item(key = "summary") {
                 val net = state.income - state.expense
@@ -228,7 +283,13 @@ fun TransactionsScreen(
                         tx = tx,
                         accountName = tx.accountId?.let { state.accountNames[it] },
                         modifier = Modifier.animateItemPlacement(),
-                        onClick = { onOpenTransactionForm(tx.id, if (tx.isIncome) "income" else "expense") },
+                        selected = tx.id in selectedIds,
+                        selectionMode = selectedIds.isNotEmpty(),
+                        onLongClick = { if (selectedIds.isEmpty()) selectedIds.add(tx.id) else toggleSelection(tx) },
+                        onClick = {
+                            if (selectedIds.isNotEmpty()) toggleSelection(tx)
+                            else onOpenTransactionForm(tx.id, if (tx.isIncome) "income" else "expense")
+                        },
                         onDelete = { deleteWithUndo(tx) }
                     )
                 }
@@ -240,14 +301,45 @@ fun TransactionsScreen(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp)
         )
 
-        SpeedDialFab(
-            onIncome = { onOpenTransactionForm(-1L, "income") },
-            onExpense = { onOpenTransactionForm(-1L, "expense") },
-            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
-        )
+        if (selectedIds.isEmpty()) {
+            SpeedDialFab(
+                onIncome = { onOpenTransactionForm(-1L, "income") },
+                onExpense = { onOpenTransactionForm(-1L, "expense") },
+                modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+            )
+        }
     }
 
-
+    if (showInvoiceActions && invoiceFile != null) {
+        AlertDialog(
+            onDismissRequest = { showInvoiceActions = false },
+            containerColor = Vsoft.colors.surface,
+            title = { Text("فاکتور آماده است", color = Vsoft.colors.textPrimary) },
+            text = { Text("فاکتور PDF ساخته شد. می‌توانید آن را به اشتراک بگذارید یا ذخیره کنید.", color = Vsoft.colors.textSecondary) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val file = invoiceFile ?: return@TextButton
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(intent, "اشتراک‌گذاری فاکتور"))
+                    showInvoiceActions = false
+                }) { Text("اشتراک‌گذاری") }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        saveInvoiceLauncher.launch("فاکتور-${System.currentTimeMillis()}.pdf")
+                        showInvoiceActions = false
+                    }) { Text("ذخیره") }
+                    TextButton(onClick = { showInvoiceActions = false }) { Text("بستن") }
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -283,6 +375,9 @@ private fun TxRow(
     tx: TransactionEntity,
     accountName: String?,
     modifier: Modifier,
+    selected: Boolean,
+    selectionMode: Boolean,
+    onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -331,12 +426,18 @@ private fun TxRow(
             Modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(Vsoft.colors.surface)
-                .border(1.dp, Vsoft.colors.outline, shape)
-                .clickable(onClick = onClick)
+                .background(if (selected) IncomeGreen.copy(alpha = 0.12f) else Vsoft.colors.surface)
+                .border(if (selected) 2.dp else 1.dp, if (selected) IncomeGreen else Vsoft.colors.outline, shape)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (selectionMode) {
+                Box(Modifier.size(24.dp).clip(RoundedCornerShape(8.dp)).background(if (selected) IncomeGreen else Vsoft.colors.surfaceHigh).border(1.dp, if (selected) IncomeGreen else Vsoft.colors.outline, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+                    if (selected) Icon(Icons.Filled.Close, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                }
+                Spacer(Modifier.width(8.dp))
+            }
             Box(
                 Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(style.color.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
