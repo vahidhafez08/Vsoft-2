@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -46,13 +47,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vsoft.app.data.model.AccountEntity
+import com.vsoft.app.ui.components.form.FormCard
+import com.vsoft.app.ui.components.form.FormTextField
+import com.vsoft.app.ui.components.form.FormAmountField
+import com.vsoft.app.ui.components.form.FormPrimaryButton
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AccountEditorSheet(
     initial: AccountEntity?,
@@ -65,102 +70,82 @@ fun AccountEditorSheet(
     var balanceText by rememberSaveable { mutableStateOf(initial?.balance?.toString() ?: "") }
     var colorKey by rememberSaveable { mutableStateOf(initial?.colorKey ?: "blue") }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val balance = balanceText.toLongOrNull() ?: 0L
 
-    ModalBottomSheet(
+    androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = Vsoft.colors.surface
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        androidx.compose.foundation.layout.Box(
+            Modifier.fillMaxWidth().fillMaxHeight().background(Vsoft.colors.bg)
         ) {
-            Text(
-                text = if (initial == null) "حساب جدید" else "ویرایش حساب",
-                color = Vsoft.colors.textPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-            AccountCardView(name = name, last4 = last4, balance = balance, colorKey = colorKey)
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it.take(24) },
-                label = { Text("نام بانک یا حساب") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = last4,
-                onValueChange = { v -> last4 = v.toLatinDigits().filter { it.isDigit() }.take(4) },
-                label = { Text("۴ رقم آخر کارت (اختیاری)") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = balanceText,
-                onValueChange = { v -> balanceText = v.toLatinDigits().filter { it.isDigit() }.take(12) },
-                label = { Text("موجودی (تومان)") },
-                supportingText = { if (balance > 0) Text(balance.toMoney()) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text("موجودی اولیه‌ی حساب (تراکنش‌ها جداگانه حساب می‌شن)", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
-            Text("رنگ کارت", color = Vsoft.colors.textSecondary, fontSize = 13.sp)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                AccountColorKeys.forEach { key ->
-                    val selected = key == colorKey
-                    Box(
-                        Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(accountBrush(key))
-                            .border(
-                                width = if (selected) 3.dp else 0.dp,
-                                color = if (selected) Vsoft.colors.textPrimary else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .clickable { colorKey = key },
-                        contentAlignment = Alignment.Center
+            com.vsoft.app.ui.components.form.FormScaffold(
+                title = if (initial == null) "حساب جدید" else "ویرایش حساب",
+                subtitle = "اطلاعات کارت و موجودی اولیه",
+                icon = Icons.Filled.SwapVert,
+                onBack = onDismiss,
+                bottomBar = {
+                    FormPrimaryButton(
+                        text = if (initial == null) "افزودن حساب" else "ذخیره تغییرات",
+                        enabled = name.isNotBlank(),
+                        loading = false
                     ) {
-                        if (selected) {
-                            Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        onSave(
+                            AccountEntity(
+                                id = initial?.id ?: 0L,
+                                name = name.trim(),
+                                last4 = last4.ifBlank { "0000" },
+                                balance = balance,
+                                colorKey = colorKey
+                            )
+                        )
+                    }
+                }
+            ) {
+                FormCard(Icons.Filled.CreditCard, "پیش‌نمایش کارت") {
+                    AccountCardView(name = name, last4 = last4, balance = balance, colorKey = colorKey)
+                }
+                FormCard(Icons.Filled.Badge, "اطلاعات حساب") {
+                    FormTextField(name, { name = it.take(24) }, "نام بانک یا حساب")
+                    FormTextField(
+                        value = last4,
+                        onValueChange = { v -> last4 = v.toLatinDigits().filter { it.isDigit() }.take(4) },
+                        placeholder = "۴ رقم آخر کارت (اختیاری)",
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                    FormAmountField(
+                        value = balanceText,
+                        onValueChange = { v -> balanceText = v.toLatinDigits().filter { it.isDigit() }.take(12) },
+                        placeholder = "موجودی اولیه (تومان)"
+                    )
+                    Text("موجودی اولیه‌ی حساب؛ تراکنش‌ها جداگانه محاسبه می‌شوند.", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                }
+                FormCard(Icons.Filled.Palette, "رنگ کارت") {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        AccountColorKeys.forEach { key ->
+                            val selected = key == colorKey
+                            Box(
+                                Modifier.size(42.dp).clip(CircleShape).background(accountBrush(key))
+                                    .border(
+                                        width = if (selected) 3.dp else 0.dp,
+                                        color = if (selected) Vsoft.colors.textPrimary else Color.Transparent,
+                                        shape = CircleShape
+                                    )
+                                    .clickable { colorKey = key },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (selected) Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            }
                         }
                     }
                 }
-            }
-            Button(
-                onClick = {
-                    onSave(
-                        AccountEntity(
-                            id = initial?.id ?: 0L,
-                            name = name.trim(),
-                            last4 = last4.ifBlank { "0000" },
-                            balance = balance,
-                            colorKey = colorKey
-                        )
-                    )
-                },
-                enabled = name.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (initial == null) "افزودن حساب" else "ذخیره تغییرات")
-            }
-            if (onDelete != null) {
-                TextButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("حذف حساب", color = ExpenseRed)
+                if (onDelete != null) {
+                    TextButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("حذف حساب", color = ExpenseRed)
+                    }
                 }
             }
         }
@@ -171,12 +156,9 @@ fun AccountEditorSheet(
             onDismissRequest = { confirmDelete = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("حذف حساب؟", color = Vsoft.colors.textPrimary) },
-            text = { Text("این حساب برای همیشه حذف می‌شود. انتقال‌های مربوط به این حساب هم حذف می‌شن", color = Vsoft.colors.textSecondary) },
+            text = { Text("این حساب برای همیشه حذف می‌شود. انتقال‌های مربوط به این حساب هم حذف می‌شوند.", color = Vsoft.colors.textSecondary) },
             confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    onDelete()
-                }) { Text("حذف", color = ExpenseRed) }
+                TextButton(onClick = { confirmDelete = false; onDelete() }) { Text("حذف", color = ExpenseRed) }
             },
             dismissButton = {
                 TextButton(onClick = { confirmDelete = false }) { Text("انصراف") }
