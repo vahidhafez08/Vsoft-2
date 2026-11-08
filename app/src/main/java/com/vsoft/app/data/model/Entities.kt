@@ -105,3 +105,4 @@ data class InvestmentEntity(
     val sellPrice: Double? = null
 )
 enum class InvestmentStatus { ACTIVE, SOLD }
+
