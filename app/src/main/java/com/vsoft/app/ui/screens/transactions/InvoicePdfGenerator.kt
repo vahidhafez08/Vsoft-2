@@ -49,7 +49,7 @@ object InvoicePdfGenerator {
             y += 18f
             rows.forEachIndexed { index, tx ->
                 val values = listOf(
-                    (pageIndex * rowsPerPage + index + 1).toPersianDigits(),
+                    (pageIndex * rowsPerPage + index + 1).toString().toPersianDigits(),
                     tx.title.take(26),
                     tx.category.take(18),
                     formatJalali(tx.dateMillis),

@@ -321,7 +321,7 @@ fun TransactionsScreen(
                     val file = invoiceFile ?: return@TextButton
                     val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                     val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/pdf"
+                        this.type = "application/pdf"
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
