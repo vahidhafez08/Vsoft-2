@@ -102,10 +102,10 @@ fun AccountEditorSheet(
                     }
                 }
             ) {
-                FormCard(Icons.Filled.CreditCard, "پیش‌نمایش کارت") {
+                FormCard(Icons.Filled.SwapVert, "پیش‌نمایش کارت") {
                     AccountCardView(name = name, last4 = last4, balance = balance, colorKey = colorKey)
                 }
-                FormCard(Icons.Filled.Badge, "اطلاعات حساب") {
+                FormCard(Icons.Filled.SwapVert, "اطلاعات حساب") {
                     FormTextField(name, { name = it.take(24) }, "نام بانک یا حساب")
                     FormTextField(
                         value = last4,
@@ -120,7 +120,7 @@ fun AccountEditorSheet(
                     )
                     Text("موجودی اولیه‌ی حساب؛ تراکنش‌ها جداگانه محاسبه می‌شوند.", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
                 }
-                FormCard(Icons.Filled.Palette, "رنگ کارت") {
+                FormCard(Icons.Filled.Check, "رنگ کارت") {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
