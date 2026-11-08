@@ -369,7 +369,7 @@ private fun DayHeader(label: String, net: Long, modifier: Modifier) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun TxRow(
     tx: TransactionEntity,
