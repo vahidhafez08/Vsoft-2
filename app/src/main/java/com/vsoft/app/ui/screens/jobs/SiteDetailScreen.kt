@@ -25,6 +25,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.data.model.*
 import com.vsoft.app.ui.components.*
 import com.vsoft.app.ui.components.form.FormDatePickerSheet
+import com.vsoft.app.ui.components.form.FormScaffold
+import com.vsoft.app.ui.components.form.FormCard
+import com.vsoft.app.ui.components.form.FormPickerRow
+import com.vsoft.app.ui.components.form.FormTextField
+import com.vsoft.app.ui.components.form.FormPrimaryButton
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
@@ -33,6 +38,7 @@ import com.vsoft.app.ui.theme.WarningOrange
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianText
+import com.vsoft.app.util.toPersianDigits
 import com.vsoft.app.util.formatJobQuantity
 import com.vsoft.app.util.startOfDay
 import kotlinx.coroutines.delay
@@ -190,55 +196,55 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
     }
 
     if (manualReportDialog) {
-        ModalBottomSheet(
+        androidx.compose.ui.window.Dialog(
             onDismissRequest = { manualReportDialog = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            containerColor = Vsoft.colors.surface
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .imePadding()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = if (editingManualReport == null) "نوشتن گزارش شخصی" else "ویرایش گزارش شخصی",
-                    color = Vsoft.colors.textPrimary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                OutlinedButton(
-                    onClick = {
-                        pendingReportDatePicker = true
-                        manualReportDialog = false
-                    },
-                    modifier = Modifier.fillMaxWidth()
+            Box(Modifier.fillMaxWidth().fillMaxHeight().background(Vsoft.colors.bg)) {
+                FormScaffold(
+                    title = if (editingManualReport == null) "نوشتن گزارش شخصی" else "ویرایش گزارش شخصی",
+                    subtitle = "ثبت یادداشت روزانه کارگاه",
+                    icon = Icons.Filled.Description,
+                    onBack = { manualReportDialog = false },
+                    bottomBar = {
+                        FormPrimaryButton(
+                            text = "ذخیره گزارش",
+                            enabled = manualReportText.isNotBlank(),
+                            loading = false
+                        ) {
+                            viewModel.saveManualReport(editingManualReport, manualReportText, manualReportDate)
+                            manualReportDialog = false
+                        }
+                    }
                 ) {
-                    Icon(Icons.Filled.CalendarMonth, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("تاریخ گزارش: " + formatJalali(manualReportDate))
+                    FormCard(Icons.Filled.CalendarMonth, "تاریخ گزارش") {
+                        FormPickerRow(
+                            icon = Icons.Filled.CalendarMonth,
+                            text = formatJalali(manualReportDate),
+                            sub = "تاریخ شمسی گزارش",
+                            onClick = {
+                                pendingReportDatePicker = true
+                                manualReportDialog = false
+                            }
+                        )
+                    }
+                    FormCard(Icons.Filled.EditNote, "متن گزارش") {
+                        FormTextField(
+                            value = manualReportText,
+                            onValueChange = { manualReportText = it.take(5000) },
+                            placeholder = "گزارش روزانه خودت را بنویس…",
+                            singleLine = false,
+                            minLines = 7,
+                            minHeight = 170.dp
+                        )
+                        Text(
+                            "${manualReportText.length.toString().toPersianDigits()}/۵۰۰۰",
+                            color = Vsoft.colors.textSecondary,
+                            fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
-                OutlinedTextField(
-                    value = manualReportText,
-                    onValueChange = { manualReportText = it.take(5000) },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("متن گزارش") },
-                    placeholder = { Text("گزارش روزانه خودت را بنویس…") },
-                    minLines = 4,
-                    maxLines = 8
-                )
-                Button(
-                    onClick = {
-                        viewModel.saveManualReport(editingManualReport, manualReportText, manualReportDate)
-                        manualReportDialog = false
-                    },
-                    enabled = manualReportText.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("ذخیره گزارش") }
             }
         }
     }
