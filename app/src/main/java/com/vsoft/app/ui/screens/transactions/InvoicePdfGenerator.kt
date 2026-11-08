@@ -24,7 +24,6 @@ object InvoicePdfGenerator {
             textSize = 10f
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             textAlign = Paint.Align.RIGHT
-            textDirection = Paint.DIRECTION_RTL
         }
         val bold = Paint(paint).apply { typeface = Typeface.create("sans-serif", Typeface.BOLD) }
         val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFB7C2D0.toInt(); strokeWidth = 1f }
