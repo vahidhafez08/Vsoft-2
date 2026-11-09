@@ -123,7 +123,7 @@ fun DebtsScreen(
 
         LazyColumn(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(start = 0.dp, top = 12.dp, end = 0.dp, bottom = 16.dp),
+            contentPadding = PaddingValues(0.dp, 12.dp, 0.dp, 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             if (filtered.isEmpty()) {
