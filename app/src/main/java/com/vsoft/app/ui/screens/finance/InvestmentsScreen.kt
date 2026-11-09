@@ -81,7 +81,7 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                 FilterChip(selectedType == type.id, { selectedType = type.id }, label = { Text(type.name) })
             }
         }
-        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = 12.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(start = 0.dp, top = 12.dp, end = 0.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (visibleItems.isEmpty()) item {
                 Text("هنوز سرمایه‌ای ثبت نشده است.", Modifier.fillMaxWidth().padding(vertical = 32.dp), color = Vsoft.colors.textSecondary)
             }
