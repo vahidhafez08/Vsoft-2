@@ -6,6 +6,8 @@ object Routes {
     const val ACCOUNTS = "accounts"
     const val DEBTS = "debts"
     const val INVESTMENTS = "investments"
+    const val DEBT_FORM = "debt_form"
+    const val INVESTMENT_FORM = "investment_form"
     const val TASK_DETAIL = "task/{id}"
     const val TASK_FORM = "task_form?id={id}&projectId={projectId}&due={due}"
     const val PROJECT_FORM = "project_form?id={id}"
