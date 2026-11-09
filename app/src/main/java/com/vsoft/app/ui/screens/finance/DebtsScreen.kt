@@ -53,7 +53,7 @@ import javax.inject.Inject
 class DebtsViewModel @Inject constructor(private val repo: FinanceRepository) : ViewModel() {
     val debts = repo.observeDebts().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun save(name: String, type: String, amount: Long, due: Long?, note: String) = viewModelScope.launch {
+    suspend fun save(name: String, type: String, amount: Long, due: Long?, note: String) {
         if (name.isBlank() || amount <= 0L) return@launch
         repo.saveDebt(DebtEntity(personName = name.trim(), type = type, totalAmount = amount,
             dateMillis = System.currentTimeMillis(), dueDateMillis = due, note = note.trim()))
@@ -148,7 +148,7 @@ fun DebtsScreen(
                             }
                             Text("${remaining.toMoney()} تومان", color = Vsoft.colors.textPrimary, fontWeight = FontWeight.Bold)
                         }
-                        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
+                        LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("مبلغ اولیه: ${debt.totalAmount.toMoney()}", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                             Text("پرداخت‌شده: ${settledAmount.toMoney()}", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
