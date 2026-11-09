@@ -80,8 +80,8 @@ fun MainScaffold(navController: NavHostController) {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val snackbarHostState = remember { SnackbarHostState() }
-    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM, Routes.DEBTS, Routes.INVESTMENTS)
-    val formPrefixes = listOf("transaction_form", "task_form", "project_form", "site_form", "floor_form", "item_form", "log_form", "payment_form")
+    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM, Routes.DEBTS, Routes.INVESTMENTS, Routes.DEBT_FORM, Routes.INVESTMENT_FORM)
+    val formPrefixes = listOf("transaction_form", "task_form", "project_form", "site_form", "floor_form", "item_form", "log_form", "payment_form", "debt_form", "investment_form")
     val isFormRoute = formPrefixes.any { currentRoute?.startsWith(it) == true }
     val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.TASK_FORM, Routes.PROJECT_FORM, Routes.JOBS, Routes.SITE_DETAIL, Routes.SITE_FORM, Routes.FLOOR_FORM, Routes.ITEM_FORM, Routes.LOG_FORM, Routes.PAYMENT_FORM, Routes.CALENDAR)
     val currentTabIndex = tabDestinations.indexOfFirst { it.route == currentRoute }
