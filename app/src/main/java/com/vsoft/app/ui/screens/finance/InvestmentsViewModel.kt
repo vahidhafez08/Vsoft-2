@@ -22,7 +22,7 @@ data class InvestmentsUiState(val types:List<InvestmentTypeEntity> = emptyList()
 class InvestmentsViewModel @Inject constructor(private val repo:InvestmentRepository):ViewModel() {
     val state=combine(repo.observeTypes(),repo.observeInvestments()){types,items->InvestmentsUiState(types,items)}.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),InvestmentsUiState())
     fun saveType(name:String,unit:String,icon:String,color:String)=viewModelScope.launch {
-        if(name.isBlank()||unit.isBlank()){UiEvents.show("نام و واحد نوع سرمایه را وارد کنید");return@launch}
+        if(name.isBlank()||unit.isBlank()){UiEvents.show("نام و واحد نوع سرمایه را وارد کنید");return}
         repo.saveType(InvestmentTypeEntity(name=name.trim(),unitLabel=unit.trim(),iconKey=icon,colorHex=color,isDefault=false))
     }
     fun deleteType(type:InvestmentTypeEntity)=viewModelScope.launch {
