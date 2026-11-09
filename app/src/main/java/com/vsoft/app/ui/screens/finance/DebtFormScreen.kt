@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,14 +30,17 @@ fun DebtFormScreen(onBack: () -> Unit, vm: DebtsViewModel = hiltViewModel()) {
     var amount by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(DebtType.I_OWE.name) }
+    val scope = rememberCoroutineScope()
     val valid = person.isNotBlank() && (amount.toLatinDigits().toLongOrNull() ?: 0L) > 0L
     Scaffold(
         containerColor = Vsoft.colors.bg,
         topBar = { TopAppBar(title = { Text("ثبت بدهی یا طلب", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "بازگشت") } }) },
         bottomBar = {
             Button(onClick = {
-                vm.save(person, type, amount.toLatinDigits().toLongOrNull() ?: 0L, null, note)
-                onBack()
+                scope.launch {
+                    vm.save(person, type, amount.toLatinDigits().toLongOrNull() ?: 0L, null, note)
+                    onBack()
+                }
             }, enabled = valid, modifier = Modifier.fillMaxWidth().padding(16.dp)) { Text("ذخیره بدهی یا طلب") }
         }
     ) { padding ->
