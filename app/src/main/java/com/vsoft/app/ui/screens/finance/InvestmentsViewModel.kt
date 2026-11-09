@@ -28,7 +28,7 @@ class InvestmentsViewModel @Inject constructor(private val repo:InvestmentReposi
     fun deleteType(type:InvestmentTypeEntity)=viewModelScope.launch {
         if(!repo.deleteType(type)) UiEvents.show("نوع پیش‌فرض یا نوع دارای سرمایه قابل حذف نیست")
     }
-    fun save(item:InvestmentEntity)=viewModelScope.launch {
+    suspend fun save(item:InvestmentEntity) {
         if(item.investedAmount<=0L||item.buyPrice<=0.0||item.quantity<=0.0||!item.buyPrice.isFinite()||!item.quantity.isFinite()){UiEvents.show("مبلغ، قیمت و مقدار باید بزرگ‌تر از صفر باشند");return@launch}
         repo.save(item);UiEvents.show("سرمایه ذخیره شد")
     }
