@@ -22,14 +22,14 @@ data class InvestmentsUiState(val types:List<InvestmentTypeEntity> = emptyList()
 class InvestmentsViewModel @Inject constructor(private val repo:InvestmentRepository):ViewModel() {
     val state=combine(repo.observeTypes(),repo.observeInvestments()){types,items->InvestmentsUiState(types,items)}.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),InvestmentsUiState())
     fun saveType(name:String,unit:String,icon:String,color:String)=viewModelScope.launch {
-        if(name.isBlank()||unit.isBlank()){UiEvents.show("نام و واحد نوع سرمایه را وارد کنید");return}
+        if(name.isBlank()||unit.isBlank()){UiEvents.show("نام و واحد نوع سرمایه را وارد کنید");return@launch}
         repo.saveType(InvestmentTypeEntity(name=name.trim(),unitLabel=unit.trim(),iconKey=icon,colorHex=color,isDefault=false))
     }
     fun deleteType(type:InvestmentTypeEntity)=viewModelScope.launch {
         if(!repo.deleteType(type)) UiEvents.show("نوع پیش‌فرض یا نوع دارای سرمایه قابل حذف نیست")
     }
     suspend fun save(item:InvestmentEntity) {
-        if(item.investedAmount<=0L||item.buyPrice<=0.0||item.quantity<=0.0||!item.buyPrice.isFinite()||!item.quantity.isFinite()){UiEvents.show("مبلغ، قیمت و مقدار باید بزرگ‌تر از صفر باشند");return@launch}
+        if(item.investedAmount<=0L||item.buyPrice<=0.0||item.quantity<=0.0||!item.buyPrice.isFinite()||!item.quantity.isFinite()){UiEvents.show("مبلغ، قیمت و مقدار باید بزرگ‌تر از صفر باشند");return}
         repo.save(item);UiEvents.show("سرمایه ذخیره شد")
     }
     fun delete(item:InvestmentEntity)=viewModelScope.launch { repo.delete(item) }
