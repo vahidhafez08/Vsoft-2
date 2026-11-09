@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,29 +42,11 @@ fun SplashScreen(onFinished: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Box(
-                Modifier.size(96.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(Color(0xFF1B2A6B)),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.linearGradient(
-                            listOf(
-                                Color(0xCC3B82F6),
-                                Color(0xCC5B5BF0),
-                                Color(0xCC8B5CF6)
-                            )
-                        )
-                    )
-                )
-                Image(
-                    painter = painterResource(R.drawable.ic_launcher_foreground),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = 1.35f, scaleY = 1.35f)
-                )
-            }
+            Image(
+                painter = painterResource(R.drawable.vesta_logo),
+                contentDescription = null,
+                modifier = Modifier.size(96.dp).clip(RoundedCornerShape(28.dp))
+            )
             Spacer(Modifier.height(18.dp))
             Text("Vesta", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(Modifier.height(10.dp))
