@@ -46,6 +46,8 @@ import com.vsoft.app.ui.screens.documents.DocumentsScreen
 import com.vsoft.app.ui.screens.finance.FinanceScreen
 import com.vsoft.app.ui.screens.finance.DebtsScreen
 import com.vsoft.app.ui.screens.finance.InvestmentsScreen
+import com.vsoft.app.ui.screens.finance.DebtFormScreen
+import com.vsoft.app.ui.screens.finance.InvestmentFormScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
 import com.vsoft.app.ui.screens.jobs.JobsScreen
 import com.vsoft.app.ui.screens.jobs.SiteDetailScreen
@@ -236,8 +238,10 @@ fun MainScaffold(navController: NavHostController) {
                 composable(route = Routes.LOG_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("itemId") { type = NavType.LongType; defaultValue = -1L })) { LogFormScreen(onBack = { navController.popBackStack() }) }
                 composable(route = Routes.PAYMENT_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { PaymentFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
-                composable(Routes.DEBTS) { DebtsScreen(onBack = { navController.popBackStack() }) }
-                composable(Routes.INVESTMENTS) { InvestmentsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.DEBTS) { DebtsScreen(onBack = { navController.popBackStack() }, onAddDebt = { openRoute(Routes.DEBT_FORM) }) }
+                composable(Routes.INVESTMENTS) { InvestmentsScreen(onBack = { navController.popBackStack() }, onAddInvestment = { openRoute(Routes.INVESTMENT_FORM) }) }
+                composable(Routes.DEBT_FORM) { DebtFormScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.INVESTMENT_FORM) { InvestmentFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
                 composable(
                     route = Routes.TASK_DETAIL,
