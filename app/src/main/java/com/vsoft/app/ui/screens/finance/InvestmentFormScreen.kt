@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,6 +28,7 @@ import com.vsoft.app.util.toLatinDigits
 @Composable
 fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     var typeId by remember { mutableLongStateOf(0L) }
     var title by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
@@ -47,13 +49,15 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
         topBar = { TopAppBar(title = { Text("ثبت سرمایه‌گذاری", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "بازگشت") } }) },
         bottomBar = {
             Button(onClick = {
-                vm.save(InvestmentEntity(
+                scope.launch {
+                    vm.save(InvestmentEntity(
                     typeId = typeId, title = title.trim(), investedAmount = parsedAmount,
                     buyPrice = parsedBuy, quantity = parsedQuantity, currentPrice = parsedCurrent,
                     priceUpdatedAtMillis = if (parsedCurrent != null) System.currentTimeMillis() else null,
                     buyDateMillis = System.currentTimeMillis(), note = note.trim()
-                ))
-                onBack()
+                    ))
+                    onBack()
+                }
             }, enabled = valid, modifier = Modifier.fillMaxWidth().padding(16.dp)) { Text("ذخیره سرمایه‌گذاری") }
         }
     ) { padding ->
