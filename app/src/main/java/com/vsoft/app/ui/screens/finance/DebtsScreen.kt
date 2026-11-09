@@ -54,7 +54,7 @@ class DebtsViewModel @Inject constructor(private val repo: FinanceRepository) : 
     val debts = repo.observeDebts().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     suspend fun save(name: String, type: String, amount: Long, due: Long?, note: String) {
-        if (name.isBlank() || amount <= 0L) return@launch
+        if (name.isBlank() || amount <= 0L) return
         repo.saveDebt(DebtEntity(personName = name.trim(), type = type, totalAmount = amount,
             dateMillis = System.currentTimeMillis(), dueDateMillis = due, note = note.trim()))
     }
