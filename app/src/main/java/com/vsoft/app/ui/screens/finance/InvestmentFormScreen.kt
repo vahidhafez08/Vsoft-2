@@ -129,14 +129,16 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                 onChange = { buyPrice = it },
                 placeholder = "قیمت خرید هر واحد",
                 unit = "تومان",
-                maxDigits = 15
+                maxDigits = 15,
+                groupThousands = true
             )
             FormNumberField(
                 raw = quantity,
                 onChange = { quantity = it },
                 placeholder = "مقدار / تعداد",
                 unit = selectedType?.unitLabel?.takeIf { it.isNotBlank() },
-                maxDigits = 15
+                maxDigits = 15,
+                groupThousands = true
             )
         }
 
@@ -146,7 +148,8 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                 onChange = { currentPrice = it },
                 placeholder = "قیمت فعلی هر واحد (اختیاری)",
                 unit = "تومان",
-                maxDigits = 15
+                maxDigits = 15,
+                groupThousands = true
             )
             Text(
                 "قیمت را فعلاً دستی وارد کنید؛ اتصال به API در آینده اضافه می‌شود.",
