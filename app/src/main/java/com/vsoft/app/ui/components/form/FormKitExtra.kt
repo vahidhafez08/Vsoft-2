@@ -92,11 +92,23 @@ fun FormAmountField(rawDigits: String, onChange: (String) -> Unit, placeholder: 
 }
 
 @Composable
-fun FormNumberField(raw: String, onChange: (String) -> Unit, placeholder: String, unit: String?, maxDigits: Int = 9, allowDecimal: Boolean = true) {
+fun FormNumberField(
+    raw: String,
+    onChange: (String) -> Unit,
+    placeholder: String,
+    unit: String?,
+    maxDigits: Int = 9,
+    allowDecimal: Boolean = true,
+    groupThousands: Boolean = false
+) {
     val normalized = raw.toLatinDigits()
-    val display = normalized.toPersianDigits()
+    val display = if (groupThousands) {
+        val parts = normalized.split('.', limit = 2)
+        val integer = parts.first().reversed().chunked(3).joinToString(",").reversed()
+        (integer + if (parts.size > 1) ".${parts[1]}" else "").toPersianDigits()
+    } else normalized.toPersianDigits()
     FormTextField(value = display, onValueChange = { input ->
-        val latin = input.toLatinDigits()
+        val latin = input.toLatinDigits().replace(",", "")
         var dotSeen = false
         val clean = buildString {
             latin.forEach { ch ->
