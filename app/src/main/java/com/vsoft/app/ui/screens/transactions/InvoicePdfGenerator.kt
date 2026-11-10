@@ -78,12 +78,12 @@ object InvoicePdfGenerator {
             val bold = paint(navy, 10f, true)
 
             drawText(canvas, "فاکتور تراکنش‌ها", margin, 38f, 400, titlePaint)
-            drawText(
+            drawText(canvas,
                 "شماره فاکتور: ${(System.currentTimeMillis() % 1000000L).toString().toPersianDigits()}",
                 margin, 76f, 240, regular
             )
-            drawText("تاریخ صدور: ${formatJalali(System.currentTimeMillis())}", 300f, 76f, 250, regular)
-            drawText(
+            drawText(canvas,"تاریخ صدور: ${formatJalali(System.currentTimeMillis())}", 300f, 76f, 250, regular)
+            drawText(canvas,
                 "صفحه ${(pageIndex + 1).toString().toPersianDigits()} از ${chunks.size.toString().toPersianDigits()}",
                 margin, 98f, 180, small
             )
@@ -114,7 +114,7 @@ object InvoicePdfGenerator {
                     paint(if (tx.isIncome) 0xFF278B62.toInt() else 0xFFC94C4C.toInt(), 10f, true),
                     rtl = false
                 )
-                drawText(
+                drawText(canvas,
                     (rowIndex + 1).toString().toPersianDigits(),
                     535f, y + 5f, 24, small
                 )
@@ -134,7 +134,7 @@ object InvoicePdfGenerator {
                 drawText(canvas, "جمع هزینه‌ها", 330f, y + 58f, 210, regular)
                 drawText(canvas, expense.toMoney() + " تومان", 48f, y + 58f, 220, paint(0xFFC94C4C.toInt(), 10f, true), rtl = false)
                 drawText(canvas, "خالص", 330f, y + 84f, 210, bold)
-                drawText(
+                drawText(canvas,
                     (if (income - expense < 0) "−" else "") + kotlin.math.abs(income - expense).toMoney() + " تومان",
                     48f, y + 84f, 220, bold, rtl = false
                 )
