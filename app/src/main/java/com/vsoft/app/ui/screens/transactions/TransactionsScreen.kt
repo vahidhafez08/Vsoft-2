@@ -118,6 +118,7 @@ fun TransactionsScreen(
     val context = LocalContext.current
     val selectedIds = remember { androidx.compose.runtime.mutableStateListOf<Long>() }
     var invoiceFile by remember { mutableStateOf<File?>(null) }
+    var invoiceImageFile by remember { mutableStateOf<File?>(null) }
     var showInvoiceActions by remember { mutableStateOf(false) }
     val saveInvoiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri: Uri? ->
         val source = invoiceFile
@@ -129,6 +130,16 @@ fun TransactionsScreen(
                 .onFailure { com.vsoft.app.util.UiEvents.show("ذخیره فاکتور ناموفق بود") }
         }
     }
+    val saveInvoiceImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri: Uri? ->
+        val source = invoiceImageFile
+        if (uri != null && source != null) {
+            runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { output -> source.inputStream().use { input -> input.copyTo(output) } }
+                    ?: error("فایل مقصد باز نشد")
+            }.onSuccess { com.vsoft.app.util.UiEvents.show("تصویر فاکتور ذخیره شد") }
+                .onFailure { com.vsoft.app.util.UiEvents.show("ذخیره تصویر فاکتور ناموفق بود") }
+        }
+    }
     val visibleTransactions = state.groups.flatMap { it.items }
     val selectedTransactions = visibleTransactions.filter { it.id in selectedIds }
     fun toggleSelection(tx: TransactionEntity) {
@@ -136,8 +147,17 @@ fun TransactionsScreen(
     }
     fun createInvoice() {
         if (selectedTransactions.isEmpty()) return
-        runCatching { InvoicePdfGenerator.create(context, selectedTransactions) }
-            .onSuccess { invoiceFile = it; showInvoiceActions = true; selectedIds.clear() }
+        runCatching {
+            val pdf = InvoicePdfGenerator.create(context, selectedTransactions)
+            val image = InvoiceImageGenerator.create(context, selectedTransactions)
+            pdf to image
+        }
+            .onSuccess { (pdf, image) ->
+                invoiceFile = pdf
+                invoiceImageFile = image
+                showInvoiceActions = true
+                selectedIds.clear()
+            }
             .onFailure { com.vsoft.app.util.UiEvents.show("ساخت فاکتور ناموفق بود") }
     }
 
@@ -310,32 +330,56 @@ fun TransactionsScreen(
         }
     }
 
-    if (showInvoiceActions && invoiceFile != null) {
+    if (showInvoiceActions && invoiceFile != null && invoiceImageFile != null) {
         AlertDialog(
             onDismissRequest = { showInvoiceActions = false },
             containerColor = Vsoft.colors.surface,
             title = { Text("فاکتور آماده است", color = Vsoft.colors.textPrimary) },
-            text = { Text("فاکتور PDF ساخته شد. می‌توانید آن را به اشتراک بگذارید یا ذخیره کنید.", color = Vsoft.colors.textSecondary) },
+            text = {
+                Text(
+                    "فاکتور با طراحی مینیمال در دو قالب PDF و تصویر باکیفیت PNG آماده شد.",
+                    color = Vsoft.colors.textSecondary
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
-                    val file = invoiceFile ?: return@TextButton
+                    val file = invoiceImageFile ?: return@TextButton
                     val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                     val intent = Intent(Intent.ACTION_SEND).apply {
-                        this.type = "application/pdf"
+                        type = "image/png"
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    context.startActivity(Intent.createChooser(intent, "اشتراک‌گذاری فاکتور"))
+                    context.startActivity(Intent.createChooser(intent, "اشتراک‌گذاری تصویر فاکتور"))
                     showInvoiceActions = false
-                }) { Text("اشتراک‌گذاری") }
+                }) { Text("اشتراک تصویر") }
             },
             dismissButton = {
-                Row {
-                    TextButton(onClick = {
-                        saveInvoiceLauncher.launch("فاکتور-${System.currentTimeMillis()}.pdf")
-                        showInvoiceActions = false
-                    }) { Text("ذخیره") }
-                    TextButton(onClick = { showInvoiceActions = false }) { Text("بستن") }
+                Column(horizontalAlignment = Alignment.End) {
+                    Row {
+                        TextButton(onClick = {
+                            saveInvoiceImageLauncher.launch("فاکتور-${System.currentTimeMillis()}.png")
+                            showInvoiceActions = false
+                        }) { Text("ذخیره تصویر") }
+                        TextButton(onClick = {
+                            saveInvoiceLauncher.launch("فاکتور-${System.currentTimeMillis()}.pdf")
+                            showInvoiceActions = false
+                        }) { Text("ذخیره PDF") }
+                    }
+                    Row {
+                        TextButton(onClick = {
+                            val file = invoiceFile ?: return@TextButton
+                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "application/pdf"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(Intent.createChooser(intent, "اشتراک‌گذاری PDF"))
+                            showInvoiceActions = false
+                        }) { Text("اشتراک PDF") }
+                        TextButton(onClick = { showInvoiceActions = false }) { Text("بستن") }
+                    }
                 }
             }
         )
