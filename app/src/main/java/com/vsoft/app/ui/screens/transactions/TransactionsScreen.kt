@@ -346,7 +346,7 @@ fun TransactionsScreen(
                     val file = invoiceImageFile ?: return@TextButton
                     val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                     val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "image/png"
+                        setType("image/png")
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
@@ -371,7 +371,7 @@ fun TransactionsScreen(
                             val file = invoiceFile ?: return@TextButton
                             val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                             val intent = Intent(Intent.ACTION_SEND).apply {
-                                type = "application/pdf"
+                                setType("application/pdf")
                                 putExtra(Intent.EXTRA_STREAM, uri)
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
