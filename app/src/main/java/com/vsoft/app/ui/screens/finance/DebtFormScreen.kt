@@ -1,29 +1,32 @@
 package com.vsoft.app.ui.screens.finance
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.rememberCoroutineScope
 import com.vsoft.app.data.model.DebtType
+import com.vsoft.app.ui.components.form.FormAmountField
+import com.vsoft.app.ui.components.form.FormCard
+import com.vsoft.app.ui.components.form.FormChip
+import com.vsoft.app.ui.components.form.FormPrimaryButton
+import com.vsoft.app.ui.components.form.FormScaffold
+import com.vsoft.app.ui.components.form.FormTextField
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.toLatinDigits
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebtFormScreen(onBack: () -> Unit, vm: DebtsViewModel = hiltViewModel()) {
     var person by remember { mutableStateOf("") }
@@ -31,29 +34,78 @@ fun DebtFormScreen(onBack: () -> Unit, vm: DebtsViewModel = hiltViewModel()) {
     var note by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(DebtType.I_OWE.name) }
     val scope = rememberCoroutineScope()
-    val valid = person.isNotBlank() && (amount.toLatinDigits().toLongOrNull() ?: 0L) > 0L
-    Scaffold(
-        containerColor = Vsoft.colors.bg,
-        topBar = { TopAppBar(title = { Text("ثبت بدهی یا طلب", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "بازگشت") } }) },
+    val parsedAmount = amount.toLatinDigits().toLongOrNull() ?: 0L
+    val valid = person.isNotBlank() && parsedAmount > 0L
+    var saving by remember { mutableStateOf(false) }
+
+    FormScaffold(
+        title = "ثبت بدهی یا طلب",
+        subtitle = "افزودن حساب شخصی",
+        icon = Icons.Default.AccountBalanceWallet,
+        onBack = onBack,
         bottomBar = {
-            Button(onClick = {
+            FormPrimaryButton("ذخیره بدهی یا طلب", valid && !saving, saving) {
                 scope.launch {
-                    vm.save(person, type, amount.toLatinDigits().toLongOrNull() ?: 0L, null, note)
-                    onBack()
+                    saving = true
+                    try {
+                        vm.save(person, type, parsedAmount, null, note)
+                        onBack()
+                    } finally {
+                        saving = false
+                    }
                 }
-            }, enabled = valid, modifier = Modifier.fillMaxWidth().padding(16.dp)) { Text("ذخیره بدهی یا طلب") }
-        }
-    ) { padding ->
-        Column(Modifier.fillMaxWidth().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("اطلاعات اصلی", color = Vsoft.colors.textPrimary, style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(person, { person = it.take(60) }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text("نام شخص یا مجموعه") }, leadingIcon = { Icon(Icons.Default.People, null) })
-            Text("نوع حساب", color = Vsoft.colors.textSecondary)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(type == DebtType.I_OWE.name, { type = DebtType.I_OWE.name }, label = { Text("من بدهکارم") })
-                FilterChip(type == DebtType.OWED_TO_ME.name, { type = DebtType.OWED_TO_ME.name }, label = { Text("از من طلبکارند") })
             }
-            OutlinedTextField(amount, { amount = it.toLatinDigits().filter(Char::isDigit).take(15) }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text("مبلغ (تومان)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            OutlinedTextField(note, { note = it.take(250) }, modifier = Modifier.fillMaxWidth(), minLines = 3, label = { Text("توضیحات (اختیاری)") })
+        }
+    ) {
+        FormCard(Icons.Default.People, "اطلاعات شخص") {
+            FormTextField(
+                value = person,
+                onValueChange = { person = it.take(60) },
+                placeholder = "نام شخص یا مجموعه"
+            )
+        }
+
+        FormCard(Icons.Default.AccountBalanceWallet, "نوع حساب") {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FormChip(
+                    text = "من بدهکارم",
+                    selected = type == DebtType.I_OWE.name,
+                    onClick = { type = DebtType.I_OWE.name },
+                    modifier = Modifier.weight(1f)
+                )
+                FormChip(
+                    text = "از من طلبکارند",
+                    selected = type == DebtType.OWED_TO_ME.name,
+                    onClick = { type = DebtType.OWED_TO_ME.name },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        FormCard(Icons.Default.Payments, "مبلغ") {
+            FormAmountField(
+                value = amount,
+                onValueChange = { amount = it.toLatinDigits().filter(Char::isDigit).take(15) },
+                placeholder = "مبلغ بدهی یا طلب",
+                trailing = { Text("تومان", color = Vsoft.colors.textSecondary, fontSize = 13.sp) }
+            )
+        }
+
+        FormCard(Icons.Default.Description, "توضیحات (اختیاری)") {
+            FormTextField(
+                value = note,
+                onValueChange = { note = it.take(250) },
+                placeholder = "توضیحات بیشتر...",
+                singleLine = false,
+                minLines = 3,
+                minHeight = 96.dp
+            )
+            Text(
+                "${note.length}/250",
+                color = Vsoft.colors.textSecondary,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
