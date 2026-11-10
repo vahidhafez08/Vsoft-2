@@ -139,11 +139,7 @@ fun FinanceScreen(
             fontWeight = FontWeight.Bold
         )
 
-        FinanceShortcuts(onOpenTransactions = onOpenTransactions, onOpenAccounts = onOpenAccounts, onOpenTransactionForm = onOpenTransactionForm)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            androidx.compose.material3.OutlinedButton(onClick = onOpenDebts, modifier = Modifier.weight(1f)) { Text("بدهی‌ها و طلب‌ها") }
-            androidx.compose.material3.OutlinedButton(onClick = onOpenInvestments, modifier = Modifier.weight(1f)) { Text("سرمایه‌گذاری") }
-        }
+        FinanceShortcuts(onOpenTransactions = onOpenTransactions, onOpenAccounts = onOpenAccounts, onOpenTransactionForm = onOpenTransactionForm, onOpenDebts = onOpenDebts, onOpenInvestments = onOpenInvestments)
 
         SegmentedTabs(
             items = listOf("کلیات", "درآمد", "هزینه", "حساب‌ها"),
