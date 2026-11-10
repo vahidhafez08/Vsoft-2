@@ -64,7 +64,7 @@ object InvoicePdfGenerator {
         }
         val income = transactions.filter { it.isIncome }.sumOf { it.amount }
         val expense = transactions.filter { !it.isIncome }.sumOf { it.amount }
-        val rowsPerPage = 20
+        val rowsPerPage = 14
         val chunks = transactions.chunked(rowsPerPage)
 
         chunks.forEachIndexed { pageIndex, rows ->
@@ -93,7 +93,7 @@ object InvoicePdfGenerator {
                 margin, y - 8f, pageWidth - margin, y + 22f, 7f, 7f,
                 Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFF1F5F9.toInt() }
             )
-            drawText(canvas, "شرح تراکنش", 310f, y, 230, bold)
+            drawText(canvas, "شرح تراکنش", 300f, y, 230, bold)
             drawText(canvas, "تاریخ", 190f, y, 105, bold)
             drawText(canvas, "مبلغ (تومان)", 48f, y, 125, bold, rtl = false)
             y += 38f
@@ -103,9 +103,9 @@ object InvoicePdfGenerator {
                 drawText(
                     canvas,
                     tx.title.ifBlank { "بدون عنوان" },
-                    310f, y, 230, paint(0xFF233047.toInt(), 10f, true)
+                    300f, y, 230, paint(0xFF233047.toInt(), 10f, true)
                 )
-                drawText(canvas, tx.category, 310f, y + 14f, 230, small)
+                drawText(canvas, tx.category, 300f, y + 14f, 230, small)
                 drawText(canvas, formatJalali(tx.dateMillis), 190f, y + 5f, 105, regular)
                 drawText(
                     canvas,
@@ -116,7 +116,7 @@ object InvoicePdfGenerator {
                 )
                 drawText(
                     (rowIndex + 1).toString().toPersianDigits(),
-                    548f, y + 5f, 10, small
+                    535f, y + 5f, 24, small
                 )
                 canvas.drawLine(margin, y + 32f, pageWidth - margin, y + 32f, line)
                 y += 35f
