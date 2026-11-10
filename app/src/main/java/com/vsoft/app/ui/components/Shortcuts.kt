@@ -16,7 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -82,24 +84,50 @@ fun EmptyState(icon: ImageVector, title: String, subtitle: String) {
 }
 
 @Composable
-fun FinanceShortcuts(onOpenTransactions: () -> Unit, onOpenAccounts: () -> Unit, onOpenTransactionForm: (String) -> Unit = {}) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        ShortcutTile(
-            title = "تراکنش‌ها",
-            subtitle = "جستجو، فیلتر و ویرایش",
-            icon = Icons.Filled.SwapVert,
-            tint = BrandBlue,
-            modifier = Modifier.weight(1f),
-            onClick = onOpenTransactions
-        )
-        ShortcutTile(
-            title = "کارت‌ها و حساب‌ها",
-            subtitle = "موجودی و انتقال وجه",
-            icon = Icons.Filled.CreditCard,
-            tint = BrandPurple,
-            modifier = Modifier.weight(1f),
-            onClick = onOpenAccounts
-        )
+fun FinanceShortcuts(
+    onOpenTransactions: () -> Unit,
+    onOpenAccounts: () -> Unit,
+    onOpenTransactionForm: (String) -> Unit = {},
+    onOpenDebts: () -> Unit = {},
+    onOpenInvestments: () -> Unit = {}
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ShortcutTile(
+                title = "تراکنش‌ها",
+                subtitle = "جستجو، فیلتر و ویرایش",
+                icon = Icons.Filled.SwapVert,
+                tint = BrandBlue,
+                modifier = Modifier.weight(1f),
+                onClick = onOpenTransactions
+            )
+            ShortcutTile(
+                title = "کارت‌ها و حساب‌ها",
+                subtitle = "موجودی و انتقال وجه",
+                icon = Icons.Filled.CreditCard,
+                tint = BrandPurple,
+                modifier = Modifier.weight(1f),
+                onClick = onOpenAccounts
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ShortcutTile(
+                title = "بدهی و طلب",
+                subtitle = "مدیریت حساب‌های شخصی",
+                icon = Icons.Filled.People,
+                tint = Color(0xFF279B70),
+                modifier = Modifier.weight(1f),
+                onClick = onOpenDebts
+            )
+            ShortcutTile(
+                title = "سرمایه‌گذاری",
+                subtitle = "دارایی‌ها و ارزش روز",
+                icon = Icons.Filled.TrendingUp,
+                tint = Color(0xFFD6A642),
+                modifier = Modifier.weight(1f),
+                onClick = onOpenInvestments
+            )
+        }
     }
 }
 
