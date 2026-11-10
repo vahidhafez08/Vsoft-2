@@ -162,7 +162,7 @@ object InvoiceImageGenerator {
 
         drawText(
             "این فاکتور توسط اپلیکیشن Vsoft تولید شده است.",
-            margin, height - 58f, width - margin * 2,
+            margin, height - 58f, (width - margin * 2).toInt(),
             paint(muted, 21f),
             alignment = Layout.Alignment.ALIGN_CENTER
         )
