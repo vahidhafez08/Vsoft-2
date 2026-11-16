@@ -84,7 +84,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.ui.components.AnimatedMoney
-import com.vsoft.app.ui.components.CategoryStyles
+import com.vsoft.app.ui.components.CategoryLogo
 import com.vsoft.app.ui.components.EmptyState
 import com.vsoft.app.ui.components.ScreenHeader
 import com.vsoft.app.ui.components.SegmentedTabs
@@ -402,7 +402,6 @@ private fun TxRow(
         }
     )
     val shape = RoundedCornerShape(18.dp)
-    val style = CategoryStyles.of(tx.category)
 
     SwipeToDismissBox(
         state = dismissState,
@@ -447,12 +446,7 @@ private fun TxRow(
                 }
                 Spacer(Modifier.width(8.dp))
             }
-            Box(
-                Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(style.color.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(style.icon, contentDescription = null, tint = style.color, modifier = Modifier.size(22.dp))
-            }
+            CategoryLogo(tx.category, 44.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
