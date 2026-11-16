@@ -35,7 +35,7 @@ import com.vsoft.app.util.toPersianDigits
 import com.vsoft.app.util.toPlainNumber
 import java.math.RoundingMode
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 
