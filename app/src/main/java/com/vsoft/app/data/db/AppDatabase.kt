@@ -133,7 +133,7 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
 val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `investments` ADD COLUMN `marketSymbol` TEXT")
-        db.execSQL("INSERT OR IGNORE INTO `investment_types` (`id`,`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES (10,'کالا','box','#607D8B','واحد',1)")
-        db.execSQL("INSERT OR IGNORE INTO `investment_types` (`id`,`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES (11,'شاخص بازار','stock','#5C6BC0','واحد',1)")
+        db.execSQL("INSERT OR IGNORE INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES ('کالا','box','#607D8B','واحد',1)")
+        db.execSQL("INSERT OR IGNORE INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES ('شاخص بازار','stock','#5C6BC0','واحد',1)")
     }
 }
