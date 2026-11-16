@@ -1,6 +1,5 @@
 package com.vsoft.app.ui.screens.finance
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,6 +33,7 @@ import com.vsoft.app.util.toGroupedNumber
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianDigits
+import com.vsoft.app.util.toPlainNumber
 import java.math.RoundingMode
 
 @Composable
@@ -61,7 +61,6 @@ fun InvestmentDetailScreen(
         com.vsoft.app.domain.InvestmentCalculator.investedFrom(parsedQuantity, parsedBuyPrice) != null
     val result = item?.let { com.vsoft.app.domain.InvestmentCalculator.compute(it) }
     val type = item?.let { value -> state.types.firstOrNull { it.id == value.typeId } }
-    val tint = type?.let { parseTypeColor(it.colorHex) } ?: Vsoft.colors.textSecondary
 
     FormScaffold(
         title = item?.title?.ifBlank { type?.name ?: "جزئیات سرمایه" } ?: "جزئیات سرمایه",
