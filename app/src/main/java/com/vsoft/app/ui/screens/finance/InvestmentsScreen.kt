@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +38,7 @@ import java.math.RoundingMode
 @Composable
 fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: InvestmentsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val marketState by vm.marketState.collectAsStateWithLifecycle()
     var selectedType by remember { mutableStateOf<Long?>(null) }
     var priceTarget by remember { mutableStateOf<InvestmentEntity?>(null) }
     var priceInput by remember { mutableStateOf("") }
@@ -74,6 +76,96 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                             fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Vsoft.colors.surface)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("قیمت‌های روز بازار", color = Vsoft.colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                        Text("اطلاعات از Iran Market Data", color = Vsoft.colors.textSecondary, fontSize = 10.sp)
+                    }
+                    TextButton(
+                        onClick = { vm.refreshMarketPrices() },
+                        enabled = !marketState.isLoading
+                    ) {
+                        if (marketState.isLoading) {
+                            CircularProgressIndicator(Modifier.size(15.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        }
+                        Spacer(Modifier.width(4.dp))
+                        Text("به‌روزرسانی", fontSize = 11.sp)
+                    }
+                }
+                val featuredSymbols = setOf(
+                    "USD_IRR_FREE", "EUR_IRR_FREE", "GOLD_18K_IRR",
+                    "COIN_EMAMI_IRR", "COIN_HALF_IRR", "USDT_IRR"
+                )
+                val featuredPrices = marketState.prices.filter { it.symbol in featuredSymbols }
+                if (featuredPrices.isEmpty()) {
+                    Text(
+                        marketState.error ?: if (marketState.isLoading) "در حال دریافت قیمت‌ها..." else "قیمت‌ها در دسترس نیستند.",
+                        color = Vsoft.colors.textSecondary,
+                        fontSize = 12.sp
+                    )
+                } else {
+                    featuredPrices.chunked(2).forEach { rowPrices ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            rowPrices.forEach { price ->
+                                Column(
+                                    Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+                                        .background(Vsoft.colors.bg).padding(10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(price.name, color = Vsoft.colors.textSecondary, fontSize = 10.sp, maxLines = 1)
+                                    Text(
+                                        "\${price.price.toLong().toMoney()} تومان",
+                                        color = Vsoft.colors.textPrimary,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1
+                                    )
+                                    val change = price.changePercent
+                                    Text(
+                                        when {
+                                            price.stale -> "اطلاعات قدیمی"
+                                            change == null -> " "
+                                            else -> (if (change > 0) "+" else "") + change.toString().toPersianDigits() + "٪"
+                                        },
+                                        color = when {
+                                            price.stale -> Vsoft.colors.textSecondary
+                                            change != null && change < 0 -> Color(0xFFE16B63)
+                                            change != null && change > 0 -> Color(0xFF279B70)
+                                            else -> Vsoft.colors.textSecondary
+                                        },
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                            if (rowPrices.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+                if (marketState.updatedAtJalali.isNotBlank()) {
+                    Text(
+                        "آخرین انتشار: \${marketState.updatedAtJalali}",
+                        color = Vsoft.colors.textSecondary,
+                        fontSize = 10.sp
+                    )
+                }
+                if (marketState.isCached) {
+                    Text("این اطلاعات از حافظهٔ دستگاه نمایش داده شده و ممکن است به‌روز نباشد.", color = Vsoft.colors.textSecondary, fontSize = 10.sp)
+                }
+                if (marketState.error != null && featuredPrices.isNotEmpty()) {
+                    Text(marketState.error.orEmpty(), color = Vsoft.colors.textSecondary, fontSize = 10.sp)
+                }
+                Text(
+                    "منبع: Iran Market Data · \${marketState.source}",
+                    color = Vsoft.colors.textSecondary,
+                    fontSize = 10.sp
+                )
             }
         }
         Spacer(Modifier.height(14.dp))
