@@ -110,7 +110,7 @@ fun seedDefaultInvestmentTypes(db: SupportSQLiteDatabase) {
         arrayOf<Any>("سکه","coin","#E0A100","عدد"),
         arrayOf<Any>("دلار","dollar","#2E9E5B","دلار"),
         arrayOf<Any>("یورو","euro","#2F6FDE","یورو"),
-        arrayOf<Any>("ارز خارجی","currency","#2E9E5B","واحد"),
+        arrayOf<Any>("ارز خارجی","dollar","#2E9E5B","واحد"),
         arrayOf<Any>("ارز دیجیتال","crypto","#F7931A","واحد"),
         arrayOf<Any>("سهام","stock","#7B4FE0","سهم"),
         arrayOf<Any>("صندوق سرمایه‌گذاری","fund","#00A3A3","واحد"),
@@ -135,6 +135,6 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
         db.execSQL("ALTER TABLE `investments` ADD COLUMN `marketSymbol` TEXT")
         db.execSQL("ALTER TABLE `investments` ADD COLUMN `marketUnit` TEXT")
         db.execSQL("INSERT INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) SELECT 'کالا','box','#607D8B','واحد',1 WHERE NOT EXISTS (SELECT 1 FROM `investment_types` WHERE `name` = 'کالا')")
-        db.execSQL("INSERT INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) SELECT 'ارز خارجی','currency','#2E9E5B','واحد',1 WHERE NOT EXISTS (SELECT 1 FROM `investment_types` WHERE `name` = 'ارز خارجی')")
+        db.execSQL("INSERT INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) SELECT 'ارز خارجی','dollar','#2E9E5B','واحد',1 WHERE NOT EXISTS (SELECT 1 FROM `investment_types` WHERE `name` = 'ارز خارجی')")
     }
 }
