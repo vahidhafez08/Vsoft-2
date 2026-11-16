@@ -60,6 +60,13 @@ val InvestmentColorOptions = listOf(
 
 /** Built-in asset keys (seeded in the database) plus the custom icon options. */
 fun investmentIconFor(key: String): ImageVector = when (key) {
+    "bitcoin" -> Icons.Default.CurrencyBitcoin
+    "ethereum" -> Icons.Default.Diamond
+    "usdt" -> Icons.Default.AttachMoney
+    "gold_asset" -> Icons.Default.Diamond
+    "coin_asset" -> Icons.Default.Toll
+    "usd_asset" -> Icons.Default.AttachMoney
+    "eur_asset" -> Icons.Default.Euro
     "coin" -> Icons.Default.Toll
     "dollar" -> Icons.Default.AttachMoney
     "euro" -> Icons.Default.Euro
@@ -89,6 +96,20 @@ private fun GoldBarGlyph(size: Dp) {
             lineTo(w * .74f, h * .54f); lineTo(w * .26f, h * .54f); close()
         }
         drawPath(shine, Color.Black.copy(alpha = .14f))
+    }
+}
+
+fun investmentIconKeyForMarketSymbol(symbol: String?, fallback: String): String {
+    val value = symbol.orEmpty().uppercase()
+    return when {
+        value.startsWith("BTC") -> "bitcoin"
+        value.startsWith("ETH") -> "ethereum"
+        value.startsWith("USDT") -> "usdt"
+        value.startsWith("GOLD") -> "gold_asset"
+        value.startsWith("COIN") -> "coin_asset"
+        value.startsWith("USD") -> "usd_asset"
+        value.startsWith("EUR") -> "eur_asset"
+        else -> fallback
     }
 }
 
