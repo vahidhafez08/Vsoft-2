@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 data class InvestmentsUiState(val types:List<InvestmentTypeEntity> = emptyList(),val items:List<InvestmentEntity> = emptyList()) {
@@ -26,6 +28,7 @@ data class InvestmentsUiState(val types:List<InvestmentTypeEntity> = emptyList()
 
 data class MarketUiState(
     val prices: List<MarketPrice> = emptyList(),
+    val allPrices: List<MarketPrice> = emptyList(),
     val updatedAtJalali: String = "",
     val source: String = "",
     val isLoading: Boolean = false,
@@ -59,14 +62,14 @@ class InvestmentsViewModel @Inject constructor(
                         val items = repo.observeInvestments().first()
                         items.filter { it.status == "ACTIVE" }.forEach { item ->
                             val type = types.firstOrNull { it.id == item.typeId } ?: return@forEach
-                            val symbol = resolveMarketSymbol(type.name, item.title) ?: return@forEach
+                            val symbol = item.marketSymbol ?: resolveMarketSymbol(type.name, item.title) ?: return@forEach
                             val price = priceBySymbol[symbol] ?: return@forEach
-                            if (!price.stale && price.price > 0.0 && price.price.isFinite()) {
+                            if (!price.stale && price.currency in setOf("IRT", "IRR") && price.price > 0.0 && price.price.isFinite()) {
                                 runCatching { repo.updatePrice(item.id, price.price) }
                             }
                         }
                     }
-                    val freshPrices = snapshot.prices.filter { !it.stale }
+                    val freshPrices = snapshot.prices.filter { !it.stale && it.currency in setOf("IRT", "IRR") }
                     val visiblePrices = buildList {
                         addAll(freshPrices.filter { it.category.equals("currency", ignoreCase = true) }.sortedBy { it.name }.take(8))
                         addAll(freshPrices.filter { it.category.equals("gold", ignoreCase = true) }.sortedBy { it.name }.take(3))
@@ -75,6 +78,7 @@ class InvestmentsViewModel @Inject constructor(
                     }
                     _marketState.value = MarketUiState(
                         prices = visiblePrices,
+                        allPrices = snapshot.prices,
                         updatedAtJalali = snapshot.updatedAtJalali,
                         source = snapshot.source,
                         isLoading = false,
@@ -116,10 +120,47 @@ class InvestmentsViewModel @Inject constructor(
     fun deleteType(type:InvestmentTypeEntity)=viewModelScope.launch {
         if(!repo.deleteType(type)) UiEvents.show("نوع پیش‌فرض یا نوع دارای سرمایه قابل حذف نیست")
     }
-    suspend fun save(item:InvestmentEntity) {
-        if(item.investedAmount<=0L||item.buyPrice<=0.0||item.quantity<=0.0||!item.buyPrice.isFinite()||!item.quantity.isFinite()){UiEvents.show("مبلغ، قیمت و مقدار باید بزرگ‌تر از صفر باشند");return}
-        repo.save(item);UiEvents.show("سرمایه ذخیره شد")
+
+    suspend fun save(item: InvestmentEntity, marketSymbol: String): Boolean {
+        if (item.quantity <= 0.0 || !item.quantity.isFinite()) {
+            UiEvents.show("مقدار باید بزرگ‌تر از صفر باشد")
+            return false
+        }
+        return try {
+            val snapshot = marketRepository.fetchLatest()
+            if (snapshot.fromCache) {
+                UiEvents.show("قیمت تازه دریافت نشد؛ اتصال اینترنت را بررسی و دوباره تلاش کنید")
+                return false
+            }
+            val price = snapshot.prices.firstOrNull { it.symbol == marketSymbol }
+            if (price == null || price.stale || price.currency !in setOf("IRT", "IRR") ||
+                price.price <= 0.0 || !price.price.isFinite()) {
+                UiEvents.show("قیمت معتبر و به‌روز این دارایی در بازار موجود نیست")
+                return false
+            }
+            val total = item.quantity * price.price
+            if (!total.isFinite() || total <= 0.0 || total > Long.MAX_VALUE.toDouble()) {
+                UiEvents.show("ارزش کل دارایی خارج از محدودهٔ قابل ذخیره است")
+                return false
+            }
+            val totalAmount = BigDecimal.valueOf(total).setScale(0, RoundingMode.HALF_UP).longValueExact()
+            val now = System.currentTimeMillis()
+            repo.save(item.copy(
+                title = price.name,
+                investedAmount = totalAmount,
+                buyPrice = price.price,
+                currentPrice = price.price,
+                priceUpdatedAtMillis = now,
+                marketSymbol = price.symbol
+            ))
+            UiEvents.show("سرمایه با قیمت روز ذخیره شد")
+            true
+        } catch (error: Exception) {
+            UiEvents.show("ثبت انجام نشد؛ دریافت قیمت معتبر از بازار ممکن نبود")
+            false
+        }
     }
+
     fun delete(item:InvestmentEntity)=viewModelScope.launch { repo.delete(item) }
     fun updatePrice(item:InvestmentEntity,price:Double)=viewModelScope.launch { runCatching{repo.updatePrice(item.id,price)}.onFailure{UiEvents.show("قیمت معتبر نیست")} }
     fun updateGroup(typeId:Long,price:Double)=viewModelScope.launch { runCatching{repo.updateTypePrice(typeId,price)}.onFailure{UiEvents.show("قیمت معتبر نیست")} }
