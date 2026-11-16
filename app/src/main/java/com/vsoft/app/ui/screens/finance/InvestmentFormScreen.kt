@@ -37,6 +37,7 @@ import com.vsoft.app.ui.components.form.FormTextField
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
+import com.vsoft.app.util.toPlainNumber
 import kotlinx.coroutines.launch
 
 @Composable
@@ -46,6 +47,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
     val scope = rememberCoroutineScope()
     var typeId by remember { mutableLongStateOf(0L) }
     var quantity by remember { mutableStateOf("") }
+    var buyPriceInput by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var selectedSymbol by remember { mutableStateOf("") }
     var search by remember { mutableStateOf("") }
@@ -90,11 +92,18 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
         }
     }
 
+    LaunchedEffect(selectedPrice?.symbol) {
+        buyPriceInput = selectedPrice?.price?.toPlainNumber().orEmpty()
+    }
     val parsedQuantity = quantity.toLatinDigits().toDoubleOrNull() ?: 0.0
+    val parsedBuyPrice = buyPriceInput.toLatinDigits().replace(",", "").toDoubleOrNull() ?: 0.0
     val totalValue = selectedPrice?.let { parsedQuantity * it.price } ?: 0.0
+    val investedValue = parsedQuantity * parsedBuyPrice
     val valid = selectedType != null && selectedPrice != null && !marketState.isCached &&
         parsedQuantity > 0.0 && parsedQuantity.isFinite() &&
-        totalValue > 0.0 && totalValue.isFinite() && totalValue <= Long.MAX_VALUE.toDouble()
+        parsedBuyPrice > 0.0 && parsedBuyPrice.isFinite() &&
+        investedValue > 0.0 && investedValue.isFinite() && investedValue <= Long.MAX_VALUE.toDouble() &&
+        totalValue > 0.0 && totalValue.isFinite()
 
     FormScaffold(
         title = "ثبت سرمایه‌گذاری",
@@ -113,8 +122,8 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                                 InvestmentEntity(
                                     typeId = type.id,
                                     title = price.name,
-                                    investedAmount = totalValue.toLong(),
-                                    buyPrice = price.price,
+                                    investedAmount = investedValue.toLong(),
+                                    buyPrice = parsedBuyPrice,
                                     quantity = parsedQuantity,
                                     currentPrice = price.price,
                                     priceUpdatedAtMillis = System.currentTimeMillis(),
@@ -122,7 +131,8 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                                     note = note.trim(),
                                     marketSymbol = price.symbol
                                 ),
-                                price.symbol
+                                price.symbol,
+                                parsedBuyPrice
                             )
                             if (saved) onBack()
                         }
@@ -221,6 +231,25 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                     }
                 }
             }
+        }
+
+        FormCard(Icons.Default.TrendingUp, "قیمت خرید هر واحد") {
+            FormNumberField(
+                raw = buyPriceInput,
+                onChange = { buyPriceInput = it },
+                placeholder = "قیمت واقعی خرید هر واحد",
+                unit = "تومان",
+                maxDigits = 15,
+                groupThousands = true
+            )
+            Text(
+                if (parsedQuantity > 0.0 && parsedBuyPrice > 0.0 && investedValue.isFinite())
+                    "مجموع مبلغ خرید: ${investedValue.toLong().toMoney()} تومان"
+                else "قیمت خرید را وارد کنید تا سود و زیان دقیق محاسبه شود.",
+                color = Vsoft.colors.textSecondary,
+                fontSize = 12.sp
+            )
+            Text("قیمت فعلی بازار: ${selectedPrice?.price?.toLong()?.toMoney() ?: "—"} تومان", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
         }
 
         FormCard(Icons.Default.AccountBalance, "مقدار دارایی") {
