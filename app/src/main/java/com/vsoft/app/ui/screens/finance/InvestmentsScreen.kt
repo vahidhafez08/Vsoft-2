@@ -21,8 +21,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.data.model.InvestmentEntity
 import com.vsoft.app.domain.InvestmentCalculator
 import com.vsoft.app.ui.theme.Vsoft
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import com.vsoft.app.ui.components.form.FormNumberField
+import com.vsoft.app.util.toGroupedNumber
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
+import com.vsoft.app.util.toPersianDigits
+import com.vsoft.app.util.toPlainNumber
 import java.math.RoundingMode
 
 @Composable
@@ -70,15 +79,10 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
         Spacer(Modifier.height(14.dp))
         Text("دارایی‌ها", color = Vsoft.colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
         Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            FilterChip(selectedType == null, { selectedType = null }, label = { Text("همه") })
-            state.types.take(4).forEach { type ->
-                FilterChip(selectedType == type.id, { selectedType = type.id }, label = { Text(type.name) })
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            state.types.drop(4).forEach { type ->
-                FilterChip(selectedType == type.id, { selectedType = type.id }, label = { Text(type.name) })
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            InvestmentTypePill(null, "همه", selectedType == null) { selectedType = null }
+            state.types.forEach { type ->
+                InvestmentTypePill(type, type.name, selectedType == type.id) { selectedType = type.id }
             }
         }
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(0.dp, 12.dp, 0.dp, 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -88,31 +92,52 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
             items(visibleItems, key = { it.id }) { item ->
                 val type = state.types.firstOrNull { it.id == item.typeId }
                 val result = InvestmentCalculator.compute(item)
-                val current = result.currentValue?.setScale(0, RoundingMode.HALF_UP)?.toPlainString()
-                Card(colors = CardDefaults.cardColors(containerColor = Vsoft.colors.surface), modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text(item.title.ifBlank { type?.name ?: "سرمایه" }, color = Vsoft.colors.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                                Text("${type?.name ?: "دارایی"} · ${item.quantity} ${type?.unitLabel.orEmpty()}", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                val current = result.currentValue?.setScale(0, RoundingMode.HALF_UP)?.toLong()
+                val tint = type?.let { parseTypeColor(it.colorHex) } ?: Vsoft.colors.textSecondary
+                val cardShape = RoundedCornerShape(20.dp)
+                Column(
+                    Modifier.fillMaxWidth().clip(cardShape).background(Vsoft.colors.surface)
+                        .border(1.dp, tint.copy(alpha = .22f), cardShape).padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        InvestmentTypeLogo(type?.iconKey ?: "", type?.colorHex ?: "#5C8FE8", 48.dp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text(item.title.ifBlank { type?.name ?: "سرمایه" }, color = Vsoft.colors.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Box(Modifier.clip(RoundedCornerShape(8.dp)).background(tint.copy(alpha = .14f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                                    Text(type?.name ?: "دارایی", color = tint, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                                Text("${item.quantity.toGroupedNumber()} ${type?.unitLabel.orEmpty()}", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
                             }
-                            Text(if (item.status == "SOLD") "فروخته‌شده" else "فعال", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                         }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column {
-                                Text("مبلغ خرید", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
-                                Text("${item.investedAmount.toMoney()} تومان", color = Vsoft.colors.textPrimary, fontSize = 13.sp)
+                        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            val pct = result.profitLossPercent
+                            if (pct != null) {
+                                val up = pct.signum() >= 0
+                                val col = if (up) Color(0xFF279B70) else Color(0xFFE16B63)
+                                Box(Modifier.clip(RoundedCornerShape(8.dp)).background(col.copy(alpha = .14f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                                    Text((if (up) "+" else "") + pct.setScale(1, RoundingMode.HALF_UP).toPlainString().toPersianDigits() + "٪", color = col, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text("ارزش فعلی", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
-                                Text(if (current != null) "$current تومان" else "قیمت وارد نشده", color = Vsoft.colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            }
+                            if (item.status == "SOLD") Text("فروخته‌شده", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (item.status == "ACTIVE") TextButton(onClick = { priceTarget = item; priceInput = item.currentPrice?.toString().orEmpty() }) { Text("ثبت / ویرایش قیمت") }
-                            Spacer(Modifier.weight(1f))
-                            IconButton(onClick = { deleteTarget = item }) { Icon(Icons.Default.Delete, "حذف", tint = Vsoft.colors.textSecondary) }
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column {
+                            Text("مبلغ خرید", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                            Text("${item.investedAmount.toMoney()} تومان", color = Vsoft.colors.textPrimary, fontSize = 13.sp)
                         }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("ارزش فعلی", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                            Text(if (current != null) "${current.toMoney()} تومان" else "قیمت وارد نشده", color = Vsoft.colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (item.status == "ACTIVE") TextButton(onClick = { priceTarget = item; priceInput = item.currentPrice?.toPlainNumber().orEmpty() }) { Text("ثبت / ویرایش قیمت") }
+                        Spacer(Modifier.weight(1f))
+                        IconButton(onClick = { deleteTarget = item }) { Icon(Icons.Default.Delete, "حذف", tint = Vsoft.colors.textSecondary) }
                     }
                 }
             }
@@ -126,8 +151,8 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
         AlertDialog(
             onDismissRequest = { priceTarget = null },
             title = { Text("قیمت دستی ${item.title.ifBlank { "سرمایه" }}") },
-            text = { OutlinedTextField(priceInput, { priceInput = it.toLatinDigits().filter { c -> c.isDigit() || c == '.' }.take(18) }, label = { Text("قیمت فعلی هر واحد (تومان)") }, singleLine = true) },
-            confirmButton = { TextButton(onClick = { priceInput.toDoubleOrNull()?.let { vm.updatePrice(item, it) }; priceTarget = null }) { Text("ذخیره قیمت") } },
+            text = { FormNumberField(raw = priceInput, onChange = { priceInput = it }, placeholder = "قیمت فعلی هر واحد", unit = "تومان", maxDigits = 15, groupThousands = true) },
+            confirmButton = { TextButton(onClick = { priceInput.toLatinDigits().toDoubleOrNull()?.let { vm.updatePrice(item, it) }; priceTarget = null }) { Text("ذخیره قیمت") } },
             dismissButton = { TextButton(onClick = { priceTarget = null }) { Text("انصراف") } }
         )
     }

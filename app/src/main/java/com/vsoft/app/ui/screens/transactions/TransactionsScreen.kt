@@ -331,60 +331,25 @@ fun TransactionsScreen(
     }
 
     if (showInvoiceActions && invoiceFile != null && invoiceImageFile != null) {
-        AlertDialog(
-            onDismissRequest = { showInvoiceActions = false },
-            containerColor = Vsoft.colors.surface,
-            title = { Text("فاکتور آماده است", color = Vsoft.colors.textPrimary) },
-            text = {
-                Text(
-                    "فاکتور با طراحی مینیمال در دو قالب PDF و تصویر باکیفیت PNG آماده شد.",
-                    color = Vsoft.colors.textSecondary
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val file = invoiceImageFile ?: return@TextButton
-                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        setType("image/png")
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    context.startActivity(Intent.createChooser(intent, "اشتراک‌گذاری تصویر فاکتور"))
-                    showInvoiceActions = false
-                }) { Text("اشتراک تصویر") }
-            },
-            dismissButton = {
-                Column(horizontalAlignment = Alignment.End) {
-                    Row {
-                        TextButton(onClick = {
-                            saveInvoiceImageLauncher.launch("فاکتور-${System.currentTimeMillis()}.png")
-                            showInvoiceActions = false
-                        }) { Text("ذخیره تصویر") }
-                        TextButton(onClick = {
-                            saveInvoiceLauncher.launch("فاکتور-${System.currentTimeMillis()}.pdf")
-                            showInvoiceActions = false
-                        }) { Text("ذخیره PDF") }
-                    }
-                    Row {
-                        TextButton(onClick = {
-                            val file = invoiceFile ?: return@TextButton
-                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                setType("application/pdf")
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            context.startActivity(Intent.createChooser(intent, "اشتراک‌گذاری PDF"))
-                            showInvoiceActions = false
-                        }) { Text("اشتراک PDF") }
-                        TextButton(onClick = { showInvoiceActions = false }) { Text("بستن") }
-                    }
-                }
+        fun share(file: File?, mime: String, chooserTitle: String) {
+            val f = file ?: return
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", f)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                setType(mime)
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+            context.startActivity(Intent.createChooser(intent, chooserTitle))
+            showInvoiceActions = false
+        }
+        InvoiceActionsSheet(
+            onSavePdf = { saveInvoiceLauncher.launch("فاکتور-${System.currentTimeMillis()}.pdf"); showInvoiceActions = false },
+            onSharePdf = { share(invoiceFile, "application/pdf", "اشتراک‌گذاری PDF") },
+            onSaveImage = { saveInvoiceImageLauncher.launch("فاکتور-${System.currentTimeMillis()}.png"); showInvoiceActions = false },
+            onShareImage = { share(invoiceImageFile, "image/png", "اشتراک‌گذاری تصویر فاکتور") },
+            onDismiss = { showInvoiceActions = false }
         )
-    }
-}
+    }}
 
 @Composable
 private fun SummaryCell(label: String, value: Long, color: Color, modifier: Modifier) {

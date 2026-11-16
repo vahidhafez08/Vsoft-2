@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+
 package com.vsoft.app.ui.screens.finance
 
 import androidx.compose.foundation.background
@@ -12,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -74,7 +78,9 @@ fun DebtsScreen(
     vm: DebtsViewModel = hiltViewModel()
 ) {
     val debts by vm.debts.collectAsStateWithLifecycle()
-    var tab by remember { mutableIntStateOf(0) }
+    val pagerState = rememberPagerState(initialPage = 0) { 2 }
+    val scope = rememberCoroutineScope()
+    val tab = pagerState.currentPage
     var deleting by remember { mutableStateOf<DebtEntity?>(null) }
     var paid by remember { mutableStateOf<Map<Long, Long>>(emptyMap()) }
 
@@ -86,7 +92,6 @@ fun DebtsScreen(
         .sumOf { (it.totalAmount - (paid[it.id] ?: 0L)).coerceAtLeast(0L) }
     val owedToMe = debts.filter { it.type == DebtType.OWED_TO_ME.name && !it.isSettled }
         .sumOf { (it.totalAmount - (paid[it.id] ?: 0L)).coerceAtLeast(0L) }
-    val filtered = debts.filter { it.type == if (tab == 0) DebtType.I_OWE.name else DebtType.OWED_TO_ME.name }
 
     Column(Modifier.fillMaxSize().background(Vsoft.colors.bg).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -117,50 +122,53 @@ fun DebtsScreen(
 
         Spacer(Modifier.height(14.dp))
         TabRow(selectedTabIndex = tab, containerColor = Vsoft.colors.bg) {
-            Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("بدهکارم") })
-            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("طلبکارم") })
+            Tab(selected = tab == 0, onClick = { scope.launch { pagerState.animateScrollToPage(0) } }, text = { Text("بدهکارم") })
+            Tab(selected = tab == 1, onClick = { scope.launch { pagerState.animateScrollToPage(1) } }, text = { Text("طلبکارم") })
         }
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(0.dp, 12.dp, 0.dp, 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            if (filtered.isEmpty()) {
-                item {
-                    Text(
-                        if (tab == 0) "هنوز بدهی‌ای ثبت نکرده‌ای." else "هنوز طلبی ثبت نکرده‌ای.",
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
-                        color = Vsoft.colors.textSecondary
-                    )
+        HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
+            val filtered = debts.filter { it.type == if (page == 0) DebtType.I_OWE.name else DebtType.OWED_TO_ME.name }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(0.dp, 12.dp, 0.dp, 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (filtered.isEmpty()) {
+                    item {
+                        Text(
+                            if (page == 0) "هنوز بدهی‌ای ثبت نکرده‌ای." else "هنوز طلبی ثبت نکرده‌ای.",
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                            color = Vsoft.colors.textSecondary
+                        )
+                    }
                 }
-            }
-            items(filtered, key = { it.id }) { debt ->
-                val settledAmount = paid[debt.id] ?: 0L
-                val remaining = (debt.totalAmount - settledAmount).coerceAtLeast(0L)
-                val progress = if (debt.totalAmount > 0L) (settledAmount.toFloat() / debt.totalAmount).coerceIn(0f, 1f) else 0f
-                Card(colors = CardDefaults.cardColors(containerColor = Vsoft.colors.surface), modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text(debt.personName, color = Vsoft.colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                                Text(if (debt.isSettled) "تسویه‌شده" else "باقی‌مانده", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                items(filtered, key = { it.id }) { debt ->
+                    val settledAmount = paid[debt.id] ?: 0L
+                    val remaining = (debt.totalAmount - settledAmount).coerceAtLeast(0L)
+                    val progress = if (debt.totalAmount > 0L) (settledAmount.toFloat() / debt.totalAmount).coerceIn(0f, 1f) else 0f
+                    Card(colors = CardDefaults.cardColors(containerColor = Vsoft.colors.surface), modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(debt.personName, color = Vsoft.colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                                    Text(if (debt.isSettled) "تسویه‌شده" else "باقی‌مانده", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                                }
+                                Text("${remaining.toMoney()} تومان", color = Vsoft.colors.textPrimary, fontWeight = FontWeight.Bold)
                             }
-                            Text("${remaining.toMoney()} تومان", color = Vsoft.colors.textPrimary, fontWeight = FontWeight.Bold)
-                        }
-                        LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("مبلغ اولیه: ${debt.totalAmount.toMoney()}", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
-                            Text("پرداخت‌شده: ${settledAmount.toMoney()}", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
-                        }
-                        if (debt.note.isNotBlank()) Text(debt.note, color = Vsoft.colors.textSecondary, fontSize = 12.sp)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = { vm.settle(debt, !debt.isSettled) }) {
-                                Text(if (debt.isSettled) "لغو تسویه" else "تسویه دستی")
+                            LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("مبلغ اولیه: ${debt.totalAmount.toMoney()}", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                                Text("پرداخت‌شده: ${settledAmount.toMoney()}", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                             }
-                            Spacer(Modifier.weight(1f))
-                            IconButton(onClick = { deleting = debt }) {
-                                Icon(Icons.Default.Delete, contentDescription = "حذف", tint = Vsoft.colors.textSecondary)
+                            if (debt.note.isNotBlank()) Text(debt.note, color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(onClick = { vm.settle(debt, !debt.isSettled) }) {
+                                    Text(if (debt.isSettled) "لغو تسویه" else "تسویه دستی")
+                                }
+                                Spacer(Modifier.weight(1f))
+                                IconButton(onClick = { deleting = debt }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "حذف", tint = Vsoft.colors.textSecondary)
+                                }
                             }
                         }
                     }

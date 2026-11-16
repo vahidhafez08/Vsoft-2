@@ -30,7 +30,6 @@ import com.vsoft.app.ui.components.form.FormNumberField
 import com.vsoft.app.ui.components.form.FormPrimaryButton
 import com.vsoft.app.ui.components.form.FormScaffold
 import com.vsoft.app.ui.components.form.FormTextField
-import com.vsoft.app.ui.components.form.FormTile
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.toLatinDigits
 import kotlinx.coroutines.launch
@@ -47,9 +46,14 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
     var currentPrice by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
+    var showTypeSheet by remember { mutableStateOf(false) }
+    var pendingTypeName by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(state.types) {
         if (typeId == 0L) typeId = state.types.firstOrNull()?.id ?: 0L
+        pendingTypeName?.let { name ->
+            state.types.firstOrNull { it.name == name }?.let { typeId = it.id; pendingTypeName = null }
+        }
     }
 
     val selectedType = state.types.firstOrNull { it.id == typeId }
@@ -98,16 +102,12 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
             } else {
                 Row(
                     Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    state.types.forEachIndexed { index, type ->
-                        FormTile(
-                            label = type.name,
-                            icon = investmentTypeIcon(type.name),
-                            tint = investmentTypeColor(index),
-                            selected = typeId == type.id
-                        ) { typeId = type.id }
+                    state.types.forEach { type ->
+                        InvestmentTypeTile(type, typeId == type.id) { typeId = type.id }
                     }
+                    InvestmentAddTypeTile { showTypeSheet = true }
                 }
             }
             FormTextField(
@@ -172,26 +172,17 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
             )
         }
     }
-}
 
-private fun investmentTypeIcon(name: String): ImageVector {
-    val value = name.lowercase()
-    return when {
-        "طلا" in value || "سکه" in value || "جواهر" in value -> Icons.Default.Diamond
-        "دلار" in value || "ارز" in value -> Icons.Default.AttachMoney
-        "بانک" in value || "سپرده" in value -> Icons.Default.AccountBalance
-        "سهام" in value || "بورس" in value -> Icons.Default.TrendingUp
-        else -> Icons.Default.Category
+    if (showTypeSheet) {
+        AddInvestmentTypeSheet(
+            existing = state.types,
+            onSave = { name, unit, icon, color ->
+                pendingTypeName = name
+                vm.saveType(name, unit, icon, color)
+                showTypeSheet = false
+            },
+            onDelete = { vm.deleteType(it) },
+            onDismiss = { showTypeSheet = false }
+        )
     }
-}
-
-private fun investmentTypeColor(index: Int): Color {
-    val colors = listOf(
-        Color(0xFFD6A642),
-        Color(0xFF4C9B83),
-        Color(0xFF5C8FE8),
-        Color(0xFF9A75C8),
-        Color(0xFFDB8064)
-    )
-    return colors[index % colors.size]
 }
