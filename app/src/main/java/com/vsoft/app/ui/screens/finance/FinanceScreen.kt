@@ -71,7 +71,7 @@ fun FinanceScreen(onOpenTransactions: () -> Unit = {}, onOpenAccounts: () -> Uni
         .padding(horizontal = 16.dp).padding(top = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text("مدیریت مالی", color = Vsoft.colors.textPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         FinanceShortcuts(onOpenTransactions, onOpenAccounts, onOpenTransactionForm, onOpenDebts, onOpenInvestments)
-        SegmentedTabs(listOf("کلیات", "درآمد", "هزینه", "حساب‌ها"), tab) { tab = it }
+        SegmentedTabs(listOf("کلیات", "درآمد", "هزینه", "حساب‌ها"), tab, onSelect = { tab = it })
         VCard { Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             DonutChart(content.items.map { ChartSlice(abs(it.amount).toFloat(), it.color) }, content.centerTitle, content.centerValue.toMoney())
         } }
