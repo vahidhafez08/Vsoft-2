@@ -11,6 +11,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vsoft.app.data.model.ExpenseCategories
 import com.vsoft.app.data.model.IncomeCategories
+import com.vsoft.app.ui.components.CustomCategories
+import com.vsoft.app.ui.components.categoriesFor
 import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.data.model.DebtEntity
 import com.vsoft.app.data.repository.DocumentRepository
@@ -64,10 +66,11 @@ class TransactionFormViewModel @Inject constructor(
             list.map { a -> FormAccountOption(a.id, a.name, (balances[a.id] ?: a.balance).toMoney()) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun categoryNames(): List<String> = if (isIncome) IncomeCategories.toList() else ExpenseCategories.toList()
+    fun categoryNames(): List<String> = categoriesFor(isIncome)
     val canSave: Boolean get() = (amountRaw.toLongOrNull() ?: 0L) > 0L && category != null && !saving
 
     init {
+        CustomCategories.init(context)
         val last = context.getSharedPreferences("vsoft_prefs", Context.MODE_PRIVATE).getLong("last_account_id", -1L)
         if (!isEdit && last > 0L) safeLaunch {
             if (finance.observeAccounts().first().any { it.id == last }) accountId = last
