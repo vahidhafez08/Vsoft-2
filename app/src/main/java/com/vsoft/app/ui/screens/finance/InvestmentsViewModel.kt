@@ -66,10 +66,13 @@ class InvestmentsViewModel @Inject constructor(
                             }
                         }
                     }
-                    val supportedCategories = setOf("currency", "gold", "coin", "crypto")
-                    val visiblePrices = snapshot.prices
-                        .filter { it.category.lowercase() in supportedCategories && !it.stale }
-                        .take(20)
+                    val freshPrices = snapshot.prices.filter { !it.stale }
+                    val visiblePrices = buildList {
+                        addAll(freshPrices.filter { it.category.equals("currency", ignoreCase = true) }.sortedBy { it.name }.take(8))
+                        addAll(freshPrices.filter { it.category.equals("gold", ignoreCase = true) }.sortedBy { it.name }.take(3))
+                        addAll(freshPrices.filter { it.category.equals("coin", ignoreCase = true) }.sortedBy { it.name }.take(5))
+                        addAll(freshPrices.filter { it.category.equals("crypto", ignoreCase = true) }.sortedBy { it.name }.take(4))
+                    }
                     _marketState.value = MarketUiState(
                         prices = visiblePrices,
                         updatedAtJalali = snapshot.updatedAtJalali,
