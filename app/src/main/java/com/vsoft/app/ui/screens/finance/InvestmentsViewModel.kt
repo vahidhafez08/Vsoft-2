@@ -151,7 +151,8 @@ class InvestmentsViewModel @Inject constructor(
                 buyPrice = price.price,
                 currentPrice = price.price,
                 priceUpdatedAtMillis = now,
-                marketSymbol = price.symbol
+                marketSymbol = price.symbol,
+                marketUnit = price.unit
             ))
             UiEvents.show("سرمایه با قیمت روز ذخیره شد")
             true
