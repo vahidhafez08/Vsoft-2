@@ -78,6 +78,17 @@ fun investmentIconFor(key: String): ImageVector = when (key) {
     else -> InvestmentIconOptions.firstOrNull { it.first == key }?.second ?: Icons.Default.Category
 }
 
+fun marketUnitLabel(unit: String): String = when (unit.trim().lowercase()) {
+    "gram", "grams", "g" -> "گرم"
+    "piece", "pieces", "coin", "pcs" -> "عدد"
+    "unit", "units" -> "واحد"
+    "share", "shares" -> "سهم"
+    "ounce", "oz" -> "اونس"
+    "kg", "kilogram" -> "کیلوگرم"
+    "barrel" -> "بشکه"
+    else -> unit
+}
+
 fun parseTypeColor(hex: String): Color =
     runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrDefault(Color(0xFF5C8FE8))
 
@@ -105,10 +116,10 @@ fun investmentIconKeyForMarketSymbol(symbol: String?, fallback: String): String 
         value.startsWith("BTC") -> "bitcoin"
         value.startsWith("ETH") -> "ethereum"
         value.startsWith("USDT") -> "usdt"
-        value.startsWith("GOLD") -> "gold_asset"
-        value.startsWith("COIN") -> "coin_asset"
-        value.startsWith("USD") -> "usd_asset"
-        value.startsWith("EUR") -> "eur_asset"
+        value.startsWith("GOLD") -> "gold"
+        value.startsWith("COIN") -> "coin"
+        value.startsWith("USD") -> "dollar"
+        value.startsWith("EUR") -> "euro"
         else -> fallback
     }
 }
