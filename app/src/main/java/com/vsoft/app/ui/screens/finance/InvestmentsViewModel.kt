@@ -66,14 +66,12 @@ class InvestmentsViewModel @Inject constructor(
                             }
                         }
                     }
-                    val visibleSymbols = setOf(
-                        "USD_IRR_FREE", "EUR_IRR_FREE", "GBP_IRR_FREE",
-                        "GOLD_18K_IRR", "GOLD_24K_IRR",
-                        "COIN_EMAMI_IRR", "COIN_HALF_IRR", "COIN_QUARTER_IRR",
-                        "USDT_IRR"
-                    )
+                    val supportedCategories = setOf("currency", "gold", "coin", "crypto")
+                    val visiblePrices = snapshot.prices
+                        .filter { it.category.lowercase() in supportedCategories && !it.stale }
+                        .take(20)
                     _marketState.value = MarketUiState(
-                        prices = snapshot.prices.filter { it.symbol in visibleSymbols },
+                        prices = visiblePrices,
                         updatedAtJalali = snapshot.updatedAtJalali,
                         source = snapshot.source,
                         isLoading = false,
