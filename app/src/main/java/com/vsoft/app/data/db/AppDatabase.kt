@@ -114,7 +114,9 @@ fun seedDefaultInvestmentTypes(db: SupportSQLiteDatabase) {
         arrayOf<Any>("سهام","stock","#7B4FE0","سهم"),
         arrayOf<Any>("صندوق سرمایه‌گذاری","fund","#00A3A3","واحد"),
         arrayOf<Any>("ملک","home","#8D6E63","متر"),
-        arrayOf<Any>("خودرو","car","#546E7A","دستگاه")
+        arrayOf<Any>("خودرو","car","#546E7A","دستگاه"),
+        arrayOf<Any>("کالا","box","#607D8B","واحد"),
+        arrayOf<Any>("شاخص بازار","stock","#5C6BC0","واحد")
     )
     rows.forEach { row ->
         db.execSQL("INSERT INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES (?,?,?,?,1)", row)
@@ -131,5 +133,7 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
 val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `investments` ADD COLUMN `marketSymbol` TEXT")
+        db.execSQL("INSERT OR IGNORE INTO `investment_types` (`id`,`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES (10,'کالا','box','#607D8B','واحد',1)")
+        db.execSQL("INSERT OR IGNORE INTO `investment_types` (`id`,`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES (11,'شاخص بازار','stock','#5C6BC0','واحد',1)")
     }
 }
