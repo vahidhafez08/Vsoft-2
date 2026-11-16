@@ -215,7 +215,7 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                                 Box(Modifier.clip(RoundedCornerShape(8.dp)).background(tint.copy(alpha = .14f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
                                     Text(type?.name ?: "دارایی", color = tint, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                 }
-                                Text("${item.quantity.toGroupedNumber()} ${type?.unitLabel.orEmpty()}", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
+                                Text("${item.quantity.toGroupedNumber()} ${item.marketUnit?.let(::marketUnitLabel)?.takeIf { it.isNotBlank() } ?: type?.unitLabel.orEmpty()}", color = Vsoft.colors.textSecondary, fontSize = 12.sp)
                             }
                         }
                         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
