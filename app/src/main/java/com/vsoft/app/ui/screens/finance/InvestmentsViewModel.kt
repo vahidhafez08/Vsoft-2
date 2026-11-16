@@ -121,9 +121,9 @@ class InvestmentsViewModel @Inject constructor(
         if(!repo.deleteType(type)) UiEvents.show("نوع پیش‌فرض یا نوع دارای سرمایه قابل حذف نیست")
     }
 
-    suspend fun save(item: InvestmentEntity, marketSymbol: String): Boolean {
-        if (item.quantity <= 0.0 || !item.quantity.isFinite()) {
-            UiEvents.show("مقدار باید بزرگ‌تر از صفر باشد")
+    suspend fun save(item: InvestmentEntity, marketSymbol: String, purchasePrice: Double = item.buyPrice): Boolean {
+        if (item.quantity <= 0.0 || !item.quantity.isFinite() || purchasePrice <= 0.0 || !purchasePrice.isFinite()) {
+            UiEvents.show("مقدار و قیمت خرید باید معتبر و بزرگ‌تر از صفر باشند")
             return false
         }
         return try {
@@ -138,7 +138,7 @@ class InvestmentsViewModel @Inject constructor(
                 UiEvents.show("قیمت معتبر و به‌روز این دارایی در بازار موجود نیست")
                 return false
             }
-            val total = item.quantity * price.price
+            val total = item.quantity * purchasePrice
             if (!total.isFinite() || total <= 0.0 || total > Long.MAX_VALUE.toDouble()) {
                 UiEvents.show("ارزش کل دارایی خارج از محدودهٔ قابل ذخیره است")
                 return false
@@ -148,7 +148,7 @@ class InvestmentsViewModel @Inject constructor(
             repo.save(item.copy(
                 title = price.name,
                 investedAmount = totalAmount,
-                buyPrice = price.price,
+                buyPrice = purchasePrice,
                 currentPrice = price.price,
                 priceUpdatedAtMillis = now,
                 marketSymbol = price.symbol,
