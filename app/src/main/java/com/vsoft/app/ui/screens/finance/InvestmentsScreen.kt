@@ -121,7 +121,7 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                                 ) {
                                     Text(price.name, color = Vsoft.colors.textSecondary, fontSize = 10.sp, maxLines = 1)
                                     Text(
-                                        "\${price.price.toLong().toMoney()} تومان",
+                                        "${price.price.toLong().toMoney()} تومان",
                                         color = Vsoft.colors.textPrimary,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
@@ -150,7 +150,7 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                 }
                 if (marketState.updatedAtJalali.isNotBlank()) {
                     Text(
-                        "آخرین انتشار: \${marketState.updatedAtJalali}",
+                        "آخرین انتشار: ${marketState.updatedAtJalali}",
                         color = Vsoft.colors.textSecondary,
                         fontSize = 10.sp
                     )
@@ -162,7 +162,7 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                     Text(marketState.error.orEmpty(), color = Vsoft.colors.textSecondary, fontSize = 10.sp)
                 }
                 Text(
-                    "منبع: Iran Market Data · \${marketState.source}",
+                    "منبع: Iran Market Data · ${marketState.source}",
                     color = Vsoft.colors.textSecondary,
                     fontSize = 10.sp
                 )
