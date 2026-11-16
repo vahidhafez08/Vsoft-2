@@ -162,6 +162,27 @@ class InvestmentsViewModel @Inject constructor(
         }
     }
 
+    fun updateInvestment(item: InvestmentEntity, quantity: Double, buyPrice: Double, note: String, onSaved: () -> Unit) = viewModelScope.launch {
+        val invested = InvestmentCalculator.investedFrom(quantity, buyPrice)
+        if (invested == null) {
+            UiEvents.show("مقدار و قیمت خرید باید معتبر و بزرگ‌تر از صفر باشند")
+            return@launch
+        }
+        runCatching {
+            repo.save(item.copy(
+                quantity = quantity,
+                buyPrice = buyPrice,
+                investedAmount = invested,
+                note = note
+            ))
+        }.onSuccess {
+            UiEvents.show("تغییرات سرمایه ذخیره شد")
+            onSaved()
+        }.onFailure {
+            UiEvents.show("ذخیره تغییرات انجام نشد")
+        }
+    }
+
     fun delete(item:InvestmentEntity)=viewModelScope.launch { repo.delete(item) }
     fun updatePrice(item:InvestmentEntity,price:Double)=viewModelScope.launch { runCatching{repo.updatePrice(item.id,price)}.onFailure{UiEvents.show("قیمت معتبر نیست")} }
     fun updateGroup(typeId:Long,price:Double)=viewModelScope.launch { runCatching{repo.updateTypePrice(typeId,price)}.onFailure{UiEvents.show("قیمت معتبر نیست")} }
