@@ -102,7 +102,8 @@ data class InvestmentEntity(
     val buyDateMillis: Long,
     val note: String = "",
     val status: String = "ACTIVE",
-    val sellPrice: Double? = null
+    val sellPrice: Double? = null,
+    val marketSymbol: String? = null
 )
 enum class InvestmentStatus { ACTIVE, SOLD }
 
