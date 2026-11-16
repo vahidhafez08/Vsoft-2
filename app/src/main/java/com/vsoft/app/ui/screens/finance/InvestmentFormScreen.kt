@@ -39,17 +39,6 @@ import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 import kotlinx.coroutines.launch
 
-private fun marketUnitLabel(unit: String): String = when (unit.trim().lowercase()) {
-    "gram", "grams", "g" -> "گرم"
-    "piece", "pieces", "coin", "pcs" -> "عدد"
-    "unit", "units" -> "واحد"
-    "share", "shares" -> "سهم"
-    "ounce", "oz" -> "اونس"
-    "kg", "kilogram" -> "کیلوگرم"
-    "barrel" -> "بشکه"
-    else -> unit
-}
-
 @Composable
 fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsState()
@@ -215,7 +204,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                 }
                 selectedPrice?.let { price ->
                     Text(
-                        "قیمت هر ${price.unit}: ${price.price.toLong().toMoney()} تومان",
+                        "قیمت هر ${marketUnitLabel(price.unit)}: ${price.price.toLong().toMoney()} تومان",
                         color = Vsoft.colors.textSecondary,
                         fontSize = 13.sp
                     )
