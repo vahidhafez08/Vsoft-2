@@ -40,7 +40,7 @@ class InvestmentsViewModel @Inject constructor(
 ):ViewModel() {
     val state=combine(repo.observeTypes(),repo.observeInvestments()){types,items->InvestmentsUiState(types,items)}.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),InvestmentsUiState())
 
-    private val _marketState = MutableStateFlow(MarketUiState(isLoading = true))
+    private val _marketState = MutableStateFlow(MarketUiState())
     val marketState = _marketState.asStateFlow()
 
     init {
