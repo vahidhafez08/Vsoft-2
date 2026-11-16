@@ -38,8 +38,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vsoft.app.data.model.ExpenseCategories
-import com.vsoft.app.data.model.IncomeCategories
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
@@ -52,7 +50,7 @@ fun AddTransactionSheet(
     onDismiss: () -> Unit,
     onSave: (title: String, amount: Long, category: String, accountId: Long?) -> Unit
 ) {
-    val categories = if (isIncome) IncomeCategories else ExpenseCategories
+    val categories = categoriesFor(isIncome)
     var title by rememberSaveable { mutableStateOf("") }
     var amountText by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf(categories.first()) }
