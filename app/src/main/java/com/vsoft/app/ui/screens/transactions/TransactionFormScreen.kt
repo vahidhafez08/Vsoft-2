@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vsoft.app.ui.components.CategoryStyles
+import com.vsoft.app.ui.components.AddCategorySheet
+import com.vsoft.app.ui.components.CategoryAddTile
+import com.vsoft.app.ui.components.CategoryTile
 import com.vsoft.app.ui.components.form.*
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.UiEvents
@@ -42,6 +45,7 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
     var showDate by remember { mutableStateOf(false) }
     var showTime by remember { mutableStateOf(false) }
     var showAccounts by remember { mutableStateOf(false) }
+    var showAddCategory by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { vm.done.collect { onBack() } }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) vm.setAttachment(uri) }
     val accounts by vm.accounts.collectAsState()
@@ -60,10 +64,8 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
         FormTypeToggle(vm.isIncome) { vm.isIncome = it; vm.category = null }
         FormCard(Icons.Default.GridView, "دسته‌بندی") {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                categoryNames.forEach { name ->
-                    val style = CategoryStyles.of(name)
-                    FormTile(name, style.icon, style.color, vm.category == name) { vm.category = name }
-                }
+                categoryNames.forEach { name -> CategoryTile(name, vm.category == name) { vm.category = name } }
+                CategoryAddTile { showAddCategory = true }
             }
         }
         FormCard(Icons.Default.AccountBalanceWallet, "مربوط به بدهی/طلب") {
@@ -136,6 +138,12 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
     if (showDate) FormDatePickerSheet(vm.dayMillis, { vm.dayMillis = it; showDate = false }, { showDate = false })
     if (showTime) FormTimePickerSheet(vm.hour, vm.minute, { h, m -> vm.hour = h; vm.minute = m; showTime = false }, { showTime = false })
     if (showAccounts) FormAccountSheet(accounts, vm.accountId, { vm.accountId = it; showAccounts = false }, { showAccounts = false })
+    if (showAddCategory) AddCategorySheet(
+        isIncome = vm.isIncome,
+        onAdded = { vm.category = it; showAddCategory = false },
+        onDeleted = { if (vm.category == it) vm.category = null },
+        onDismiss = { showAddCategory = false }
+    )
 }
 private fun Modifier.dashedBorder(color: Color, shape: RoundedCornerShape): Modifier = drawBehind {
     val r = shape.topStart.toPx(size, this)
