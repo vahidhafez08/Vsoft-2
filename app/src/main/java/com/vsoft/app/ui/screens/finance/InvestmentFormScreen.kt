@@ -87,7 +87,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
 
     val parsedQuantity = quantity.toLatinDigits().toDoubleOrNull() ?: 0.0
     val totalValue = selectedPrice?.let { parsedQuantity * it.price } ?: 0.0
-    val valid = selectedType != null && selectedPrice != null &&
+    val valid = selectedType != null && selectedPrice != null && !marketState.isCached &&
         parsedQuantity > 0.0 && parsedQuantity.isFinite() &&
         totalValue > 0.0 && totalValue.isFinite() && totalValue <= Long.MAX_VALUE.toDouble()
 
