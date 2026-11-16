@@ -152,7 +152,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                 groupThousands = true
             )
             Text(
-                "قیمت را فعلاً دستی وارد کنید؛ اتصال به API در آینده اضافه می‌شود.",
+                "قیمت خرید را وارد کنید؛ قیمت روز دارایی‌های پشتیبانی‌شده پس از دریافت اطلاعات بازار در صفحه سرمایه‌گذاری به‌روزرسانی می‌شود.",
                 color = Vsoft.colors.textSecondary
             )
         }
