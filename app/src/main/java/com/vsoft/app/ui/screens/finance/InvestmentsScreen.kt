@@ -34,11 +34,24 @@ import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianDigits
 import com.vsoft.app.util.toPlainNumber
 import java.math.RoundingMode
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
 
 @Composable
 fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: InvestmentsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val marketState by vm.marketState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(vm, lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                vm.refreshMarketPrices()
+                delay(30 * 60 * 1000L)
+            }
+        }
+    }
     var selectedType by remember { mutableStateOf<Long?>(null) }
     var priceTarget by remember { mutableStateOf<InvestmentEntity?>(null) }
     var priceInput by remember { mutableStateOf("") }
@@ -99,11 +112,7 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                         Text("به‌روزرسانی", fontSize = 11.sp)
                     }
                 }
-                val featuredSymbols = setOf(
-                    "USD_IRR_FREE", "EUR_IRR_FREE", "GOLD_18K_IRR",
-                    "COIN_EMAMI_IRR", "COIN_HALF_IRR", "USDT_IRR"
-                )
-                val featuredPrices = marketState.prices.filter { it.symbol in featuredSymbols }
+                val featuredPrices = marketState.prices
                 if (featuredPrices.isEmpty()) {
                     Text(
                         marketState.error ?: if (marketState.isLoading) "در حال دریافت قیمت‌ها..." else "قیمت‌ها در دسترس نیستند.",
@@ -163,6 +172,11 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                 }
                 Text(
                     "منبع: Iran Market Data · ${marketState.source}",
+                    color = Vsoft.colors.textSecondary,
+                    fontSize = 10.sp
+                )
+                Text(
+                    "بررسی خودکار قیمت‌ها هر ۳۰ دقیقه، هنگام بازبودن صفحه",
                     color = Vsoft.colors.textSecondary,
                     fontSize = 10.sp
                 )
