@@ -39,6 +39,17 @@ import com.vsoft.app.util.toLatinDigits
 import com.vsoft.app.util.toMoney
 import kotlinx.coroutines.launch
 
+private fun marketUnitLabel(unit: String): String = when (unit.trim().lowercase()) {
+    "gram", "grams", "g" -> "گرم"
+    "piece", "pieces", "coin", "pcs" -> "عدد"
+    "unit", "units" -> "واحد"
+    "share", "shares" -> "سهم"
+    "ounce", "oz" -> "اونس"
+    "kg", "kilogram" -> "کیلوگرم"
+    "barrel" -> "بشکه"
+    else -> unit
+}
+
 @Composable
 fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsState()
@@ -171,7 +182,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                         Column(Modifier.fillMaxWidth().padding(14.dp)) {
                             Text("دارایی انتخاب‌شده", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                             Text(selectedPrice?.name.orEmpty(), color = Vsoft.colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                            Text("واحد قیمت: ${selectedPrice?.unit.orEmpty()} · برای تغییر لمس کنید", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                            Text("واحد قیمت: ${selectedPrice?.unit?.let(::marketUnitLabel).orEmpty()} · برای تغییر لمس کنید", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                         }
                     }
                     DropdownMenu(
@@ -190,7 +201,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                                     text = {
                                         Column {
                                             Text(price.name, color = Vsoft.colors.textPrimary)
-                                            Text("${price.price.toLong().toMoney()} تومان · ${price.unit}", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
+                                            Text("${price.price.toLong().toMoney()} تومان · ${marketUnitLabel(price.unit)}", color = Vsoft.colors.textSecondary, fontSize = 11.sp)
                                         }
                                     },
                                     onClick = {
@@ -223,7 +234,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                 raw = quantity,
                 onChange = { quantity = it },
                 placeholder = "مقدار / تعداد",
-                unit = selectedPrice?.unit ?: selectedType?.unitLabel?.takeIf { it.isNotBlank() },
+                unit = selectedPrice?.unit?.let(::marketUnitLabel) ?: selectedType?.unitLabel?.takeIf { it.isNotBlank() },
                 maxDigits = 15,
                 groupThousands = true
             )
