@@ -50,6 +50,16 @@ class MarketRepository @Inject constructor(
         val categories = data.getJSONObject("categories")
         val meta = root.optJSONObject("meta")
         val prices = mutableListOf<MarketPrice>()
+        val usdToIrt = categories.optJSONArray("currency")?.let { rows ->
+            (0 until rows.length()).asSequence()
+                .mapNotNull { rows.optJSONObject(it) }
+                .firstOrNull {
+                    it.optString("symbol") == "USD_IRR_FREE" &&
+                        it.optString("currency") in setOf("IRT", "IRR") &&
+                        !it.optBoolean("stale", true) &&
+                        it.optDouble("price", 0.0) > 0.0
+                }?.optDouble("price")
+        }
 
         val categoryKeys = categories.keys()
         while (categoryKeys.hasNext()) {
@@ -58,18 +68,21 @@ class MarketRepository @Inject constructor(
             for (index in 0 until rows.length()) {
                 val item = rows.optJSONObject(index) ?: continue
                 val currency = item.optString("currency")
-                if (currency != "IRT" && currency != "IRR") continue
+                val category = item.optString("category", categoryKey)
+                val isUsdCommodity = category.equals("commodity", ignoreCase = true) && currency == "USD"
+                if (currency != "IRT" && currency != "IRR" && !(isUsdCommodity && usdToIrt != null)) continue
 
-                val price = item.optDouble("price", Double.NaN)
+                val rawPrice = item.optDouble("price", Double.NaN)
+                val price = if (isUsdCommodity) rawPrice * (usdToIrt ?: 0.0) else rawPrice
                 if (!price.isFinite() || price <= 0.0) continue
 
                 prices += MarketPrice(
                     symbol = item.optString("symbol"),
                     name = item.optString("name_fa").takeIf { it.isNotBlank() && it != "null" }
                         ?: item.optString("symbol"),
-                    category = item.optString("category", categoryKey),
+                    category = category,
                     price = price,
-                    currency = currency,
+                    currency = if (isUsdCommodity) "IRT" else currency,
                     unit = item.optString("unit", "unit"),
                     changePercent = if (item.isNull("change_pct")) null else item.optDouble("change_pct"),
                     timestampJalali = item.optString("timestamp_jalali"),
