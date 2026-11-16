@@ -40,8 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vsoft.app.data.model.ExpenseCategories
-import com.vsoft.app.data.model.IncomeCategories
 import com.vsoft.app.data.model.TransactionEntity
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
@@ -62,7 +60,7 @@ fun TransactionEditorSheet(
     onDelete: (() -> Unit)? = null
 ) {
     var isIncome by rememberSaveable { mutableStateOf(initial?.isIncome ?: defaultIncome) }
-    val categories = if (isIncome) IncomeCategories else ExpenseCategories
+    val categories = categoriesFor(isIncome)
     var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
     var amountText by rememberSaveable { mutableStateOf(initial?.amount?.toString() ?: "") }
     var category by rememberSaveable { mutableStateOf(initial?.category ?: categories.first()) }
@@ -108,7 +106,7 @@ fun TransactionEditorSheet(
                 selected = if (isIncome) 1 else 0,
                 onSelect = { index ->
                     isIncome = index == 1
-                    category = (if (isIncome) IncomeCategories else ExpenseCategories).first()
+                    category = categoriesFor(isIncome).first()
                 }
             )
             OutlinedTextField(
