@@ -75,7 +75,12 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
     val availablePrices = marketState.allPrices.filter {
         !it.stale && it.currency in setOf("IRT", "IRR") &&
             it.price > 0.0 && it.price.isFinite() &&
-            it.category.lowercase() in allowedCategories
+            it.category.lowercase() in allowedCategories &&
+            when (selectedType?.name) {
+                "دلار" -> it.symbol == "USD_IRR_FREE"
+                "یورو" -> it.symbol == "EUR_IRR_FREE"
+                else -> true
+            }
     }.sortedBy { it.name }
     val selectedPrice = availablePrices.firstOrNull { it.symbol == selectedSymbol }
         ?: availablePrices.firstOrNull()
