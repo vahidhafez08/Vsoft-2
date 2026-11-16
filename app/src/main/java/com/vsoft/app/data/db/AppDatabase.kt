@@ -11,7 +11,7 @@ import com.vsoft.app.data.model.*
         TransactionEntity::class, DebtEntity::class, InvestmentTypeEntity::class, InvestmentEntity::class, AccountEntity::class, TransferEntity::class, DocumentEntity::class, ProjectEntity::class, TaskEntity::class, SubtaskEntity::class,
         SiteEntity::class, FloorEntity::class, WorkItemEntity::class, WorkLogEntity::class, SitePaymentEntity::class, ManualDailyReportEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -125,5 +125,11 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `investment_types` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `iconKey` TEXT NOT NULL, `colorHex` TEXT NOT NULL, `unitLabel` TEXT NOT NULL, `isDefault` INTEGER NOT NULL)")
         db.execSQL("CREATE TABLE IF NOT EXISTS `investments` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `typeId` INTEGER NOT NULL, `title` TEXT NOT NULL, `investedAmount` INTEGER NOT NULL, `buyPrice` REAL NOT NULL, `quantity` REAL NOT NULL, `currentPrice` REAL, `priceUpdatedAtMillis` INTEGER, `buyDateMillis` INTEGER NOT NULL, `note` TEXT NOT NULL, `status` TEXT NOT NULL, `sellPrice` REAL)")
         seedDefaultInvestmentTypes(db)
+    }
+}
+
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `investments` ADD COLUMN `marketSymbol` TEXT")
     }
 }
