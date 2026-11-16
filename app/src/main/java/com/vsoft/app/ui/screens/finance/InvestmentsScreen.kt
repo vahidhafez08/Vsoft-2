@@ -207,7 +207,7 @@ fun InvestmentsScreen(onBack: () -> Unit, onAddInvestment: () -> Unit, vm: Inves
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        InvestmentTypeLogo(type?.iconKey ?: "", type?.colorHex ?: "#5C8FE8", 48.dp)
+                        InvestmentTypeLogo(investmentIconKeyForMarketSymbol(item.marketSymbol, type?.iconKey ?: ""), type?.colorHex ?: "#5C8FE8", 48.dp)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text(item.title.ifBlank { type?.name ?: "سرمایه" }, color = Vsoft.colors.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
