@@ -116,7 +116,6 @@ fun seedDefaultInvestmentTypes(db: SupportSQLiteDatabase) {
         arrayOf<Any>("ملک","home","#8D6E63","متر"),
         arrayOf<Any>("خودرو","car","#546E7A","دستگاه"),
         arrayOf<Any>("کالا","box","#607D8B","واحد"),
-        arrayOf<Any>("شاخص بازار","stock","#5C6BC0","واحد")
     )
     rows.forEach { row ->
         db.execSQL("INSERT INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES (?,?,?,?,1)", row)
@@ -135,6 +134,5 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
         db.execSQL("ALTER TABLE `investments` ADD COLUMN `marketSymbol` TEXT")
         db.execSQL("ALTER TABLE `investments` ADD COLUMN `marketUnit` TEXT")
         db.execSQL("INSERT OR IGNORE INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES ('کالا','box','#607D8B','واحد',1)")
-        db.execSQL("INSERT OR IGNORE INTO `investment_types` (`name`,`iconKey`,`colorHex`,`unitLabel`,`isDefault`) VALUES ('شاخص بازار','stock','#5C6BC0','واحد',1)")
     }
 }
