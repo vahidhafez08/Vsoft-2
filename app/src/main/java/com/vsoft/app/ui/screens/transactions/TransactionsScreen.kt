@@ -44,6 +44,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -83,6 +84,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.data.model.TransactionEntity
+import com.vsoft.app.ui.components.AccountLogo
 import com.vsoft.app.ui.components.AnimatedMoney
 import com.vsoft.app.ui.components.CategoryLogo
 import com.vsoft.app.ui.components.EmptyState
@@ -261,6 +263,7 @@ fun TransactionsScreen(
                             FilterChip(
                                 selected = category == null,
                                 onClick = { category = null },
+                                leadingIcon = { Icon(Icons.Filled.GridView, contentDescription = null, modifier = Modifier.size(18.dp)) },
                                 label = { Text("همه دسته‌ها") }
                             )
                         }
@@ -268,6 +271,7 @@ fun TransactionsScreen(
                             FilterChip(
                                 selected = category == c,
                                 onClick = { category = if (category == c) null else c },
+                                leadingIcon = { CategoryLogo(c, 24.dp) },
                                 label = { Text(c) }
                             )
                         }
@@ -277,9 +281,21 @@ fun TransactionsScreen(
             if (state.accounts.isNotEmpty()) {
                 item(key = "accounts") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item { FilterChip(selected = accountFilter == null, onClick = { accountFilter = null }, label = { Text("همه حساب‌ها") }) }
+                        item {
+                            FilterChip(
+                                selected = accountFilter == null,
+                                onClick = { accountFilter = null },
+                                leadingIcon = { AccountLogo("blue", 24.dp) },
+                                label = { Text("همه حساب‌ها") }
+                            )
+                        }
                         items(state.accounts, key = { it.id }) { account ->
-                            FilterChip(selected = accountFilter == account.id, onClick = { accountFilter = if (accountFilter == account.id) null else account.id }, label = { Text(account.name) })
+                            FilterChip(
+                                selected = accountFilter == account.id,
+                                onClick = { accountFilter = if (accountFilter == account.id) null else account.id },
+                                leadingIcon = { AccountLogo(account.colorKey, 24.dp) },
+                                label = { Text(account.name) }
+                            )
                         }
                     }
                 }
