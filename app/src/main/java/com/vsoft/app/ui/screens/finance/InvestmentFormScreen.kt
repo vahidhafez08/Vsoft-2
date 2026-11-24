@@ -84,7 +84,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                 else -> true
             }
     }.sortedBy { it.name }.map { price ->
-        if (selectedType?.iconKey == "gold_milligram" && price.symbol == "GOLD_18K_IRR") {
+        if (selectedType?.iconKey == "gold_milligram" && price.symbol.startsWith("GOLD_")) {
             price.copy(price = price.price / 1000.0, unit = "میلی‌گرم")
         } else price
     }
