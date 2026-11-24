@@ -64,6 +64,7 @@ fun investmentIconFor(key: String): ImageVector = when (key) {
     "ethereum" -> Icons.Default.Diamond
     "usdt" -> Icons.Default.AttachMoney
     "gold_asset" -> Icons.Default.Diamond
+    "gold_milligram" -> Icons.Default.Diamond
     "coin_asset" -> Icons.Default.Toll
     "usd_asset" -> Icons.Default.AttachMoney
     "eur_asset" -> Icons.Default.Euro
@@ -135,7 +136,7 @@ fun InvestmentTypeLogo(iconKey: String, colorHex: String, size: Dp = 44.dp, modi
             .border(0.8.dp, Color.White.copy(alpha = .28f), shape),
         contentAlignment = Alignment.Center
     ) {
-        if (iconKey == "gold") GoldBarGlyph(size * 0.60f)
+        if (iconKey == "gold" || iconKey == "gold_milligram") GoldBarGlyph(size * 0.60f)
         else Icon(investmentIconFor(iconKey), null, tint = Color.White, modifier = Modifier.size(size * 0.52f))
     }
 }
