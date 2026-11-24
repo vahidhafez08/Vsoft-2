@@ -242,9 +242,9 @@ fun MainScaffold(navController: NavHostController, settingsViewModel: SettingsVi
                 composable(route = Routes.LOG_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("itemId") { type = NavType.LongType; defaultValue = -1L })) { LogFormScreen(onBack = { navController.popBackStack() }) }
                 composable(route = Routes.PAYMENT_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { PaymentFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
-                composable(Routes.DEBTS) { DebtsScreen(onBack = { navController.popBackStack() }, onAddDebt = { openRoute(Routes.DEBT_FORM) }) }
+                composable(Routes.DEBTS) { DebtsScreen(onBack = { navController.popBackStack() }, onAddDebt = { openRoute(Routes.debtForm()) }, onEditDebt = { id -> openRoute(Routes.debtForm(id)) }) }
                 composable(Routes.INVESTMENTS) { InvestmentsScreen(onBack = { navController.popBackStack() }, onAddInvestment = { openRoute(Routes.INVESTMENT_FORM) }, onOpenInvestment = { id -> openRoute("investment/$id") }) }
-                composable(Routes.DEBT_FORM) { DebtFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.DEBT_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { DebtFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.INVESTMENT_FORM) { InvestmentFormScreen(onBack = { navController.popBackStack() }) }
                 composable(route = Routes.INVESTMENT_DETAIL, arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
                     val id = entry.arguments?.getLong("id") ?: -1L
