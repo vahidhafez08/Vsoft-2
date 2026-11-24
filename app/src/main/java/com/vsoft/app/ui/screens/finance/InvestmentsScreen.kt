@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -176,7 +177,11 @@ fun InvestmentsScreen(
                         }
                         if (item.status == "SOLD") {
                             Text("فروخته‌شده", color = Vsoft.colors.textSecondary, fontSize = 10.sp)
-                        } else {
+                        }
+                        IconButton(onClick = { onOpenInvestment(item.id) }, modifier = Modifier.size(34.dp)) {
+                            Icon(Icons.Default.Edit, "ویرایش سرمایه", tint = Vsoft.colors.textSecondary, modifier = Modifier.size(18.dp))
+                        }
+                        if (item.status != "SOLD") {
                             IconButton(onClick = { deleteTarget = item }, modifier = Modifier.size(34.dp)) {
                                 Icon(Icons.Default.Delete, "حذف سرمایه", tint = Vsoft.colors.textSecondary, modifier = Modifier.size(18.dp))
                             }
