@@ -121,6 +121,7 @@ fun TransactionsScreen(
     val scope = rememberCoroutineScope()
     val focus: FocusManager = LocalFocusManager.current
     val context = LocalContext.current
+    val invoiceDarkTheme = Vsoft.colors.isDark
     val selectedIds = remember { androidx.compose.runtime.mutableStateListOf<Long>() }
     var invoiceFile by remember { mutableStateOf<File?>(null) }
     var invoiceImageFile by remember { mutableStateOf<File?>(null) }
@@ -153,9 +154,8 @@ fun TransactionsScreen(
     fun createInvoice() {
         if (selectedTransactions.isEmpty()) return
         runCatching {
-            val darkTheme = Vsoft.colors.isDark
-            val pdf = InvoicePdfGenerator.create(context, selectedTransactions, darkTheme)
-            val image = InvoiceImageGenerator.create(context, selectedTransactions, darkTheme)
+            val pdf = InvoicePdfGenerator.create(context, selectedTransactions, invoiceDarkTheme)
+            val image = InvoiceImageGenerator.create(context, selectedTransactions, invoiceDarkTheme)
             pdf to image
         }
             .onSuccess { (pdf, image) ->
