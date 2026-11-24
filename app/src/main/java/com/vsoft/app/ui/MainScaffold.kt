@@ -58,6 +58,8 @@ import com.vsoft.app.ui.screens.jobs.ItemFormScreen
 import com.vsoft.app.ui.screens.jobs.LogFormScreen
 import com.vsoft.app.ui.screens.jobs.PaymentFormScreen
 import com.vsoft.app.ui.screens.more.MoreScreen
+import com.vsoft.app.ui.screens.more.SettingsViewModel
+import com.vsoft.app.ui.onboarding.OnboardingScreen
 import com.vsoft.app.ui.screens.reports.ReportsScreen
 import com.vsoft.app.ui.screens.tasks.TaskDetailScreen
 import com.vsoft.app.ui.screens.tasks.TasksScreen
@@ -77,13 +79,14 @@ import kotlin.math.sign
 private val tabDestinations = Destination.values().toList()
 
 @Composable
-fun MainScaffold(navController: NavHostController) {
+fun MainScaffold(navController: NavHostController, settingsViewModel: SettingsViewModel) {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val snackbarHostState = remember { SnackbarHostState() }
     val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM, Routes.DEBTS, Routes.INVESTMENTS, Routes.DEBT_FORM, Routes.INVESTMENT_FORM, Routes.INVESTMENT_DETAIL)
     val formPrefixes = listOf("transaction_form", "task_form", "project_form", "site_form", "floor_form", "item_form", "log_form", "payment_form", "debt_form", "investment_form", "investment/")
     val isFormRoute = formPrefixes.any { currentRoute?.startsWith(it) == true }
+    val isOnboardingRoute = currentRoute == Routes.ONBOARDING
     val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.TASK_FORM, Routes.PROJECT_FORM, Routes.JOBS, Routes.SITE_DETAIL, Routes.SITE_FORM, Routes.FLOOR_FORM, Routes.ITEM_FORM, Routes.LOG_FORM, Routes.PAYMENT_FORM, Routes.CALENDAR)
     val currentTabIndex = tabDestinations.indexOfFirst { it.route == currentRoute }
     val isTabRoute = currentTabIndex >= 0
@@ -146,7 +149,7 @@ fun MainScaffold(navController: NavHostController) {
             }
         },
         bottomBar = {
-            if (!isFormRoute) {
+            if (!isFormRoute && !isOnboardingRoute) {
             NavigationBar(containerColor = Vsoft.colors.surface) {
                 tabDestinations.forEachIndexed { index, dest ->
                     val selected = if (isTabRoute) {
@@ -248,6 +251,12 @@ fun MainScaffold(navController: NavHostController) {
                     InvestmentDetailScreen(investmentId = id, onBack = { navController.popBackStack() })
                 }
                 composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.ONBOARDING) {
+                    OnboardingScreen(onFinish = { name ->
+                        if (name != null) settingsViewModel.setUserName(name)
+                        navController.popBackStack()
+                    })
+                }
                 composable(
                     route = Routes.TASK_DETAIL,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
@@ -338,7 +347,7 @@ private fun TabsHost(
                     onOpenCalendar = { onOpenRoute(Routes.CALENDAR) }
                 )
                 Destination.Reports -> ReportsScreen()
-                Destination.More -> MoreScreen()
+                Destination.More -> MoreScreen(onOpenOnboarding = { onOpenRoute(Routes.ONBOARDING) })
                 null -> Unit
             }
         }

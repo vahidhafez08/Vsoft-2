@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.ui.screens.SplashScreen
 import com.vsoft.app.ui.screens.rememberReduceMotion
 import com.vsoft.app.ui.screens.more.SettingsViewModel
+import com.vsoft.app.ui.onboarding.OnboardingScreen
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.ui.theme.VsoftTheme
 
@@ -44,6 +46,8 @@ fun VsoftRoot(settingsViewModel: SettingsViewModel = hiltViewModel()) {
         val navController = rememberNavController()
         val locked by AppLock.locked.collectAsStateWithLifecycle()
         val view = LocalView.current
+        val onboardingPrefs = remember(view) { view.context.getSharedPreferences("vsoft_prefs", 0) }
+        var showOnboarding by rememberSaveable { mutableStateOf(!onboardingPrefs.getBoolean("onboarding_completed", false)) }
         val barBg = Vsoft.colors.bg.toArgb()
         val barSurface = Vsoft.colors.surface.toArgb()
         if (!view.isInEditMode) {
@@ -68,7 +72,11 @@ fun VsoftRoot(settingsViewModel: SettingsViewModel = hiltViewModel()) {
                 enter = EnterTransition.None,
                 exit = ExitTransition.None
             ) {
-                if (locked) LockScreen(onUnlocked = { AppLock.unlock() }) else MainScaffold(navController = navController)
+                if (locked) LockScreen(onUnlocked = { AppLock.unlock() }) else if (showOnboarding) OnboardingScreen { name ->
+                    if (name != null) settingsViewModel.setUserName(name)
+                    onboardingPrefs.edit().putBoolean("onboarding_completed", true).apply()
+                    showOnboarding = false
+                } else MainScaffold(navController = navController, settingsViewModel = settingsViewModel)
             }
             AnimatedVisibility(
                 visible = showSplash,

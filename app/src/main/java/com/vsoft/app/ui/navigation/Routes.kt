@@ -21,6 +21,7 @@ object Routes {
     const val PAYMENT_FORM = "payment_form?siteId={siteId}&id={id}"
     const val CALENDAR = "calendar"
     const val DOCUMENTS = "documents"
+    const val ONBOARDING = "onboarding"
 
     fun transactionForm(id: Long = -1L, type: String = "expense"): String = "transaction_form?id=$id&type=$type"
     fun taskDetail(id: Long): String = "task/$id"
