@@ -29,7 +29,7 @@ internal object InvoiceRenderer {
     private const val CARD_W = (W - 2 * M - GAP) / 2f
     private const val HEADER_H = 225f
     private const val SUMMARY_H = 200f
-    private const val TOTALS_H = 180f
+    private const val TOTALS_H = 300f
     private const val FOOTER_H = 105f
     private const val BRAND = "Vesta"
 
@@ -258,10 +258,8 @@ internal object InvoiceRenderer {
     private fun drawTotals(context: Context, canvas: Canvas, y: Float, meta: Meta, c: Palette): Float {
         val rect = RectF(M, y, W - M, y + TOTALS_H)
         glassCard(canvas, rect, c, 48f)
-        drawText(canvas, "جمع درآمد", M + 42f, y + 22f, 360f, tp(context, c.text, 30f, true))
         drawText(canvas, "+" + meta.income.toMoney(), M + 42f, y + 24f, 360f,
             tp(context, c.income, 34f, true))
-        drawText(canvas, "جمع هزینه", M + 42f, y + 92f, 360f, tp(context, c.text, 30f, true))
         drawText(canvas, "−" + meta.expense.toMoney(), M + 42f, y + 94f, 360f,
             tp(context, c.expense, 34f, true))
         drawText(canvas, "جمع درآمد", W - M - 390f, y + 22f, 350f, tp(context, c.text, 29f, true))
