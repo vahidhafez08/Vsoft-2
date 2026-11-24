@@ -5,6 +5,7 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.vsoft.app.security.AppLock
 import com.vsoft.app.security.PinStore
 import com.vsoft.app.ui.VsoftRoot
@@ -13,6 +14,8 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Must run before super.onCreate(): swaps Theme.Vsoft.Splash for Theme.Vsoft.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         try {
             AppLock.initOnColdStart(this)
