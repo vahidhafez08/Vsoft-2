@@ -6,7 +6,7 @@ object Routes {
     const val ACCOUNTS = "accounts"
     const val DEBTS = "debts"
     const val INVESTMENTS = "investments"
-    const val DEBT_FORM = "debt_form"
+    const val DEBT_FORM = "debt_form?id={id}"
     const val INVESTMENT_FORM = "investment_form"
     const val INVESTMENT_DETAIL = "investment/{id}"
     const val TASK_DETAIL = "task/{id}"
@@ -24,6 +24,7 @@ object Routes {
     const val ONBOARDING = "onboarding"
 
     fun transactionForm(id: Long = -1L, type: String = "expense"): String = "transaction_form?id=$id&type=$type"
+    fun debtForm(id: Long = -1L): String = "debt_form?id=$id"
     fun taskDetail(id: Long): String = "task/$id"
     fun taskForm(id: Long = -1L, projectId: Long = -1L, due: Long = -1L): String = "task_form?id=$id&projectId=$projectId&due=$due"
     fun projectForm(id: Long = -1L): String = "project_form?id=$id"
