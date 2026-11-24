@@ -9,6 +9,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.clickable
 import android.content.Intent
 import android.net.Uri
@@ -47,6 +48,7 @@ import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -75,6 +77,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -150,8 +153,9 @@ fun TransactionsScreen(
     fun createInvoice() {
         if (selectedTransactions.isEmpty()) return
         runCatching {
-            val pdf = InvoicePdfGenerator.create(context, selectedTransactions)
-            val image = InvoiceImageGenerator.create(context, selectedTransactions)
+            val darkTheme = Vsoft.colors.isDark
+            val pdf = InvoicePdfGenerator.create(context, selectedTransactions, darkTheme)
+            val image = InvoiceImageGenerator.create(context, selectedTransactions, darkTheme)
             pdf to image
         }
             .onSuccess { (pdf, image) ->
@@ -205,9 +209,6 @@ fun TransactionsScreen(
                                 selectedIds.addAll(visibleTransactions.map { it.id })
                             }) { Text("انتخاب همه") }
                             TextButton(onClick = { selectedIds.clear() }) { Text("لغو انتخاب") }
-                        }
-                        Button(onClick = { createInvoice() }, enabled = selectedIds.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
-                            Text("ساخت فاکتور")
                         }
                     }
                 }
@@ -342,6 +343,12 @@ fun TransactionsScreen(
                 onIncome = { onOpenTransactionForm(-1L, "income") },
                 onExpense = { onOpenTransactionForm(-1L, "expense") },
                 modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+            )
+        } else {
+            InvoiceGlassFab(
+                count = selectedIds.size,
+                onClick = { createInvoice() },
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 92.dp)
             )
         }
     }
@@ -495,6 +502,31 @@ private fun TxRow(
                 )
                 Text("تومان", color = Vsoft.colors.textSecondary, fontSize = 10.sp)
             }
+        }
+    }
+}
+
+
+@Composable
+private fun InvoiceGlassFab(count: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = Vsoft.colors
+    val shape = RoundedCornerShape(50)
+    Row(
+        modifier.clip(shape)
+            .background(Brush.linearGradient(
+                if (colors.isDark) listOf(Color(0xFF263C69), Color(0xFF463B79))
+                else listOf(Color(0xFF527CEB), Color(0xFF7664D9))
+            ))
+            .border(1.dp, Color.White.copy(alpha = 0.45f), shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 19.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        Icon(Icons.Filled.Receipt, contentDescription = null, tint = Color.White, modifier = Modifier.size(21.dp))
+        Text("ساخت فاکتور", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Box(Modifier.size(24.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+            Text(count.toString(), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
