@@ -64,7 +64,7 @@ fun InvestmentDetailScreen(
 
     FormScaffold(
         title = item?.title?.ifBlank { type?.name ?: "جزئیات سرمایه" } ?: "جزئیات سرمایه",
-        subtitle = "مدیریت دارایی و محاسبهٔ بازدهی",
+        subtitle = "ویرایش مقدار، قیمت خرید و یادداشت دارایی",
         icon = Icons.Default.TrendingUp,
         onBack = onBack,
         bottomBar = {
