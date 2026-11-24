@@ -65,7 +65,7 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
 
     val selectedType = state.types.firstOrNull { it.id == typeId }
     val allowedCategories = when (selectedType?.iconKey) {
-        "gold" -> setOf("gold")
+        "gold", "gold_milligram" -> setOf("gold")
         "coin" -> setOf("coin")
         "dollar", "euro" -> setOf("currency")
         "crypto" -> setOf("crypto")
@@ -83,7 +83,11 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                 "یورو" -> it.symbol == "EUR_IRR_FREE"
                 else -> true
             }
-    }.sortedBy { it.name }
+    }.sortedBy { it.name }.map { price ->
+        if (selectedType?.iconKey == "gold_milligram" && price.symbol == "GOLD_18K_IRR") {
+            price.copy(price = price.price / 1000.0, unit = "میلی‌گرم")
+        } else price
+    }
     val selectedPrice = availablePrices.firstOrNull { it.symbol == selectedSymbol }
         ?: availablePrices.firstOrNull()
     LaunchedEffect(availablePrices) {
@@ -132,7 +136,8 @@ fun InvestmentFormScreen(onBack: () -> Unit, vm: InvestmentsViewModel = hiltView
                                     marketSymbol = price.symbol
                                 ),
                                 price.symbol,
-                                parsedBuyPrice
+                                parsedBuyPrice,
+                                priceDivisor = if (type.iconKey == "gold_milligram") 1000.0 else 1.0
                             )
                             if (saved) onBack()
                         }
