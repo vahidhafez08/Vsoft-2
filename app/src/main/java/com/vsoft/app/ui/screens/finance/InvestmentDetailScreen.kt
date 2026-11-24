@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Refresh
@@ -83,8 +81,9 @@ fun InvestmentDetailScreen(
         if (item == null) {
             Text("این سرمایه پیدا نشد.", color = Vsoft.colors.textSecondary)
         } else {
+            // FormScaffold already provides the page's vertical scrolling container.
             Column(
-                Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 FormCard(Icons.Default.AccountBalance, "وضعیت دارایی") {
