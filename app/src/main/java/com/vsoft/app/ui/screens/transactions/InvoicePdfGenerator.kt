@@ -7,25 +7,30 @@ import java.io.File
 import java.io.FileOutputStream
 
 object InvoicePdfGenerator {
-    fun create(context: Context, transactions: List<TransactionEntity>): File {
+    fun create(context: Context, transactions: List<TransactionEntity>, darkTheme: Boolean = false): File {
         require(transactions.isNotEmpty()) { "هیچ تراکنشی انتخاب نشده است" }
-        val pageW = 595; val pageH = 842
-        val scale = pageW / InvoiceRenderer.W
-        val unitsH = pageH / scale
-        val pages = InvoiceRenderer.paginate(transactions.size, unitsH)
+        val pageWidth = 595
+        val pageHeight = 842
+        val scale = pageWidth / InvoiceRenderer.W
+        val logicalHeight = pageHeight / scale
         val meta = InvoiceRenderer.meta(transactions)
+        val colors = InvoiceRenderer.palette(darkTheme)
+        val ranges = InvoiceRenderer.paginate(context, transactions, logicalHeight)
         val document = PdfDocument()
         try {
-            pages.forEachIndexed { i, range ->
-                val page = document.startPage(PdfDocument.PageInfo.Builder(pageW, pageH, i + 1).create())
+            ranges.forEachIndexed { index, range ->
+                val page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, index + 1).create())
                 page.canvas.scale(scale, scale)
-                InvoiceRenderer.drawPage(page.canvas, transactions, range, i + 1, pages.size, meta, unitsH)
+                InvoiceRenderer.drawPage(context, page.canvas, transactions, range, index + 1, ranges.size,
+                    meta, logicalHeight, colors)
                 document.finishPage(page)
             }
-            val directory = File(context.cacheDir, "invoices").apply { mkdirs() }
-            val output = File(directory, "invoice-${System.currentTimeMillis()}.pdf")
+            val dir = File(context.cacheDir, "invoices").apply { mkdirs() }
+            val output = File(dir, "invoice-" + System.currentTimeMillis() + ".pdf")
             FileOutputStream(output).use { document.writeTo(it) }
             return output
-        } finally { document.close() }
+        } finally {
+            document.close()
+        }
     }
 }
