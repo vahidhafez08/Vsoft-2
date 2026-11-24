@@ -162,7 +162,7 @@ internal object InvoiceRenderer {
         canvas.restore()
         val topLine = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             shader = LinearGradient(rect.left + radius, rect.top, rect.right - radius, rect.top,
-                intArrayOf(0x00FFFFFF, 0x88FFFFFF, 0x00FFFFFF), null, Shader.TileMode.CLAMP)
+                intArrayOf(0x00FFFFFF, 0x88FFFFFF.toInt(), 0x00FFFFFF), null, Shader.TileMode.CLAMP)
             strokeWidth = 2f
         }
         canvas.drawLine(rect.left + radius, rect.top + 1f, rect.right - radius, rect.top + 1f, topLine)
