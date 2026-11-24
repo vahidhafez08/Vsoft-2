@@ -8,21 +8,22 @@ import java.io.File
 import java.io.FileOutputStream
 
 object InvoiceImageGenerator {
-    private const val MAX_ROWS = 90
-    fun create(context: Context, transactions: List<TransactionEntity>): File {
+    fun create(context: Context, transactions: List<TransactionEntity>, darkTheme: Boolean = false): File {
         require(transactions.isNotEmpty()) { "هیچ تراکنشی انتخاب نشده است" }
-        val shown = minOf(transactions.size, MAX_ROWS)
-        val truncated = transactions.size - shown
         val meta = InvoiceRenderer.meta(transactions)
-        val heightF = InvoiceRenderer.HEADER_H + shown * InvoiceRenderer.ROW_H +
-            (if (truncated > 0) InvoiceRenderer.ROW_H else 0f) + InvoiceRenderer.SUMMARY_H + InvoiceRenderer.FOOTER_H
-        val bitmap = Bitmap.createBitmap(InvoiceRenderer.W.toInt(), heightF.toInt(), Bitmap.Config.ARGB_8888)
+        val height = InvoiceRenderer.imageHeight(context, transactions)
+        val bitmap = Bitmap.createBitmap(InvoiceRenderer.W.toInt(), height, Bitmap.Config.ARGB_8888)
         try {
-            InvoiceRenderer.drawPage(Canvas(bitmap), transactions, 0 until shown, 1, 1, meta, heightF, truncated)
-            val directory = File(context.cacheDir, "invoices").apply { mkdirs() }
-            val output = File(directory, "invoice-${System.currentTimeMillis()}.png")
-            FileOutputStream(output).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            InvoiceRenderer.drawPage(context, Canvas(bitmap), transactions, 0 until transactions.size,
+                1, 1, meta, height.toFloat(), InvoiceRenderer.palette(darkTheme))
+            val dir = File(context.cacheDir, "invoices").apply { mkdirs() }
+            val output = File(dir, "invoice-" + System.currentTimeMillis() + ".png")
+            FileOutputStream(output).use { stream ->
+                check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream))
+            }
             return output
-        } finally { bitmap.recycle() }
+        } finally {
+            bitmap.recycle()
+        }
     }
 }
