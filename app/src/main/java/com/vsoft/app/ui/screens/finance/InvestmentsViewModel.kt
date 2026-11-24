@@ -78,7 +78,7 @@ class InvestmentsViewModel @Inject constructor(
                             val type = types.firstOrNull { it.id == item.typeId } ?: return@forEach
                             val symbol = item.marketSymbol ?: resolveMarketSymbol(type.name, item.title) ?: return@forEach
                             val price = priceBySymbol[symbol] ?: return@forEach
-                            val normalizedPrice = if (type.iconKey == "gold_milligram" && symbol == "GOLD_18K_IRR") {
+                            val normalizedPrice = if (type.iconKey == "gold_milligram" && symbol.startsWith("GOLD_")) {
                                 price.price / 1000.0
                             } else price.price
                             if (!price.stale && price.currency in setOf("IRT", "IRR") && normalizedPrice > 0.0 && normalizedPrice.isFinite()) {
@@ -169,7 +169,7 @@ class InvestmentsViewModel @Inject constructor(
             val totalAmount = BigDecimal.valueOf(total).setScale(0, RoundingMode.HALF_UP).longValueExact()
             val now = System.currentTimeMillis()
             repo.save(item.copy(
-                title = if (priceDivisor == 1000.0) "طلای ۱۸ عیار" else price.name,
+                title = if (priceDivisor == 1000.0) "طلای میلی‌گرمی" else price.name,
                 investedAmount = totalAmount,
                 buyPrice = purchasePrice,
                 currentPrice = price.price / priceDivisor,
