@@ -47,6 +47,20 @@ class InvestmentsViewModel @Inject constructor(
     val marketState = _marketState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            val existingTypes = repo.observeTypes().first()
+            if (existingTypes.none { it.iconKey == "gold_milligram" }) {
+                repo.saveType(
+                    InvestmentTypeEntity(
+                        name = "طلای میلی‌گرمی",
+                        iconKey = "gold_milligram",
+                        colorHex = "#F5B301",
+                        unitLabel = "میلی‌گرم",
+                        isDefault = true
+                    )
+                )
+            }
+        }
         refreshMarketPrices()
     }
 
@@ -64,8 +78,11 @@ class InvestmentsViewModel @Inject constructor(
                             val type = types.firstOrNull { it.id == item.typeId } ?: return@forEach
                             val symbol = item.marketSymbol ?: resolveMarketSymbol(type.name, item.title) ?: return@forEach
                             val price = priceBySymbol[symbol] ?: return@forEach
-                            if (!price.stale && price.currency in setOf("IRT", "IRR") && price.price > 0.0 && price.price.isFinite()) {
-                                runCatching { repo.updatePrice(item.id, price.price) }
+                            val normalizedPrice = if (type.iconKey == "gold_milligram" && symbol == "GOLD_18K_IRR") {
+                                price.price / 1000.0
+                            } else price.price
+                            if (!price.stale && price.currency in setOf("IRT", "IRR") && normalizedPrice > 0.0 && normalizedPrice.isFinite()) {
+                                runCatching { repo.updatePrice(item.id, normalizedPrice) }
                             }
                         }
                     }
@@ -98,7 +115,7 @@ class InvestmentsViewModel @Inject constructor(
         val type = typeName.trim()
         val itemTitle = title.trim()
         return when (type) {
-            "طلا" -> if (itemTitle.contains("۲۴") || itemTitle.contains("24")) "GOLD_24K_IRR" else "GOLD_18K_IRR"
+            "طلا", "طلای میلی‌گرمی" -> if (itemTitle.contains("۲۴") || itemTitle.contains("24")) "GOLD_24K_IRR" else "GOLD_18K_IRR"
             "سکه" -> when {
                 itemTitle.contains("نیم") -> "COIN_HALF_IRR"
                 itemTitle.contains("ربع") -> "COIN_QUARTER_IRR"
@@ -121,8 +138,14 @@ class InvestmentsViewModel @Inject constructor(
         if(!repo.deleteType(type)) UiEvents.show("نوع پیش‌فرض یا نوع دارای سرمایه قابل حذف نیست")
     }
 
-    suspend fun save(item: InvestmentEntity, marketSymbol: String, purchasePrice: Double = item.buyPrice): Boolean {
-        if (item.quantity <= 0.0 || !item.quantity.isFinite() || purchasePrice <= 0.0 || !purchasePrice.isFinite()) {
+    suspend fun save(
+        item: InvestmentEntity,
+        marketSymbol: String,
+        purchasePrice: Double = item.buyPrice,
+        priceDivisor: Double = 1.0
+    ): Boolean {
+        if (item.quantity <= 0.0 || !item.quantity.isFinite() || purchasePrice <= 0.0 || !purchasePrice.isFinite() ||
+            priceDivisor <= 0.0 || !priceDivisor.isFinite()) {
             UiEvents.show("مقدار و قیمت خرید باید معتبر و بزرگ‌تر از صفر باشند")
             return false
         }
@@ -146,13 +169,13 @@ class InvestmentsViewModel @Inject constructor(
             val totalAmount = BigDecimal.valueOf(total).setScale(0, RoundingMode.HALF_UP).longValueExact()
             val now = System.currentTimeMillis()
             repo.save(item.copy(
-                title = price.name,
+                title = if (priceDivisor == 1000.0) "طلای ۱۸ عیار" else price.name,
                 investedAmount = totalAmount,
                 buyPrice = purchasePrice,
-                currentPrice = price.price,
+                currentPrice = price.price / priceDivisor,
                 priceUpdatedAtMillis = now,
                 marketSymbol = price.symbol,
-                marketUnit = price.unit
+                marketUnit = if (priceDivisor == 1000.0) "میلی‌گرم" else price.unit
             ))
             UiEvents.show("سرمایه با قیمت روز ذخیره شد")
             true
