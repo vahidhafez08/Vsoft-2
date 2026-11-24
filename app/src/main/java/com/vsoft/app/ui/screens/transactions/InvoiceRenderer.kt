@@ -266,7 +266,7 @@ internal object InvoiceRenderer {
         drawText(canvas, "جمع هزینه", W - M - 390f, y + 92f, 350f, tp(context, c.text, 29f, true))
         canvas.drawLine(M + 42f, y + 82f, W - M - 42f, y + 82f,
             Paint(Paint.ANTI_ALIAS_FLAG).apply { color = c.outline; strokeWidth = 2f })
-        val net = RectF(M, y + TOTALS_H - 6f, W - M, y + TOTALS_H + 116f)
+        val net = RectF(M, y + TOTALS_H - 122f, W - M, y + TOTALS_H)
         glassCard(canvas, net, c, 48f, true)
         drawText(canvas, "خالص", W - M - 220f, net.top + 31f, 170f, tp(context, c.text, 38f, true))
         drawText(canvas, (if (meta.net < 0) "−" else "+") + abs(meta.net).toMoney() + " تومان",
