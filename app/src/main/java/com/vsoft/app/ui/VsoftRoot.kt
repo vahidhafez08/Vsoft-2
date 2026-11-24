@@ -2,8 +2,11 @@ package com.vsoft.app.ui
 
 import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +26,7 @@ import com.vsoft.app.security.AppLock
 import com.vsoft.app.ui.screens.lock.LockScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.ui.screens.SplashScreen
+import com.vsoft.app.ui.screens.rememberReduceMotion
 import com.vsoft.app.ui.screens.more.SettingsViewModel
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.ui.theme.VsoftTheme
@@ -54,12 +58,23 @@ fun VsoftRoot(settingsViewModel: SettingsViewModel = hiltViewModel()) {
                 }
             }
         }
+        // rememberSaveable, above the NavHost: the splash runs once per app launch
+        // and does not repeat on navigation, rotation or theme change.
         var showSplash by rememberSaveable { mutableStateOf(true) }
-        Box(Modifier.fillMaxSize()) {
-            AnimatedVisibility(visible = !showSplash, enter = fadeIn(), exit = fadeOut()) {
+        val reduceMotion = rememberReduceMotion()
+        Box(Modifier.fillMaxSize().background(Vsoft.colors.bg)) {
+            AnimatedVisibility(
+                visible = !showSplash,
+                enter = EnterTransition.None,
+                exit = ExitTransition.None
+            ) {
                 if (locked) LockScreen(onUnlocked = { AppLock.unlock() }) else MainScaffold(navController = navController)
             }
-            AnimatedVisibility(visible = showSplash, exit = fadeOut()) { SplashScreen(onFinished = { showSplash = false }) }
+            AnimatedVisibility(
+                visible = showSplash,
+                enter = EnterTransition.None,
+                exit = if (reduceMotion) ExitTransition.None else fadeOut(tween(300))
+            ) { SplashScreen(onFinished = { showSplash = false }) }
         }
     }
 }
