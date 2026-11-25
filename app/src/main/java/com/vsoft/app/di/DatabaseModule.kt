@@ -2,12 +2,19 @@ package com.vsoft.app.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.vsoft.app.data.db.AppDatabase
 import com.vsoft.app.data.db.MIGRATION_1_2
 import com.vsoft.app.data.db.MIGRATION_2_3
 import com.vsoft.app.data.db.MIGRATION_3_4
 import com.vsoft.app.data.db.MIGRATION_4_5
 import com.vsoft.app.data.db.MIGRATION_5_6
+import com.vsoft.app.data.db.MIGRATION_6_7
+import com.vsoft.app.data.db.MIGRATION_7_8
+import com.vsoft.app.data.db.MIGRATION_8_9
+import com.vsoft.app.data.db.MIGRATION_9_10
+import com.vsoft.app.data.db.seedDefaultInvestmentTypes
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,10 +28,17 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideDb(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "vsoft.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+            .addCallback(object : RoomDatabase.Callback() {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    seedDefaultInvestmentTypes(db)
+                }
+            })
             .fallbackToDestructiveMigration()
             .build()
 
+    @Provides fun provideDebtDao(db: AppDatabase) = db.debtDao()
+    @Provides fun provideInvestmentDao(db: AppDatabase) = db.investmentDao()
     @Provides fun provideTransactionDao(db: AppDatabase) = db.transactionDao()
     @Provides fun provideAccountDao(db: AppDatabase) = db.accountDao()
     @Provides fun provideTransferDao(db: AppDatabase) = db.transferDao()

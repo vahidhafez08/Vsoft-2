@@ -76,7 +76,15 @@ open class JobFormViewModelBase(
                 if (kind == "item" && floorId == null) floorId = floors.firstOrNull()?.id
                 if (kind == "log" && id < 0L && requestedItemId >= 0L) itemId = requestedItemId
                 if (kind == "log" && itemId == null) itemId = items.firstOrNull()?.id
-                if (kind == "log") floorId = items.firstOrNull { it.id == itemId }?.floorId ?: originalLog?.floorId ?: floors.firstOrNull()?.id
+                if (kind == "log") {
+                    floorId = items.firstOrNull { it.id == itemId }?.floorId ?: originalLog?.floorId ?: floors.firstOrNull()?.id
+                    val selected = items.firstOrNull { it.id == itemId }
+                    if (originalLog == null && selected?.unit == "درصد") {
+                        quantity = logs.filter { it.itemId == selected.id }
+                            .maxWithOrNull(compareBy<WorkLogEntity> { it.dateMillis }.thenBy { it.id })
+                            ?.qty?.coerceIn(0, 100)?.toString() ?: "0"
+                    }
+                }
             } catch (cancelled: CancellationException) { throw cancelled }
             finally { loading = false }
         }
@@ -89,7 +97,10 @@ open class JobFormViewModelBase(
         if ((kind == "site" || kind == "floor") && cleanName.isBlank()) return
         if ((kind == "item") && cleanTitle.isBlank()) return
         if (kind == "item" && floorId == null) { UiEvents.show("ابتدا یک طبقه بساز"); return }
-        if (kind == "log" && (itemId == null || (quantity.toIntOrNull() ?: 0) <= 0)) return
+        val selectedItem = items.firstOrNull { it.id == itemId }
+        val parsedQuantity = quantity.toLatinDigits().filter(Char::isDigit).take(9).toIntOrNull() ?: 0
+        val invalidLogQuantity = if (selectedItem?.unit == "درصد") parsedQuantity !in 0..100 else parsedQuantity <= 0
+        if (kind == "log" && (itemId == null || invalidLogQuantity)) return
         if (kind == "payment" && (amount.toLatinDigits().filter(Char::isDigit).toLongOrNull() ?: 0L) <= 0L) return
         saving = true
         safeLaunch {
@@ -98,8 +109,8 @@ open class JobFormViewModelBase(
                 when (kind) {
                     "site" -> repository.saveSite(SiteEntity(id = originalSite?.id ?: 0L, name = cleanName.take(80), address = address.trim().take(200), client = client.trim().take(80), startDateMillis = dateMillis, contractAmount = amount.toLatinDigits().filter(Char::isDigit).take(15).toLongOrNull() ?: 0L))
                     "floor" -> repository.saveFloor(FloorEntity(id = originalFloor?.id ?: 0L, siteId = siteId, name = cleanName.take(80)))
-                    "item" -> repository.saveItem(WorkItemEntity(id = originalItem?.id ?: 0L, siteId = siteId, floorId = floorId ?: return@safeLaunch, title = cleanTitle.take(100), unit = unit.take(30), targetQty = quantity.toLatinDigits().filter(Char::isDigit).take(9).toIntOrNull() ?: 0))
-                    "log" -> repository.addLog(WorkLogEntity(id = originalLog?.id ?: 0L, siteId = siteId, floorId = floorId ?: return@safeLaunch, itemId = itemId ?: return@safeLaunch, qty = quantity.toLatinDigits().filter(Char::isDigit).take(9).toIntOrNull() ?: 0, note = note.trim().take(300), dateMillis = dateMillis))
+                    "item" -> repository.saveItem(WorkItemEntity(id = originalItem?.id ?: 0L, siteId = siteId, floorId = floorId ?: return@safeLaunch, title = cleanTitle.take(100), unit = unit.take(30), targetQty = if (unit == "درصد") 100 else quantity.toLatinDigits().filter(Char::isDigit).take(9).toIntOrNull() ?: 0))
+                    "log" -> repository.addLog(WorkLogEntity(id = originalLog?.id ?: 0L, siteId = siteId, floorId = floorId ?: return@safeLaunch, itemId = itemId ?: return@safeLaunch, qty = (quantity.toLatinDigits().filter(Char::isDigit).take(9).toIntOrNull() ?: 0).let { if (selectedItem?.unit == "درصد") it.coerceIn(0, 100) else it }, note = note.trim().take(300), dateMillis = dateMillis))
                     "payment" -> repository.savePayment(SitePaymentEntity(id = originalPayment?.id ?: 0L, siteId = siteId, amount = amount.toLatinDigits().filter(Char::isDigit).take(15).toLongOrNull() ?: 0L, dateMillis = dateMillis, note = note.trim().take(200)))
                 }
                 UiEvents.show(when(kind) { "site" -> "کارگاه ذخیره شد ✅"; "floor" -> "طبقه ذخیره شد ✅"; "item" -> "آیتم کار ذخیره شد ✅"; "log" -> "گزارش ذخیره شد ✅"; else -> "دریافتی ذخیره شد ✅" })

@@ -24,6 +24,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.data.model.*
 import com.vsoft.app.ui.components.*
+import com.vsoft.app.ui.components.form.FormDatePickerSheet
+import com.vsoft.app.ui.components.form.FormScaffold
+import com.vsoft.app.ui.components.form.FormCard
+import com.vsoft.app.ui.components.form.FormPickerRow
+import com.vsoft.app.ui.components.form.FormTextField
+import com.vsoft.app.ui.components.form.FormPrimaryButton
 import com.vsoft.app.ui.theme.BrandBlue
 import com.vsoft.app.ui.theme.ExpenseRed
 import com.vsoft.app.ui.theme.IncomeGreen
@@ -32,9 +38,14 @@ import com.vsoft.app.ui.theme.WarningOrange
 import com.vsoft.app.util.formatJalali
 import com.vsoft.app.util.toMoney
 import com.vsoft.app.util.toPersianText
+import com.vsoft.app.util.toPersianDigits
+import com.vsoft.app.util.formatJobQuantity
+import com.vsoft.app.util.startOfDay
+import kotlinx.coroutines.delay
 
 private val floorSuggestions = listOf("پارکینگ", "همکف", "طبقه ۱", "طبقه ۲", "طبقه ۳", "طبقه ۴", "پشت‌بام")
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor: (Long) -> Unit, onEditFloor: (Long, Long) -> Unit, onAddItem: (Long, Long) -> Unit, onEditItem: (Long, Long) -> Unit, onAddLog: (Long, Long) -> Unit, onEditLog: (Long, Long) -> Unit, onAddPayment: (Long, Long) -> Unit, viewModel: SiteDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -43,6 +54,13 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
     var handledMissing by rememberSaveable { mutableStateOf(false) }
     var confirmText by remember { mutableStateOf<String?>(null) }
     var confirmAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var manualReportDialog by remember { mutableStateOf(false) }
+    var editingManualReport by remember { mutableStateOf<ManualDailyReportEntity?>(null) }
+    var manualReportText by remember { mutableStateOf("") }
+    var manualReportDate by remember { mutableLongStateOf(startOfDay(System.currentTimeMillis())) }
+    var manualReportDateSheet by remember { mutableStateOf(false) }
+    var pendingReportDatePicker by remember { mutableStateOf(false) }
+    var pendingReportSheetReopen by remember { mutableStateOf(false) }
 
     fun ask(text: String, action: () -> Unit) {
         confirmText = text
@@ -104,7 +122,7 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
                 }
             }
 
-            SegmentedTabs(items = listOf("طبقه‌ها", "گزارش روزانه", "مالی"), selected = tab, onSelect = { tab = it })
+            SegmentedTabs(items = listOf("طبقه‌ها", "گزارش روزانه", "گزارش شخصی", "مالی"), selected = tab, onSelect = { tab = it })
 
             when (tab) {
                 0 -> FloorsTab(
@@ -122,6 +140,22 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
                     onNewLog = { onAddLog(site.id, -1L) },
                     onEdit = { l -> onEditLog(site.id, l.id) },
                     onDelete = { l -> ask("این گزارش حذف شود؟") { viewModel.deleteLog(l.id) } }
+                )
+                2 -> PersonalReportsTab(
+                    reports = state.manualReports,
+                    onNew = {
+                        editingManualReport = null
+                        manualReportText = ""
+                        manualReportDate = startOfDay(System.currentTimeMillis())
+                        manualReportDialog = true
+                    },
+                    onEdit = { report ->
+                        editingManualReport = report
+                        manualReportText = report.content
+                        manualReportDate = report.dateMillis
+                        manualReportDialog = true
+                    },
+                    onDelete = { report -> ask("گزارش شخصی این تاریخ حذف شود؟") { viewModel.deleteManualReport(report.id) } }
                 )
                 else -> FinanceTab(
                     site = site,
@@ -143,6 +177,89 @@ fun SiteDetailScreen(onBack: () -> Unit, onEditSite: (Long) -> Unit, onAddFloor:
             text = text,
             onConfirm = { confirmText = null; confirmAction = null; action() },
             onDismiss = { confirmText = null; confirmAction = null }
+        )
+    }
+
+    LaunchedEffect(manualReportDialog, pendingReportDatePicker) {
+        if (!manualReportDialog && pendingReportDatePicker) {
+            delay(300)
+            manualReportDateSheet = true
+            pendingReportDatePicker = false
+        }
+    }
+    LaunchedEffect(manualReportDateSheet, pendingReportSheetReopen) {
+        if (!manualReportDateSheet && pendingReportSheetReopen) {
+            delay(300)
+            manualReportDialog = true
+            pendingReportSheetReopen = false
+        }
+    }
+
+    if (manualReportDialog) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { manualReportDialog = false },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(Modifier.fillMaxWidth().fillMaxHeight().background(Vsoft.colors.bg)) {
+                FormScaffold(
+                    title = if (editingManualReport == null) "نوشتن گزارش شخصی" else "ویرایش گزارش شخصی",
+                    subtitle = "ثبت یادداشت روزانه کارگاه",
+                    icon = Icons.Filled.Description,
+                    onBack = { manualReportDialog = false },
+                    bottomBar = {
+                        FormPrimaryButton(
+                            text = "ذخیره گزارش",
+                            enabled = manualReportText.isNotBlank(),
+                            loading = false
+                        ) {
+                            viewModel.saveManualReport(editingManualReport, manualReportText, manualReportDate)
+                            manualReportDialog = false
+                        }
+                    }
+                ) {
+                    FormCard(Icons.Filled.CalendarMonth, "تاریخ گزارش") {
+                        FormPickerRow(
+                            icon = Icons.Filled.CalendarMonth,
+                            text = formatJalali(manualReportDate),
+                            sub = "تاریخ شمسی گزارش",
+                            onClick = {
+                                pendingReportDatePicker = true
+                                manualReportDialog = false
+                            }
+                        )
+                    }
+                    FormCard(Icons.Filled.EditNote, "متن گزارش") {
+                        FormTextField(
+                            value = manualReportText,
+                            onValueChange = { manualReportText = it.take(5000) },
+                            placeholder = "گزارش روزانه خودت را بنویس…",
+                            singleLine = false,
+                            minLines = 7,
+                            minHeight = 170.dp
+                        )
+                        Text(
+                            "${manualReportText.length.toString().toPersianDigits()}/۵۰۰۰",
+                            color = Vsoft.colors.textSecondary,
+                            fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+    }
+    if (manualReportDateSheet) {
+        FormDatePickerSheet(
+            manualReportDate,
+            { selected ->
+                manualReportDate = selected
+                manualReportDateSheet = false
+                pendingReportSheetReopen = true
+            },
+            {
+                manualReportDateSheet = false
+                pendingReportSheetReopen = true
+            }
         )
     }
 }
@@ -234,8 +351,8 @@ private fun FloorsTab(
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(ui.item.title, color = Vsoft.colors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                                         Text(
-                                            ui.done.toPersianText() + " از " + ui.item.targetQty.toPersianText() + " " + ui.item.unit +
-                                                " | مانده: " + ui.remaining.toPersianText(),
+                                            (if (ui.item.unit == "درصد") formatJobQuantity(ui.done, ui.item.unit) else ui.done.toPersianText() + " از " + ui.item.targetQty.toPersianText() + " " + ui.item.unit) +
+                                                " | مانده: " + (if (ui.item.unit == "درصد") formatJobQuantity(ui.remaining, ui.item.unit) else ui.remaining.toPersianText() + " " + ui.item.unit),
                                             color = Vsoft.colors.textSecondary, fontSize = 11.sp
                                         )
                                         AnimatedProgressBar(ui.done.toFloat() / ui.item.targetQty, BrandBlue, height = 5.dp)
@@ -263,7 +380,7 @@ private fun FloorsTab(
                                         modifier = Modifier.weight(1f)
                                     )
                                     Text(
-                                        ui.done.toPersianText() + " " + ui.item.unit,
+                                        formatJobQuantity(ui.done, ui.item.unit),
                                         color = Vsoft.colors.textSecondary, fontSize = 11.sp
                                     )
                                     SmallIconButton(Icons.Filled.Edit, "ویرایش کار") { onEditItem(ui.item) }
@@ -279,7 +396,12 @@ private fun FloorsTab(
 }
 
 @Composable
-private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onEdit: (WorkLogEntity) -> Unit, onDelete: (WorkLogEntity) -> Unit) {
+private fun LogsTab(
+    logs: List<LogUi>,
+    onNewLog: () -> Unit,
+    onEdit: (WorkLogEntity) -> Unit,
+    onDelete: (WorkLogEntity) -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Button(onClick = onNewLog, modifier = Modifier.fillMaxWidth()) { Text("ثبت گزارش کار") }
 
@@ -306,7 +428,7 @@ private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onEdit: (WorkLogEnt
                                         color = Vsoft.colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        l.log.qty.toPersianText() + " " + l.unit,
+                                        formatJobQuantity(l.log.qty, l.unit),
                                         color = IncomeGreen, fontSize = 12.sp, fontWeight = FontWeight.Medium
                                     )
                                     if (l.log.note.isNotBlank()) {
@@ -318,6 +440,42 @@ private fun LogsTab(logs: List<LogUi>, onNewLog: () -> Unit, onEdit: (WorkLogEnt
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PersonalReportsTab(
+    reports: List<ManualDailyReportEntity>,
+    onNew: () -> Unit,
+    onEdit: (ManualDailyReportEntity) -> Unit,
+    onDelete: (ManualDailyReportEntity) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Button(onClick = onNew, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Filled.Add, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("نوشتن گزارش شخصی")
+        }
+        if (reports.isEmpty()) {
+            EmptyState(
+                icon = Icons.Filled.Edit,
+                title = "هنوز گزارش شخصی ثبت نشده",
+                subtitle = "یادداشت‌های روزانه‌ات را اینجا ثبت کن"
+            )
+        }
+        reports.forEach { report ->
+            key(report.id) {
+                VCard {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(formatJalali(report.dateMillis), color = Vsoft.colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        SmallIconButton(Icons.Filled.Edit, "ویرایش گزارش شخصی") { onEdit(report) }
+                        SmallIconButton(Icons.Filled.DeleteOutline, "حذف گزارش شخصی") { onDelete(report) }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(report.content.ifBlank { "بدون متن" }, color = Vsoft.colors.textSecondary, fontSize = 13.sp)
                 }
             }
         }

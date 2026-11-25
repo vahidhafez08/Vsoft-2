@@ -3,6 +3,7 @@ package com.vsoft.app
 import android.app.Application
 import android.util.Log
 import com.vsoft.app.data.db.AppDatabase
+import com.vsoft.app.ui.components.CustomCategories
 import com.vsoft.app.notify.NotificationHelper
 import com.vsoft.app.notify.ReminderScheduler
 import dagger.hilt.android.HiltAndroidApp
@@ -21,6 +22,7 @@ class VsoftApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        CustomCategories.init(this)
         try {
             NotificationHelper.ensureChannel(this)
             ReminderScheduler.schedule(this)

@@ -1,4 +1,4 @@
-name: Android Build
+name: Android Release
 on:
   push:
     branches: [New]
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -16,23 +16,49 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Verify JDK
-        run: java -version
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-      - name: Stop old Gradle daemons
-        run: ./gradlew --stop
-      - name: Build release APK (R8)
+      - name: Decode and validate release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_BASE64" || { echo "Missing secret: KEYSTORE_BASE64"; exit 1; }
+          test -n "$KEYSTORE_PASSWORD" || { echo "Missing secret: KEYSTORE_PASSWORD"; exit 1; }
+          test -n "$KEY_ALIAS" || { echo "Missing secret: KEY_ALIAS"; exit 1; }
+          test -n "$KEY_PASSWORD" || { echo "Missing secret: KEY_PASSWORD"; exit 1; }
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/vsoft-release.jks"
+          test -s "$RUNNER_TEMP/vsoft-release.jks"
+      - name: Build signed release APK only
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/vsoft-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease --stacktrace
-      - name: Build debug APK
-        if: always()
-        run: ./gradlew assembleDebug --stacktrace
-      - name: Upload APKs
-        if: always()
+      - name: Verify release signature and prepare single APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_APK="app/build/outputs/apk/release/app-release.apk"
+          test -f "$SOURCE_APK" || { echo "Expected release APK not found: $SOURCE_APK"; exit 1; }
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner -print | sort -V | tail -n 1)"
+          test -x "$APKSIGNER" || { echo "apksigner not found"; exit 1; }
+          "$APKSIGNER" verify --print-certs "$SOURCE_APK" | tee "$RUNNER_TEMP/apk-signature.txt"
+          if grep -Eiq 'CN[=: ]*Android Debug|Android Debug' "$RUNNER_TEMP/apk-signature.txt"; then
+            echo "ERROR: APK is signed with the Android Debug certificate."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/vsoft-release-artifact"
+          cp "$SOURCE_APK" "$RUNNER_TEMP/vsoft-release-artifact/vsoft-release.apk"
+          test "$(find "$RUNNER_TEMP/vsoft-release-artifact" -maxdepth 1 -type f | wc -l)" -eq 1
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: vsoft-apks
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
+          name: VSOFT-RELEASE-APK
+          path: ${{ runner.temp }}/vsoft-release-artifact/vsoft-release.apk
+          if-no-files-found: error
+          include-hidden-files: false

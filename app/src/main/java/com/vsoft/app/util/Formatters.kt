@@ -62,3 +62,22 @@ fun formatSize(bytes: Long): String {
     val unit = if (megabytes) "مگابایت" else "کیلوبایت"
     return number.toPersianDigits().replace(".", "٫") + " " + unit
 }
+
+
+/** Plain (non-scientific) text of a Double with no trailing zeros, in Latin digits. */
+fun Double.toPlainNumber(): String {
+    if (!isFinite()) return "0"
+    val text = java.math.BigDecimal(this.toString()).stripTrailingZeros().toPlainString()
+    return if (text == "-0") "0" else text
+}
+
+/** Double with 3-digit grouping and optional decimals (e.g. 1,250,000.5), in Persian digits. */
+fun Double.toGroupedNumber(): String {
+    val plain = toPlainNumber()
+    val negative = plain.startsWith("-")
+    val body = plain.removePrefix("-")
+    val parts = body.split('.', limit = 2)
+    val integer = parts.first().reversed().chunked(3).joinToString(",").reversed()
+    val grouped = integer + if (parts.size > 1) "٫${parts[1]}" else ""
+    return ((if (negative) "-" else "") + grouped).toPersianDigits()
+}

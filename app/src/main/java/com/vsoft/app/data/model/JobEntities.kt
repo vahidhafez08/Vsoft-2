@@ -49,3 +49,12 @@ data class SitePaymentEntity(
     val dateMillis: Long,
     val note: String = ""
 )
+
+
+@Entity(tableName = "manual_daily_reports")
+data class ManualDailyReportEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val siteId: Long,
+    val dateMillis: Long,
+    val content: String
+)

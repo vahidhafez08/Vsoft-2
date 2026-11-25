@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.room.withTransaction
 import com.vsoft.app.data.db.AppDatabase
+import com.vsoft.app.data.db.seedDefaultInvestmentTypes
 import com.vsoft.app.data.model.*
 import com.vsoft.app.data.repository.SettingsRepository
 import com.vsoft.app.util.JCal
@@ -65,6 +66,12 @@ class BackupManager @Inject constructor(
             .put("site_payments", JSONArray().apply {
                 db.jobDao().getAllSitePaymentsOnce().forEach { put(it.toJson()) }
             })
+            .put("debts", JSONArray().apply { db.debtDao().getAllOnce().forEach { put(it.toJson()) } })
+            .put("investment_types", JSONArray().apply { db.investmentDao().getTypesOnce().forEach { put(it.toJson()) } })
+            .put("investments", JSONArray().apply { db.investmentDao().getInvestmentsOnce().forEach { put(it.toJson()) } })
+            .put("manual_daily_reports", JSONArray().apply {
+                db.jobDao().getAllManualDailyReportsOnce().forEach { put(it.toJson()) }
+            })
 
         JSONObject()
             .put("app", "VSOFT")
@@ -89,8 +96,12 @@ class BackupManager @Inject constructor(
                 db.withTransaction {
                     // Delete children before their logical parents.
                     db.subtaskDao().deleteAllRaw()
+                    db.debtDao().deleteAllRaw()
+                    db.investmentDao().deleteAllRaw()
+                    db.investmentDao().deleteAllTypesRaw()
                     db.jobDao().deleteAllWorkLogsRaw()
                     db.jobDao().deleteAllSitePaymentsRaw()
+                    db.jobDao().deleteAllManualDailyReportsRaw()
                     db.jobDao().deleteAllWorkItemsRaw()
                     db.jobDao().deleteAllFloorsRaw()
                     db.transactionDao().deleteAllRaw()
@@ -108,12 +119,16 @@ class BackupManager @Inject constructor(
                     db.projectDao().insertAllRaw(parsed.projects)
                     db.jobDao().insertAllSitesRaw(parsed.sites)
                     db.transactionDao().insertAllRaw(parsed.transactions)
+                    db.debtDao().insertAllRaw(parsed.debts)
+                    if (parsed.investmentTypes.isEmpty()) seedDefaultInvestmentTypes(db.openHelper.writableDatabase) else db.investmentDao().insertTypesRaw(parsed.investmentTypes)
+                    db.investmentDao().insertAllRaw(parsed.investments)
                     db.taskDao().insertAllRaw(parsed.tasks)
                     db.jobDao().insertAllFloorsRaw(parsed.floors)
                     db.jobDao().insertAllWorkItemsRaw(parsed.workItems)
                     db.subtaskDao().insertAllRaw(parsed.subtasks)
                     db.jobDao().insertAllWorkLogsRaw(parsed.workLogs)
                     db.jobDao().insertAllSitePaymentsRaw(parsed.sitePayments)
+                    db.jobDao().insertAllManualDailyReportsRaw(parsed.manualDailyReports)
                 }
             }
 
@@ -198,8 +213,23 @@ class BackupManager @Inject constructor(
             isIncome = requiredBoolean("isIncome"),
             category = requiredString("category"),
             dateMillis = requiredLong("dateMillis"),
-            accountId = optionalNullableLong("accountId")
+            accountId = optionalNullableLong("accountId"), debtId = optionalNullableLong("debtId")
         ) }
+        val debts = if (!tableObject.has("debts") || tableObject.isNull("debts")) emptyList() else tableObject.requiredArray("debts").mapObjects { DebtEntity(
+            id = requiredLong("id"), personName = requiredString("personName"), type = requiredString("type"),
+            totalAmount = requiredLong("totalAmount"), dateMillis = requiredLong("dateMillis"),
+            dueDateMillis = optionalNullableLong("dueDateMillis"), note = optionalString("note", ""),
+            isSettled = optionalBoolean("isSettled", false), isManuallySettled = optionalBoolean("isManuallySettled", false)
+        ) }
+        val investmentTypes = if (!tableObject.has("investment_types") || tableObject.isNull("investment_types")) emptyList() else tableObject.requiredArray("investment_types").mapObjects { InvestmentTypeEntity(
+            id=requiredLong("id"),name=requiredString("name"),iconKey=requiredString("iconKey"),colorHex=requiredString("colorHex"),unitLabel=requiredString("unitLabel"),isDefault=optionalBoolean("isDefault",false)
+        ) }
+        val investments = if (!tableObject.has("investments") || tableObject.isNull("investments")) emptyList() else tableObject.requiredArray("investments").mapObjects { InvestmentEntity(
+            id=requiredLong("id"),typeId=requiredLong("typeId"),title=optionalString("title",""),investedAmount=requiredLong("investedAmount"),buyPrice=getDouble("buyPrice"),quantity=getDouble("quantity"),
+            currentPrice=optionalNullableDouble("currentPrice"),priceUpdatedAtMillis=optionalNullableLong("priceUpdatedAtMillis"),buyDateMillis=requiredLong("buyDateMillis"),note=optionalString("note",""),status=optionalString("status","ACTIVE"),sellPrice=optionalNullableDouble("sellPrice")
+        ) }
+        val validTypeIds=investmentTypes.map { it.id }.toSet()
+        val safeInvestments=investments.filter { it.typeId in validTypeIds && it.investedAmount>0 && it.buyPrice>0.0 && it.quantity>0.0 }
         val accounts = tableObject.requiredArray("accounts").mapObjects { AccountEntity(
             id = requiredLong("id"),
             name = requiredString("name"),
@@ -295,6 +325,16 @@ class BackupManager @Inject constructor(
             dateMillis = requiredLong("dateMillis"),
             note = optionalString("note", "")
         ) }
+        val manualDailyReports = if (!tableObject.has("manual_daily_reports") || tableObject.isNull("manual_daily_reports")) {
+            emptyList()
+        } else {
+            tableObject.requiredArray("manual_daily_reports").mapObjects { ManualDailyReportEntity(
+                id = requiredLong("id"),
+                siteId = requiredLong("siteId"),
+                dateMillis = requiredLong("dateMillis"),
+                content = optionalString("content", "")
+            ) }.filter { report -> sites.any { it.id == report.siteId } }
+        }
 
         val settingsObject = if (root.has("settings") && !root.isNull("settings")) {
             root.requiredObject("settings")
@@ -308,13 +348,16 @@ class BackupManager @Inject constructor(
         val notifications = settingsObject.optionalBooleanOrNull("notifications")
 
         return ParsedBackup(
-            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }) }, accounts, transfers, documents, projects, tasks, subtasks, sites, floors,
-            workItems, workLogs, sitePayments, userName, themeMode, notifications
+            transactions.map { tx -> tx.copy(accountId = tx.accountId?.takeIf { id -> accounts.any { it.id == id } }, debtId = tx.debtId?.takeIf { id -> debts.any { it.id == id } }) }, debts, investmentTypes, safeInvestments, accounts, transfers, documents, projects, tasks, subtasks, sites, floors,
+            workItems, workLogs, sitePayments, manualDailyReports, userName, themeMode, notifications
         )
     }
 
     private data class ParsedBackup(
         val transactions: List<TransactionEntity>,
+        val debts: List<DebtEntity>,
+        val investmentTypes: List<InvestmentTypeEntity>,
+        val investments: List<InvestmentEntity>,
         val accounts: List<AccountEntity>,
         val transfers: List<TransferEntity>,
         val documents: List<DocumentEntity>,
@@ -326,6 +369,7 @@ class BackupManager @Inject constructor(
         val workItems: List<WorkItemEntity>,
         val workLogs: List<WorkLogEntity>,
         val sitePayments: List<SitePaymentEntity>,
+        val manualDailyReports: List<ManualDailyReportEntity>,
         val userName: String?,
         val themeMode: Int?,
         val notifications: Boolean?
@@ -335,6 +379,19 @@ class BackupManager @Inject constructor(
         .put("id", id).put("title", title).put("amount", amount)
         .put("isIncome", isIncome).put("category", category).put("dateMillis", dateMillis)
         .put("accountId", accountId ?: JSONObject.NULL)
+
+    private fun DebtEntity.toJson() = JSONObject()
+        .put("id", id).put("personName", personName).put("type", type)
+        .put("totalAmount", totalAmount).put("dateMillis", dateMillis)
+        .put("dueDateMillis", dueDateMillis ?: JSONObject.NULL).put("note", note)
+        .put("isSettled", isSettled).put("isManuallySettled", isManuallySettled)
+
+    private fun InvestmentTypeEntity.toJson() = JSONObject()
+        .put("id",id).put("name",name).put("iconKey",iconKey).put("colorHex",colorHex).put("unitLabel",unitLabel).put("isDefault",isDefault)
+    private fun InvestmentEntity.toJson() = JSONObject()
+        .put("id",id).put("typeId",typeId).put("title",title).put("investedAmount",investedAmount).put("buyPrice",buyPrice).put("quantity",quantity)
+        .put("currentPrice",currentPrice ?: JSONObject.NULL).put("priceUpdatedAtMillis",priceUpdatedAtMillis ?: JSONObject.NULL)
+        .put("buyDateMillis",buyDateMillis).put("note",note).put("status",status).put("sellPrice",sellPrice ?: JSONObject.NULL)
 
     private fun AccountEntity.toJson() = JSONObject()
         .put("id", id).put("name", name).put("last4", last4)
@@ -381,6 +438,10 @@ class BackupManager @Inject constructor(
         .put("id", id).put("siteId", siteId).put("amount", amount)
         .put("dateMillis", dateMillis).put("note", note)
 
+    private fun ManualDailyReportEntity.toJson() = JSONObject()
+        .put("id", id).put("siteId", siteId).put("dateMillis", dateMillis)
+        .put("content", content)
+
     private fun JSONObject.requiredObject(key: String): JSONObject {
         require(has(key) && !isNull(key)) { "Missing object: $key" }
         return get(key) as? JSONObject ?: throw IllegalArgumentException("Invalid object: $key")
@@ -424,6 +485,9 @@ class BackupManager @Inject constructor(
 
     private fun JSONObject.optionalIntOrNull(key: String): Int? =
         if (!has(key) || isNull(key)) null else requiredInt(key)
+
+    private fun JSONObject.getDouble(key: String): Double { require(has(key) && !isNull(key)); val n=get(key) as? Number ?: throw IllegalArgumentException("Invalid number: $key"); return n.toDouble().also { require(it.isFinite()) } }
+    private fun JSONObject.optionalNullableDouble(key: String): Double? = if (!has(key) || isNull(key)) null else getDouble(key)
 
     private fun JSONObject.requiredBoolean(key: String): Boolean {
         require(has(key) && !isNull(key)) { "Missing boolean: $key" }

@@ -45,16 +45,16 @@ fun TaskFormScreen(onBack: () -> Unit, onOpenProjectForm: () -> Unit, viewModel:
         }
         FormCard(Icons.Filled.Folder, "پروژه") {
             val selected = viewModel.projects.firstOrNull { it.id == viewModel.projectId }
-            FormPickerRow(Icons.Filled.Folder, selected?.title ?: "بدون پروژه", "برای اتصال این کار به یک پروژه انتخاب کن", { projectSheet = true })
+            FormPickerRow(Icons.Filled.Folder, selected?.title ?: "بدون پروژه", "برای اتصال این کار به یک پروژه انتخاب کن", onClick = { projectSheet = true })
             OutlinedButton(onClick = onOpenProjectForm, modifier = Modifier.fillMaxWidth()) { Text("پروژه‌ی جدید") }
         }
         FormCard(Icons.Filled.CalendarMonth, "سررسید") {
             FormSwitchRow("تعیین سررسید", "تاریخ و ساعت انجام کار", viewModel.dueEnabled) { viewModel.dueEnabled = it }
             if (viewModel.dueEnabled) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(viewModel.dueMillis), "تاریخ", { dateSheet = true }, Modifier.weight(1f))
+                    FormPickerRow(Icons.Filled.CalendarMonth, formatJalali(viewModel.dueMillis), "تاریخ", onClick = { dateSheet = true }, modifier = Modifier.weight(1f))
                     val cal = java.util.Calendar.getInstance().apply { timeInMillis = viewModel.dueMillis }
-                    FormPickerRow(Icons.Filled.Schedule, FormFormat.time(cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE)), "ساعت", { timeSheet = true }, Modifier.weight(1f))
+                    FormPickerRow(Icons.Filled.Schedule, FormFormat.time(cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE)), "ساعت", onClick = { timeSheet = true }, modifier = Modifier.weight(1f))
                 }
             }
         }

@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vsoft.app.ui.components.CategoryStyles
+import com.vsoft.app.ui.components.AddCategorySheet
+import com.vsoft.app.ui.components.CategoryAddTile
+import com.vsoft.app.ui.components.CategoryTile
 import com.vsoft.app.ui.components.form.*
 import com.vsoft.app.ui.theme.Vsoft
 import com.vsoft.app.util.UiEvents
@@ -42,11 +45,14 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
     var showDate by remember { mutableStateOf(false) }
     var showTime by remember { mutableStateOf(false) }
     var showAccounts by remember { mutableStateOf(false) }
+    var showAddCategory by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { vm.done.collect { onBack() } }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) vm.setAttachment(uri) }
     val accounts by vm.accounts.collectAsState()
     val selectedAccount = accounts.firstOrNull { it.id == vm.accountId }
     val categoryNames = vm.categoryNames()
+    val debts by vm.debts.collectAsState()
+    var debtExpanded by remember { mutableStateOf(false) }
 
     FormScaffold(
         title = if (vm.isEdit) "ویرایش تراکنش" else "افزودن تراکنش",
@@ -58,15 +64,27 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
         FormTypeToggle(vm.isIncome) { vm.isIncome = it; vm.category = null }
         FormCard(Icons.Default.GridView, "دسته‌بندی") {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                categoryNames.forEach { name ->
-                    val style = CategoryStyles.of(name)
-                    FormTile(name, style.icon, style.color, vm.category == name) { vm.category = name }
+                categoryNames.forEach { name -> CategoryTile(name, vm.category == name) { vm.category = name } }
+                CategoryAddTile { showAddCategory = true }
+            }
+        }
+        FormCard(Icons.Default.AccountBalanceWallet, "مربوط به بدهی/طلب") {
+            FormSwitchRow("این تراکنش مربوط به بدهکار یا طلبکار است", null, vm.debtEnabled) { vm.debtEnabled = it; if (!it) vm.debtId = null }
+            if (vm.debtEnabled) {
+                FormPickerRow(Icons.Default.People, debts.firstOrNull { it.id == vm.debtId }?.personName ?: "انتخاب بدهی یا طلب", null, onClick = { debtExpanded = true })
+                debts.forEach { debt ->
+                    FormChip("${debt.personName} · ${if (debt.type == "I_OWE") "بدهکارم" else "طلبکارم"}", vm.debtId == debt.id, onClick = { vm.debtId = debt.id })
+                }
+                FormChip("+ بدهی/طلب جدید", false, onClick = { UiEvents.show("ابتدا بدهی یا طلب را از بخش مالی ثبت کنید") })
+                val selectedDebt = debts.firstOrNull { it.id == vm.debtId }
+                if (selectedDebt != null && ((selectedDebt.type == "I_OWE" && vm.isIncome) || (selectedDebt.type == "OWED_TO_ME" && !vm.isIncome))) {
+                    Text("نوع این تراکنش با نوع بدهی انتخاب‌شده متفاوت است.", color = com.vsoft.app.ui.theme.WarningOrange, fontSize = 12.sp)
                 }
             }
         }
         if (accounts.isNotEmpty()) FormCard(Icons.Default.AccountBalanceWallet, "حساب") {
             FormPickerRow(Icons.Default.AccountBalance, selectedAccount?.name ?: "بدون حساب",
-                selectedAccount?.let { "موجودی: ${it.balanceText} تومان" }, { showAccounts = true })
+                selectedAccount?.let { "موجودی: ${it.balanceText} تومان" }, onClick = { showAccounts = true })
         }
         FormCard(Icons.Default.MonetizationOn, "مبلغ") {
             FormAmountField(
@@ -82,8 +100,8 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
         }
         FormCard(Icons.Default.CalendarMonth, "تاریخ و زمان") {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                FormPickerRow(Icons.Default.Schedule, FormFormat.time(vm.hour, vm.minute), null, { showTime = true }, Modifier.weight(1f))
-                FormPickerRow(Icons.Default.CalendarMonth, FormFormat.date(vm.dayMillis), FormFormat.weekday(vm.dayMillis), { showDate = true }, Modifier.weight(1.2f))
+                FormPickerRow(Icons.Default.Schedule, FormFormat.time(vm.hour, vm.minute), null, onClick = { showTime = true }, modifier = Modifier.weight(1f))
+                FormPickerRow(Icons.Default.CalendarMonth, FormFormat.date(vm.dayMillis), FormFormat.weekday(vm.dayMillis), onClick = { showDate = true }, modifier = Modifier.weight(1.2f))
             }
         }
         FormCard(Icons.Default.Description, "توضیحات (اختیاری)") {
@@ -120,6 +138,12 @@ fun TransactionFormScreen(onBack: () -> Unit, vm: TransactionFormViewModel = hil
     if (showDate) FormDatePickerSheet(vm.dayMillis, { vm.dayMillis = it; showDate = false }, { showDate = false })
     if (showTime) FormTimePickerSheet(vm.hour, vm.minute, { h, m -> vm.hour = h; vm.minute = m; showTime = false }, { showTime = false })
     if (showAccounts) FormAccountSheet(accounts, vm.accountId, { vm.accountId = it; showAccounts = false }, { showAccounts = false })
+    if (showAddCategory) AddCategorySheet(
+        isIncome = vm.isIncome,
+        onAdded = { vm.category = it; showAddCategory = false },
+        onDeleted = { if (vm.category == it) vm.category = null },
+        onDismiss = { showAddCategory = false }
+    )
 }
 private fun Modifier.dashedBorder(color: Color, shape: RoundedCornerShape): Modifier = drawBehind {
     val r = shape.topStart.toPx(size, this)

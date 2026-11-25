@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same as LightBg in ui/theme/Color.kt -->
+    <color name="vsoft_bg">#FFF6F8FC</color>
+</resources>

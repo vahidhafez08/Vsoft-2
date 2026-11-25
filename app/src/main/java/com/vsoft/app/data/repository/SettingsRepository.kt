@@ -24,7 +24,9 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     val notifications: StateFlow<Boolean> = _notifications.asStateFlow()
 
     private fun readName(): String =
-        prefs.getString(KEY_NAME, null)?.trim().orEmpty().ifBlank { DEFAULT_NAME }
+        prefs.getString(KEY_NAME, null)?.trim().orEmpty().let { savedName ->
+            if (savedName.isBlank() || savedName == "وحید") DEFAULT_NAME else savedName
+        }
 
     fun setUserName(value: String) {
         val v = value.trim().take(24)
@@ -57,7 +59,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     }
 
     companion object {
-        const val DEFAULT_NAME = "وحید"
+        const val DEFAULT_NAME = "کاربر"
         private const val KEY_NAME = "user_name"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_NOTIF = "notifications_enabled"

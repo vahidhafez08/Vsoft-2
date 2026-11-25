@@ -44,6 +44,11 @@ import com.vsoft.app.ui.screens.accounts.AccountsScreen
 import com.vsoft.app.ui.screens.calendar.CalendarScreen
 import com.vsoft.app.ui.screens.documents.DocumentsScreen
 import com.vsoft.app.ui.screens.finance.FinanceScreen
+import com.vsoft.app.ui.screens.finance.DebtsScreen
+import com.vsoft.app.ui.screens.finance.InvestmentsScreen
+import com.vsoft.app.ui.screens.finance.DebtFormScreen
+import com.vsoft.app.ui.screens.finance.InvestmentFormScreen
+import com.vsoft.app.ui.screens.finance.InvestmentDetailScreen
 import com.vsoft.app.ui.screens.home.HomeScreen
 import com.vsoft.app.ui.screens.jobs.JobsScreen
 import com.vsoft.app.ui.screens.jobs.SiteDetailScreen
@@ -53,6 +58,8 @@ import com.vsoft.app.ui.screens.jobs.ItemFormScreen
 import com.vsoft.app.ui.screens.jobs.LogFormScreen
 import com.vsoft.app.ui.screens.jobs.PaymentFormScreen
 import com.vsoft.app.ui.screens.more.MoreScreen
+import com.vsoft.app.ui.screens.more.SettingsViewModel
+import com.vsoft.app.ui.onboarding.OnboardingScreen
 import com.vsoft.app.ui.screens.reports.ReportsScreen
 import com.vsoft.app.ui.screens.tasks.TaskDetailScreen
 import com.vsoft.app.ui.screens.tasks.TasksScreen
@@ -72,13 +79,14 @@ import kotlin.math.sign
 private val tabDestinations = Destination.values().toList()
 
 @Composable
-fun MainScaffold(navController: NavHostController) {
+fun MainScaffold(navController: NavHostController, settingsViewModel: SettingsViewModel) {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val snackbarHostState = remember { SnackbarHostState() }
-    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM)
-    val formPrefixes = listOf("transaction_form", "task_form", "project_form", "site_form", "floor_form", "item_form", "log_form", "payment_form")
+    val financeGroup = listOf(Destination.Finance.route, Routes.TRANSACTIONS, Routes.ACCOUNTS, Routes.TRANSACTION_FORM, Routes.DEBTS, Routes.INVESTMENTS, Routes.DEBT_FORM, Routes.INVESTMENT_FORM, Routes.INVESTMENT_DETAIL)
+    val formPrefixes = listOf("transaction_form", "task_form", "project_form", "site_form", "floor_form", "item_form", "log_form", "payment_form", "debt_form", "investment_form", "investment/")
     val isFormRoute = formPrefixes.any { currentRoute?.startsWith(it) == true }
+    val isOnboardingRoute = currentRoute == Routes.ONBOARDING
     val tasksGroup = listOf(Destination.Tasks.route, Routes.TASK_DETAIL, Routes.TASK_FORM, Routes.PROJECT_FORM, Routes.JOBS, Routes.SITE_DETAIL, Routes.SITE_FORM, Routes.FLOOR_FORM, Routes.ITEM_FORM, Routes.LOG_FORM, Routes.PAYMENT_FORM, Routes.CALENDAR)
     val currentTabIndex = tabDestinations.indexOfFirst { it.route == currentRoute }
     val isTabRoute = currentTabIndex >= 0
@@ -141,7 +149,7 @@ fun MainScaffold(navController: NavHostController) {
             }
         },
         bottomBar = {
-            if (!isFormRoute) {
+            if (!isFormRoute && !isOnboardingRoute) {
             NavigationBar(containerColor = Vsoft.colors.surface) {
                 tabDestinations.forEachIndexed { index, dest ->
                     val selected = if (isTabRoute) {
@@ -234,7 +242,21 @@ fun MainScaffold(navController: NavHostController) {
                 composable(route = Routes.LOG_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L }, navArgument("itemId") { type = NavType.LongType; defaultValue = -1L })) { LogFormScreen(onBack = { navController.popBackStack() }) }
                 composable(route = Routes.PAYMENT_FORM, arguments = listOf(navArgument("siteId") { type = NavType.LongType; defaultValue = -1L }, navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { PaymentFormScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.ACCOUNTS) { AccountsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.DEBTS) { DebtsScreen(onBack = { navController.popBackStack() }, onAddDebt = { openRoute(Routes.debtForm()) }, onEditDebt = { id -> openRoute(Routes.debtForm(id)) }) }
+                composable(Routes.INVESTMENTS) { InvestmentsScreen(onBack = { navController.popBackStack() }, onAddInvestment = { openRoute(Routes.INVESTMENT_FORM) }, onOpenInvestment = { id -> openRoute("investment/$id") }) }
+                composable(route = Routes.DEBT_FORM, arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })) { DebtFormScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.INVESTMENT_FORM) { InvestmentFormScreen(onBack = { navController.popBackStack() }) }
+                composable(route = Routes.INVESTMENT_DETAIL, arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
+                    val id = entry.arguments?.getLong("id") ?: -1L
+                    InvestmentDetailScreen(investmentId = id, onBack = { navController.popBackStack() })
+                }
                 composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.ONBOARDING) {
+                    OnboardingScreen(onFinish = { name ->
+                        if (name != null) settingsViewModel.setUserName(name)
+                        navController.popBackStack()
+                    })
+                }
                 composable(
                     route = Routes.TASK_DETAIL,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
@@ -313,7 +335,9 @@ private fun TabsHost(
                 Destination.Finance -> FinanceScreen(
                     onOpenTransactions = { onOpenRoute(Routes.TRANSACTIONS) },
                     onOpenAccounts = { onOpenRoute(Routes.ACCOUNTS) },
-                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) }
+                    onOpenTransactionForm = { type -> onOpenRoute(Routes.transactionForm(type = type)) },
+                    onOpenDebts = { onOpenRoute(Routes.DEBTS) },
+                    onOpenInvestments = { onOpenRoute(Routes.INVESTMENTS) }
                 )
                 Destination.Tasks -> TasksScreen(
                     onOpenTask = { id -> onOpenRoute(Routes.taskDetail(id)) },
@@ -323,7 +347,7 @@ private fun TabsHost(
                     onOpenCalendar = { onOpenRoute(Routes.CALENDAR) }
                 )
                 Destination.Reports -> ReportsScreen()
-                Destination.More -> MoreScreen()
+                Destination.More -> MoreScreen(onOpenOnboarding = { onOpenRoute(Routes.ONBOARDING) })
                 null -> Unit
             }
         }

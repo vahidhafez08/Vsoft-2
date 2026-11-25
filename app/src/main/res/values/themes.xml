@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Vsoft" parent="android:Theme.Material.NoActionBar" />
-    <style name="Theme.Vsoft.Splash" parent="Theme.Vsoft">
-        <item name="android:windowBackground">@android:color/black</item>
+    <style name="Theme.Vsoft" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/vsoft_bg</item>
+        <item name="android:colorBackground">@color/vsoft_bg</item>
+    </style>
+    <!-- System splash: plain background following system day/night, no icon.
+         The animated logo is drawn by SplashScreen.kt (Compose). -->
+    <style name="Theme.Vsoft.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/vsoft_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_empty</item>
+        <item name="postSplashScreenTheme">@style/Theme.Vsoft</item>
     </style>
 </resources>

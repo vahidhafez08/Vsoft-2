@@ -92,7 +92,7 @@ import com.vsoft.app.util.toLatinDigits
 import java.util.Locale
 
 @Composable
-fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
+fun MoreScreen(onOpenOnboarding: () -> Unit = {}, viewModel: SettingsViewModel = hiltViewModel()) {
     val name by viewModel.userName.collectAsStateWithLifecycle()
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
@@ -218,6 +218,12 @@ fun MoreScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             SettingsRow(Icons.Filled.Language, BrandBlue, "زبان", onClick = {
                 Toast.makeText(context, "فعلاً فقط زبان فارسی پشتیبانی می‌شود", Toast.LENGTH_SHORT).show()
             })
+            RowDivider()
+            SettingsRow(
+                Icons.Filled.Info, BrandBlue, "آموزش برنامه",
+                subtitle = "آشنایی با بخش‌های مختلف Vesta",
+                onClick = onOpenOnboarding
+            )
             RowDivider()
             SettingsRow(
                 Icons.Filled.Notifications, WarningOrange, "اعلان‌ها",

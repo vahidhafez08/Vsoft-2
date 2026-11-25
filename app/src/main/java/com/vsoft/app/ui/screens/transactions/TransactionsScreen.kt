@@ -9,7 +9,21 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.clickable
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
+import com.vsoft.app.util.formatJalali
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,8 +45,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -61,6 +77,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -70,8 +87,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vsoft.app.data.model.TransactionEntity
+import com.vsoft.app.ui.components.AccountLogo
 import com.vsoft.app.ui.components.AnimatedMoney
-import com.vsoft.app.ui.components.CategoryStyles
+import com.vsoft.app.ui.components.CategoryLogo
 import com.vsoft.app.ui.components.EmptyState
 import com.vsoft.app.ui.components.ScreenHeader
 import com.vsoft.app.ui.components.SegmentedTabs
@@ -102,6 +120,52 @@ fun TransactionsScreen(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val focus: FocusManager = LocalFocusManager.current
+    val context = LocalContext.current
+    val invoiceDarkTheme = Vsoft.colors.isDark
+    val selectedIds = remember { androidx.compose.runtime.mutableStateListOf<Long>() }
+    var invoiceFile by remember { mutableStateOf<File?>(null) }
+    var invoiceImageFile by remember { mutableStateOf<File?>(null) }
+    var showInvoiceActions by remember { mutableStateOf(false) }
+    val saveInvoiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri: Uri? ->
+        val source = invoiceFile
+        if (uri != null && source != null) {
+            runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { output -> source.inputStream().use { input -> input.copyTo(output) } }
+                    ?: error("فایل مقصد باز نشد")
+            }.onSuccess { com.vsoft.app.util.UiEvents.show("فاکتور ذخیره شد") }
+                .onFailure { com.vsoft.app.util.UiEvents.show("ذخیره فاکتور ناموفق بود") }
+        }
+    }
+    val saveInvoiceImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri: Uri? ->
+        val source = invoiceImageFile
+        if (uri != null && source != null) {
+            runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { output -> source.inputStream().use { input -> input.copyTo(output) } }
+                    ?: error("فایل مقصد باز نشد")
+            }.onSuccess { com.vsoft.app.util.UiEvents.show("تصویر فاکتور ذخیره شد") }
+                .onFailure { com.vsoft.app.util.UiEvents.show("ذخیره تصویر فاکتور ناموفق بود") }
+        }
+    }
+    val visibleTransactions = state.groups.flatMap { it.items }
+    val selectedTransactions = visibleTransactions.filter { it.id in selectedIds }
+    fun toggleSelection(tx: TransactionEntity) {
+        if (tx.id in selectedIds) selectedIds.remove(tx.id) else selectedIds.add(tx.id)
+    }
+    fun createInvoice() {
+        if (selectedTransactions.isEmpty()) return
+        runCatching {
+            val pdf = InvoicePdfGenerator.create(context, selectedTransactions, invoiceDarkTheme)
+            val image = InvoiceImageGenerator.create(context, selectedTransactions, invoiceDarkTheme)
+            pdf to image
+        }
+            .onSuccess { (pdf, image) ->
+                invoiceFile = pdf
+                invoiceImageFile = image
+                showInvoiceActions = true
+                selectedIds.clear()
+            }
+            .onFailure { com.vsoft.app.util.UiEvents.show("ساخت فاکتور ناموفق بود") }
+    }
 
     LaunchedEffect(query, type, category, accountFilter) {
         viewModel.setFilters(TxFilters(query, type, category, accountFilter))
@@ -129,11 +193,25 @@ fun TransactionsScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item(key = "header") {
-                ScreenHeader(
-                    title = "تراکنش‌ها",
-                    subtitle = state.count.toPersianText() + " تراکنش",
-                    onBack = onBack
-                )
+                if (selectedIds.isEmpty()) {
+                    ScreenHeader(
+                        title = "تراکنش‌ها",
+                        subtitle = state.count.toPersianText() + " تراکنش",
+                        onBack = onBack
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { selectedIds.clear() }) { Icon(Icons.Filled.Close, contentDescription = "لغو انتخاب") }
+                            Text(selectedIds.size.toPersianText() + " تراکنش انتخاب‌شده", Modifier.weight(1f), color = Vsoft.colors.textPrimary, fontWeight = FontWeight.Bold)
+                            TextButton(onClick = {
+                                selectedIds.clear()
+                                selectedIds.addAll(visibleTransactions.map { it.id })
+                            }) { Text("انتخاب همه") }
+                            TextButton(onClick = { selectedIds.clear() }) { Text("لغو انتخاب") }
+                        }
+                    }
+                }
             }
             item(key = "summary") {
                 val net = state.income - state.expense
@@ -186,6 +264,7 @@ fun TransactionsScreen(
                             FilterChip(
                                 selected = category == null,
                                 onClick = { category = null },
+                                leadingIcon = { Icon(Icons.Filled.GridView, contentDescription = null, modifier = Modifier.size(18.dp)) },
                                 label = { Text("همه دسته‌ها") }
                             )
                         }
@@ -193,6 +272,7 @@ fun TransactionsScreen(
                             FilterChip(
                                 selected = category == c,
                                 onClick = { category = if (category == c) null else c },
+                                leadingIcon = { CategoryLogo(c, 24.dp) },
                                 label = { Text(c) }
                             )
                         }
@@ -202,9 +282,21 @@ fun TransactionsScreen(
             if (state.accounts.isNotEmpty()) {
                 item(key = "accounts") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item { FilterChip(selected = accountFilter == null, onClick = { accountFilter = null }, label = { Text("همه حساب‌ها") }) }
+                        item {
+                            FilterChip(
+                                selected = accountFilter == null,
+                                onClick = { accountFilter = null },
+                                leadingIcon = { AccountLogo("blue", 24.dp) },
+                                label = { Text("همه حساب‌ها") }
+                            )
+                        }
                         items(state.accounts, key = { it.id }) { account ->
-                            FilterChip(selected = accountFilter == account.id, onClick = { accountFilter = if (accountFilter == account.id) null else account.id }, label = { Text(account.name) })
+                            FilterChip(
+                                selected = accountFilter == account.id,
+                                onClick = { accountFilter = if (accountFilter == account.id) null else account.id },
+                                leadingIcon = { AccountLogo(account.colorKey, 24.dp) },
+                                label = { Text(account.name) }
+                            )
                         }
                     }
                 }
@@ -228,7 +320,13 @@ fun TransactionsScreen(
                         tx = tx,
                         accountName = tx.accountId?.let { state.accountNames[it] },
                         modifier = Modifier.animateItemPlacement(),
-                        onClick = { onOpenTransactionForm(tx.id, if (tx.isIncome) "income" else "expense") },
+                        selected = tx.id in selectedIds,
+                        selectionMode = selectedIds.isNotEmpty(),
+                        onLongClick = { if (selectedIds.isEmpty()) selectedIds.add(tx.id) else toggleSelection(tx) },
+                        onClick = {
+                            if (selectedIds.isNotEmpty()) toggleSelection(tx)
+                            else onOpenTransactionForm(tx.id, if (tx.isIncome) "income" else "expense")
+                        },
                         onDelete = { deleteWithUndo(tx) }
                     )
                 }
@@ -240,15 +338,41 @@ fun TransactionsScreen(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp)
         )
 
-        SpeedDialFab(
-            onIncome = { onOpenTransactionForm(-1L, "income") },
-            onExpense = { onOpenTransactionForm(-1L, "expense") },
-            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
-        )
+        if (selectedIds.isEmpty()) {
+            SpeedDialFab(
+                onIncome = { onOpenTransactionForm(-1L, "income") },
+                onExpense = { onOpenTransactionForm(-1L, "expense") },
+                modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+            )
+        } else {
+            InvoiceGlassFab(
+                count = selectedIds.size,
+                onClick = { createInvoice() },
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 92.dp)
+            )
+        }
     }
 
-
-}
+    if (showInvoiceActions && invoiceFile != null && invoiceImageFile != null) {
+        fun share(file: File?, mime: String, chooserTitle: String) {
+            val f = file ?: return
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", f)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                setType(mime)
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(intent, chooserTitle))
+            showInvoiceActions = false
+        }
+        InvoiceActionsSheet(
+            onSavePdf = { saveInvoiceLauncher.launch("فاکتور-${System.currentTimeMillis()}.pdf"); showInvoiceActions = false },
+            onSharePdf = { share(invoiceFile, "application/pdf", "اشتراک‌گذاری PDF") },
+            onSaveImage = { saveInvoiceImageLauncher.launch("فاکتور-${System.currentTimeMillis()}.png"); showInvoiceActions = false },
+            onShareImage = { share(invoiceImageFile, "image/png", "اشتراک‌گذاری تصویر فاکتور") },
+            onDismiss = { showInvoiceActions = false }
+        )
+    }}
 
 @Composable
 private fun SummaryCell(label: String, value: Long, color: Color, modifier: Modifier) {
@@ -277,12 +401,15 @@ private fun DayHeader(label: String, net: Long, modifier: Modifier) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun TxRow(
     tx: TransactionEntity,
     accountName: String?,
     modifier: Modifier,
+    selected: Boolean,
+    selectionMode: Boolean,
+    onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -298,7 +425,6 @@ private fun TxRow(
         }
     )
     val shape = RoundedCornerShape(18.dp)
-    val style = CategoryStyles.of(tx.category)
 
     SwipeToDismissBox(
         state = dismissState,
@@ -331,18 +457,19 @@ private fun TxRow(
             Modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(Vsoft.colors.surface)
-                .border(1.dp, Vsoft.colors.outline, shape)
-                .clickable(onClick = onClick)
+                .background(if (selected) IncomeGreen.copy(alpha = 0.12f) else Vsoft.colors.surface)
+                .border(if (selected) 2.dp else 1.dp, if (selected) IncomeGreen else Vsoft.colors.outline, shape)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(style.color.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(style.icon, contentDescription = null, tint = style.color, modifier = Modifier.size(22.dp))
+            if (selectionMode) {
+                Box(Modifier.size(24.dp).clip(RoundedCornerShape(8.dp)).background(if (selected) IncomeGreen else Vsoft.colors.surfaceHigh).border(1.dp, if (selected) IncomeGreen else Vsoft.colors.outline, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+                    if (selected) Icon(Icons.Filled.Close, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                }
+                Spacer(Modifier.width(8.dp))
             }
+            CategoryLogo(tx.category, 44.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
@@ -375,6 +502,31 @@ private fun TxRow(
                 )
                 Text("تومان", color = Vsoft.colors.textSecondary, fontSize = 10.sp)
             }
+        }
+    }
+}
+
+
+@Composable
+private fun InvoiceGlassFab(count: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = Vsoft.colors
+    val shape = RoundedCornerShape(50)
+    Row(
+        modifier.clip(shape)
+            .background(Brush.linearGradient(
+                if (colors.isDark) listOf(Color(0xFF263C69), Color(0xFF463B79))
+                else listOf(Color(0xFF527CEB), Color(0xFF7664D9))
+            ))
+            .border(1.dp, Color.White.copy(alpha = 0.45f), shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 19.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        Icon(Icons.Filled.Receipt, contentDescription = null, tint = Color.White, modifier = Modifier.size(21.dp))
+        Text("ساخت فاکتور", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Box(Modifier.size(24.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+            Text(count.toString(), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
